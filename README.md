@@ -15,7 +15,7 @@ Initial project scaffold for the Railway Reservation System coursework. The repo
 ├── Documents/              # Project requirements and test references
 ├── backend/
 │   ├── app/
-│   │   ├── __init__.py     # Flask application factory
+│   │   ├── __init__.py     # Flask application factory and frontend serving
 │   │   ├── config.py       # Environment-based configuration
 │   │   ├── db.py           # MySQL connection helper
 │   │   └── routes.py       # Initial health endpoints
@@ -59,13 +59,13 @@ Initial project scaffold for the Railway Reservation System coursework. The repo
    CREATE DATABASE railway_reservation;
    ```
 
-6. Start the backend from the repository root:
+6. Start the backend and frontend server from the repository root:
 
    ```bash
    python backend/run.py
    ```
 
-7. Open `frontend/index.html` in a browser. The frontend status check expects the API at `http://127.0.0.1:5000`.
+7. Open [http://127.0.0.1:5000](http://127.0.0.1:5000). Flask serves the frontend and API from the same origin, so a separate frontend server is not needed.
 
 ## Health endpoints
 
