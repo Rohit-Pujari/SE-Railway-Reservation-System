@@ -70,7 +70,7 @@ def login():
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
-            "SELECT id, full_name, email, password_hash FROM users WHERE email = %s LIMIT 1",
+            "SELECT user_id, full_name, email, password_hash FROM users WHERE email = %s AND account_status = 'ACTIVE' AND role = 'PASSENGER' LIMIT 1",
             (email.strip().lower(),),
         )
         user = cursor.fetchone()
@@ -78,13 +78,13 @@ def login():
             return jsonify({"status": "error", "message": "Invalid email or password."}), 401
 
         session.clear()
-        session["user_id"] = user["id"]
+        session["user_id"] = user["user_id"]
         session["user_name"] = user["full_name"]
         session["user_email"] = user["email"]
         return jsonify({
             "status": "ok",
             "message": "Login successful.",
-            "user": {"id": user["id"], "full_name": user["full_name"], "email": user["email"]},
+            "user": {"id": user["user_id"], "full_name": user["full_name"], "email": user["email"]},
         }), 200
     except mysql.connector.Error:
         return jsonify({"status": "error", "message": "Login is temporarily unavailable. Please try again."}), 503
