@@ -21,8 +21,8 @@
         <label for="phone-number">Phone number <span>(optional)</span></label>
         <input id="phone-number" name="phone_number" type="tel" autocomplete="tel" maxlength="25">
         <label for="password">Password</label>
-        <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required aria-describedby="password-help">
-        <p id="password-help" class="field-help">At least 8 characters, including uppercase, lowercase, and a number.</p>
+        <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required aria-describedby="password-help">
+        <p id="password-help" class="field-help">8–128 characters, including uppercase, lowercase, and a number.</p>
         <button type="submit" id="register-button">Create account</button>
         <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
       </form>
