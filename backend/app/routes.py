@@ -42,8 +42,12 @@ def registration():
         user = register_user(payload)
     except RegistrationValidationError as exc:
         return jsonify({"status": "error", "message": str(exc)}), 400
-    except IntegrityError:
-        return jsonify({"status": "error", "message": "An account with this email already exists."}), 409
+    except IntegrityError as exc:
+        # MySQL error 1062 is ER_DUP_ENTRY. Other integrity failures are not
+        # necessarily duplicate emails and must not be reported as such.
+        if getattr(exc, "errno", None) == 1062:
+            return jsonify({"status": "error", "message": "An account with this email already exists."}), 409
+        return jsonify({"status": "error", "message": "Registration could not be completed. Please try again."}), 500
     except mysql.connector.Error:
         return jsonify({"status": "error", "message": "Registration is temporarily unavailable. Please try again."}), 503
     except Exception:
