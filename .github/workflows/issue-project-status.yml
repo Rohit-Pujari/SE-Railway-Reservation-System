@@ -1,0 +1,141 @@
+name: Sync issue status to GitHub Project
+
+on:
+  issues:
+    types: [assigned, reopened]
+  pull_request:
+    types: [opened, ready_for_review, review_requested, closed]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to update"
+        required: true
+        default: "3"
+        type: string
+      status:
+        description: "Project status to set"
+        required: true
+        default: "In progress"
+        type: choice
+        options:
+          - Backlog
+          - Ready
+          - In progress
+          - In review
+          - Done
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  sync-status:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issues' && github.event.issue.number == 3) ||
+      (github.event_name == 'pull_request' &&
+       (contains(github.event.pull_request.body, '#3') ||
+        contains(github.event.pull_request.head.ref, 'issue-3') ||
+        contains(github.event.pull_request.head.ref, 'issue/3')))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve target issue and desired status
+        id: target
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_NUMBER_INPUT: ${{ inputs.issue_number }}
+          STATUS_INPUT: ${{ inputs.status }}
+          ISSUE_NUMBER_EVENT: ${{ github.event.issue.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_HEAD: ${{ github.event.pull_request.head.ref }}
+          PR_MERGED: ${{ github.event.pull_request.merged }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "issue_number=$ISSUE_NUMBER_INPUT" >> "$GITHUB_OUTPUT"
+            echo "status=$STATUS_INPUT" >> "$GITHUB_OUTPUT"
+          elif [ "$EVENT_NAME" = "issues" ]; then
+            echo "issue_number=$ISSUE_NUMBER_EVENT" >> "$GITHUB_OUTPUT"
+            echo "status=In progress" >> "$GITHUB_OUTPUT"
+          else
+            if [ "$PR_MERGED" = "true" ]; then
+              echo "status=Done" >> "$GITHUB_OUTPUT"
+            else
+              echo "status=In review" >> "$GITHUB_OUTPUT"
+            fi
+            # Issue #3 is the only issue this workflow is configured to sync.
+            echo "issue_number=3" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update Project status
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
+          PROJECT_OWNER: Rohit-Pujari
+          ISSUE_NUMBER: ${{ steps.target.outputs.issue_number }}
+          DESIRED_STATUS: ${{ steps.target.outputs.status }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::Add a repository secret named PROJECT_TOKEN with permission to read and write Projects."
+            exit 1
+          fi
+          if [ -z "${PROJECT_NUMBER:-}" ]; then
+            echo "::error::Add repository variable PROJECT_NUMBER containing the number from the GitHub Project URL."
+            exit 1
+          fi
+
+          query='query($owner:String!, $number:Int!) {
+            user(login:$owner) {
+              projectV2(number:$number) {
+                id
+                fields(first:50) {
+                  nodes {
+                    ... on ProjectV2SingleSelectField {
+                      id
+                      name
+                      options { id name }
+                    }
+                  }
+                }
+                items(first:100) {
+                  nodes {
+                    id
+                    content {
+                      ... on Issue { number repository { nameWithOwner } }
+                    }
+                  }
+                }
+              }
+            }
+          }'
+          data=$(gh api graphql -f query="$query" -F owner="$PROJECT_OWNER" -F number="$PROJECT_NUMBER")
+          project_id=$(echo "$data" | jq -r '.data.user.projectV2.id // empty')
+          if [ -z "$project_id" ]; then
+            echo "::error::Could not find that Project. Check PROJECT_NUMBER and PROJECT_TOKEN access."
+            exit 1
+          fi
+
+          field_id=$(echo "$data" | jq -r '.data.user.projectV2.fields.nodes[] | select(.name=="Status") | .id' | head -n1)
+          option_id=$(echo "$data" | jq -r --arg status "$DESIRED_STATUS" '.data.user.projectV2.fields.nodes[] | select(.name=="Status") | .options[] | select(.name==$status) | .id' | head -n1)
+          item_id=$(echo "$data" | jq -r --argjson number "$ISSUE_NUMBER" '.data.user.projectV2.items.nodes[] | select(.content.number==$number and .content.repository.nameWithOwner=="Rohit-Pujari/SE-Railway-Reservation-System") | .id' | head -n1)
+
+          if [ -z "$field_id" ] || [ -z "$option_id" ]; then
+            echo "::error::Could not find Status field option '$DESIRED_STATUS'. Ensure the Project has that exact option."
+            exit 1
+          fi
+          if [ -z "$item_id" ]; then
+            echo "::error::Issue #$ISSUE_NUMBER is not in the configured Project."
+            exit 1
+          fi
+
+          mutation='mutation($project:ID!, $item:ID!, $field:ID!, $option:String!) {
+            updateProjectV2ItemFieldValue(input:{
+              projectId:$project
+              itemId:$item
+              fieldId:$field
+              value:{singleSelectOptionId:$option}
+            }) { projectV2Item { id } }
+          }'
+          gh api graphql -f query="$mutation" -f project="$project_id" -f item="$item_id" -f field="$field_id" -f option="$option_id"
+          echo "Set issue #$ISSUE_NUMBER status to '$DESIRED_STATUS'."
