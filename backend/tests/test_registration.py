@@ -7,7 +7,12 @@ import mysql.connector
 from werkzeug.security import check_password_hash
 
 from backend.app import create_app
-from backend.app.registration import RegistrationValidationError, register_user, validate_registration
+from backend.app.registration import (
+    PASSWORD_MAX_LENGTH,
+    RegistrationValidationError,
+    register_user,
+    validate_registration,
+)
 
 VALID = {
     "full_name": "Aditi Rao",
@@ -35,6 +40,15 @@ class RegistrationServiceTests(unittest.TestCase):
         for password in ("short1A", "alllowercase1", "ALLUPPERCASE1", "NoDigitsHere"):
             with self.subTest(password=password), self.assertRaises(RegistrationValidationError):
                 validate_registration(dict(VALID, password=password))
+
+    def test_password_over_maximum_length_rejected(self):
+        password = "Aa1" + ("x" * PASSWORD_MAX_LENGTH)
+        with self.assertRaises(RegistrationValidationError):
+            validate_registration(dict(VALID, password=password))
+
+    def test_password_at_maximum_length_is_accepted(self):
+        password = "Aa1" + ("x" * (PASSWORD_MAX_LENGTH - 3))
+        self.assertEqual(len(validate_registration(dict(VALID, password=password))["password"]), PASSWORD_MAX_LENGTH)
 
     def test_password_hash_inserted_not_plaintext(self):
         connection = MagicMock()
@@ -76,11 +90,19 @@ class RegistrationEndpointTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
     @patch("backend.app.routes.register_user")
-    def test_duplicate_email_conflict(self, register):
-        register.side_effect = mysql.connector.IntegrityError("duplicate")
+    def test_duplicate_key_returns_conflict(self, register):
+        register.side_effect = mysql.connector.IntegrityError(errno=1062, msg="duplicate")
         response = self.client.post("/api/register", json=VALID)
         self.assertEqual(response.status_code, 409)
         self.assertEqual(response.json["message"], "An account with this email already exists.")
+
+    @patch("backend.app.routes.register_user")
+    def test_non_duplicate_integrity_error_is_safe_server_error(self, register):
+        register.side_effect = mysql.connector.IntegrityError(errno=1452, msg="foreign key failure")
+        response = self.client.post("/api/register", json=VALID)
+        self.assertEqual(response.status_code, 500)
+        self.assertNotIn("foreign key", response.get_data(as_text=True))
+        self.assertNotIn("1452", response.get_data(as_text=True))
 
     @patch("backend.app.routes.register_user")
     def test_database_error_is_not_leaked(self, register):
