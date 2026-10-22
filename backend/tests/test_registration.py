@@ -1,0 +1,105 @@
+"""Unit tests for registration validation, persistence, and API errors."""
+
+import unittest
+from unittest.mock import MagicMock, patch
+
+import mysql.connector
+from werkzeug.security import check_password_hash
+
+from backend.app import create_app
+from backend.app.registration import RegistrationValidationError, register_user, validate_registration
+
+VALID = {
+    "full_name": "Aditi Rao",
+    "email": "Aditi.Rao@example.com",
+    "phone_number": "9876543210",
+    "password": "StrongPass1",
+}
+
+
+class RegistrationServiceTests(unittest.TestCase):
+    def test_validation_normalizes_email(self):
+        self.assertEqual(validate_registration(VALID)["email"], "aditi.rao@example.com")
+
+    def test_missing_required_fields_rejected(self):
+        for field in ("full_name", "email", "password"):
+            with self.subTest(field=field), self.assertRaises(RegistrationValidationError):
+                validate_registration(dict(VALID, **{field: ""}))
+
+    def test_invalid_email_rejected(self):
+        for email in ("not-an-email", "name@", "@example.com", "two@@example.com"):
+            with self.subTest(email=email), self.assertRaises(RegistrationValidationError):
+                validate_registration(dict(VALID, email=email))
+
+    def test_password_policy_enforced(self):
+        for password in ("short1A", "alllowercase1", "ALLUPPERCASE1", "NoDigitsHere"):
+            with self.subTest(password=password), self.assertRaises(RegistrationValidationError):
+                validate_registration(dict(VALID, password=password))
+
+    def test_password_hash_inserted_not_plaintext(self):
+        connection = MagicMock()
+        connection.cursor.return_value.lastrowid = 42
+        result = register_user(VALID, connection_factory=lambda: connection)
+        params = connection.cursor.return_value.execute.call_args.args[1]
+        stored_hash = params[3]
+        self.assertNotEqual(stored_hash, VALID["password"])
+        self.assertTrue(check_password_hash(stored_hash, VALID["password"]))
+        self.assertEqual(result["user_id"], 42)
+        connection.commit.assert_called_once()
+        connection.close.assert_called_once()
+
+    def test_database_failure_rolls_back(self):
+        connection = MagicMock()
+        connection.cursor.return_value.execute.side_effect = mysql.connector.Error("internal detail")
+        with self.assertRaises(mysql.connector.Error):
+            register_user(VALID, connection_factory=lambda: connection)
+        connection.rollback.assert_called_once()
+        connection.close.assert_called_once()
+
+
+class RegistrationEndpointTests(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app()
+        self.app.config.update(TESTING=True)
+        self.client = self.app.test_client()
+
+    @patch("backend.app.routes.register_user")
+    def test_success(self, register):
+        register.return_value = {"user_id": 42, "full_name": "Aditi Rao", "email": "aditi.rao@example.com"}
+        response = self.client.post("/api/register", json=VALID)
+        self.assertEqual(response.status_code, 201)
+
+    @patch("backend.app.routes.register_user")
+    def test_validation_error(self, register):
+        register.side_effect = RegistrationValidationError("Enter a valid email address.")
+        response = self.client.post("/api/register", json=VALID)
+        self.assertEqual(response.status_code, 400)
+
+    @patch("backend.app.routes.register_user")
+    def test_duplicate_email_conflict(self, register):
+        register.side_effect = mysql.connector.IntegrityError("duplicate")
+        response = self.client.post("/api/register", json=VALID)
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json["message"], "An account with this email already exists.")
+
+    @patch("backend.app.routes.register_user")
+    def test_database_error_is_not_leaked(self, register):
+        register.side_effect = mysql.connector.Error("secret host/password")
+        response = self.client.post("/api/register", json=VALID)
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn("secret", response.get_data(as_text=True))
+
+    @patch("backend.app.routes.register_user")
+    def test_unexpected_error_is_not_leaked(self, register):
+        register.side_effect = RuntimeError("private internals")
+        response = self.client.post("/api/register", json=VALID)
+        self.assertEqual(response.status_code, 500)
+        self.assertNotIn("private internals", response.get_data(as_text=True))
+
+    def test_non_json_request_rejected(self):
+        response = self.client.post("/api/register", data="not json", content_type="text/plain")
+        self.assertEqual(response.status_code, 400)
+
+
+if __name__ == "__main__":
+    unittest.main()
