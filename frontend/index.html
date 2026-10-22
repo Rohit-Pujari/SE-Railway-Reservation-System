@@ -11,8 +11,21 @@
   <main class="page-shell">
     <section class="welcome-card" aria-labelledby="page-title">
       <p class="eyebrow">Railway Reservation System</p>
-      <h1 id="page-title">Project setup</h1>
-      <p class="intro">The application foundation is ready. Reservation features will be added in the next development tasks.</p>
+      <h1 id="page-title">Create your account</h1>
+      <p class="intro">Register to get started with railway reservations.</p>
+      <form id="registration-form" novalidate>
+        <label for="full-name">Full name</label>
+        <input id="full-name" name="full_name" autocomplete="name" maxlength="120" required>
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required>
+        <label for="phone-number">Phone number <span>(optional)</span></label>
+        <input id="phone-number" name="phone_number" type="tel" autocomplete="tel" maxlength="25">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required aria-describedby="password-help">
+        <p id="password-help" class="field-help">At least 8 characters, including uppercase, lowercase, and a number.</p>
+        <button type="submit" id="register-button">Create account</button>
+        <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
+      </form>
       <div class="service-status" role="status" aria-live="polite">
         <span class="status-indicator" id="status-indicator"></span>
         <span id="api-status">Checking backend connection…</span>
