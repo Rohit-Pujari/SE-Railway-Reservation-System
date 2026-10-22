@@ -6,10 +6,11 @@ from werkzeug.security import generate_password_hash
 
 from .db import get_db_connection
 
-EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+EMAIL_RE = re.compile(r"^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
 NAME_MAX_LENGTH = 120
 EMAIL_MAX_LENGTH = 254
 PHONE_MAX_LENGTH = 25
+PASSWORD_MAX_LENGTH = 128
 
 
 class RegistrationValidationError(ValueError):
@@ -43,6 +44,8 @@ def validate_registration(data):
         raise RegistrationValidationError("Enter a valid email address.")
     if phone_number and len(phone_number) > PHONE_MAX_LENGTH:
         raise RegistrationValidationError("Phone number must be 25 characters or fewer.")
+    if len(password) > PASSWORD_MAX_LENGTH:
+        raise RegistrationValidationError("Password must be 128 characters or fewer.")
     if len(password) < 8 or not any(c.islower() for c in password) or not any(c.isupper() for c in password) or not any(c.isdigit() for c in password):
         raise RegistrationValidationError("Password must be at least 8 characters and include uppercase, lowercase, and a number.")
 
