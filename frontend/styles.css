@@ -21,3 +21,11 @@ button:disabled { cursor: wait; opacity: .7; }
 .status-indicator { width: .6rem; height: .6rem; border-radius: 50%; background: #9aa4b2; }
 .status-indicator.is-online { background: #21864a; }
 .status-indicator.is-offline { background: #b42318; }
+
+[hidden] { display: none !important; }
+.auth-tabs { display: flex; gap: .75rem; margin-top: 1rem; }
+.auth-tabs button { flex: 1; margin-top: 0; }
+.auth-tabs button[aria-pressed="true"] { background: #173f78; }
+.auth-tabs button[aria-pressed="false"] { background: #63738a; }
+#account-panel { margin: 1.5rem 0; padding: 1rem; border: 1px solid #dce3ee; border-radius: 10px; }
+#account-panel h2 { margin-top: 0; font-size: 1.2rem; }
