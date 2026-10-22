@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash
 
 from .db import get_db_connection
 
-EMAIL_RE = re.compile(r"^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
+EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 NAME_MAX_LENGTH = 120
 EMAIL_MAX_LENGTH = 254
 PHONE_MAX_LENGTH = 25
