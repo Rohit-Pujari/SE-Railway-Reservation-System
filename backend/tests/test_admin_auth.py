@@ -87,7 +87,9 @@ class AdminAuthenticationTests(unittest.TestCase):
             "/api/admin/login",
             json={"email": "passenger@example.com", "password": "Passenger123"},
         )
-        self.assertEqual(response.status_code, 403)
+        # Keep login failures indistinguishable so the endpoint does not
+        # reveal whether an account is a passenger or an administrator.
+        self.assertEqual(response.status_code, 401)
         self.assertEqual(self.client.get("/api/admin/dashboard").status_code, 401)
 
     @patch("backend.app.routes.get_db_connection")
