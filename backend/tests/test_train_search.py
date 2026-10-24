@@ -1,7 +1,7 @@
 """Tests for station listing and scheduled train search."""
 
 import unittest
-from datetime import datetime
+from datetime import date, datetime
 from unittest.mock import MagicMock, patch
 
 import mysql.connector
@@ -18,7 +18,7 @@ class TrainSearchValidationTests(unittest.TestCase):
     def test_valid_search_normalizes_station_ids_and_date(self):
         self.assertEqual(
             validate_search("1", "2", "2026-11-15"),
-            (1, 2, __import__("datetime").date(2026, 11, 15)),
+            (1, 2, date(2026, 11, 15)),
         )
 
     def test_missing_or_non_numeric_station_ids_are_rejected(self):
