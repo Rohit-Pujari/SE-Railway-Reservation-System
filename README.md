@@ -1,77 +1,30 @@
 # Railway Reservation System
 
-Initial project scaffold for the Railway Reservation System coursework. The repository's SRS, use-case flow, and test plan are available in [Documents](Documents/).
-
-## Stack
-
-- **Frontend:** HTML, CSS, and vanilla JavaScript
-- **Backend:** Python and Flask
-- **Database:** MySQL
-
-## Project structure
-
-```text
-.
-├── Documents/              # Project requirements and test references
-├── backend/
-│   ├── app/
-│   │   ├── __init__.py     # Flask application factory and frontend serving
-│   │   ├── config.py       # Environment-based configuration
-│   │   ├── db.py           # MySQL connection helper
-│   │   └── routes.py       # Initial health endpoints
-│   └── run.py              # Development entry point
-├── frontend/
-│   ├── index.html
-│   ├── styles.css
-│   └── app.js
-├── .env.example
-├── .gitignore
-└── requirements.txt
-```
-
-## Requirements
-
-- Python 3.10 or newer
-- MySQL Server 8.x (for database connectivity checks)
+Coursework project using Flask, MySQL, and a vanilla HTML/CSS/JavaScript frontend. Project requirements and test references are in [Documents](Documents/).
 
 ## Setup
+1. Install Python 3.10+ and MySQL 8.x.
+2. Create and activate a virtual environment: `python -m venv .venv`, then `source .venv/bin/activate` (Windows PowerShell: `.venv\\Scripts\\Activate.ps1`).
+3. Install dependencies: `pip install -r requirements.txt`.
+4. Copy `.env.example` to `.env`, set database credentials, and replace `SECRET_KEY` with a high-entropy random value. Never commit `.env`.
+5. Run `database/schema.sql` in MySQL.
+6. Start from the repository root with `python backend/run.py`, then open http://127.0.0.1:5000.
 
-1. Clone the repository and open its root directory.
-2. Create and activate a virtual environment:
+## Administrator login (Issue #5)
+Admin accounts are existing `users` rows with `role='ADMIN'` and `account_status='ACTIVE'`. Public registration cannot set a role. Create the initial admin through a trusted, access-controlled database administration process; do not expose public admin creation.
 
-   ```bash
-   python -m venv .venv
-   # macOS/Linux
-   source .venv/bin/activate
-   # Windows PowerShell: .venv\\Scripts\\Activate.ps1
-   ```
+- `POST /api/admin/login`: JSON `{"email":"admin@example.com","password":"your-password"}`; verifies the stored Werkzeug password hash, role, and active status, then establishes a session.
+- `POST /api/admin/logout`: clears the authenticated admin session.
+- `GET /api/admin/dashboard`: protected example endpoint (401 anonymous, 403 authenticated non-admin).
+- Decorate every future admin-only route with `@admin_required` from `backend.app.admin_auth`.
 
-3. Install backend dependencies:
+Sessions use HttpOnly, SameSite=Lax cookies and a 30-minute lifetime. Set a stable random `SECRET_KEY` in deployment and `SESSION_COOKIE_SECURE=true` behind HTTPS. The development fallback secret is generated at startup and is not suitable for deployment.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+Example:
+```bash
+curl -i -c cookies.txt -H 'Content-Type: application/json' -d '{"email":"admin@example.com","password":"your-password"}' http://127.0.0.1:5000/api/admin/login
+curl -i -b cookies.txt http://127.0.0.1:5000/api/admin/dashboard
+```
 
-4. Copy `.env.example` to `.env` and update the MySQL username and password. Do not commit `.env` or real credentials.
-5. Create the local database in MySQL (the schema is a separate task):
-
-   ```sql
-   CREATE DATABASE railway_reservation;
-   ```
-
-6. Start the backend and frontend server from the repository root:
-
-   ```bash
-   python backend/run.py
-   ```
-
-7. Open [http://127.0.0.1:5000](http://127.0.0.1:5000). Flask serves the frontend and API from the same origin, so a separate frontend server is not needed.
-
-## Health endpoints
-
-- `GET /api/health` — confirms the API is running.
-- `GET /api/health/db` — checks MySQL connectivity. Returns HTTP 503 if MySQL is not configured or reachable; it does not expose connection details.
-
-## Current scope
-
-This commit establishes the project structure, environment configuration, dependency list, MySQL connection helper, and a minimal frontend/API health check. Reservation features, authentication, database tables, payment handling, and business logic have not been implemented yet and should be developed in their assigned issues.
+## Tests
+Run `python -m unittest discover -s backend/tests -v` from the repository root. Admin tests mock database access and cover login, invalid credentials, disabled users, passenger denial, anonymous denial, and logout.

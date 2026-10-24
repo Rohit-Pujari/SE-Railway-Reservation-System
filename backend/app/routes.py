@@ -1,9 +1,11 @@
-"""API endpoints for health checks, registration, and train search."""
+"""Health, registration, train search, and administrator authentication API."""
 
 import mysql.connector
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 from mysql.connector import IntegrityError
+from werkzeug.security import check_password_hash
 
+from .admin_auth import admin_required
 from .db import get_db_connection
 from .registration import RegistrationValidationError, register_user
 from .train_search import (
@@ -58,6 +60,76 @@ def registration():
     except Exception:
         return jsonify({"status": "error", "message": "Registration could not be completed. Please try again."}), 500
     return jsonify({"status": "ok", "message": "Account created successfully.", "user": user}), 201
+
+
+@api.post("/admin/login")
+def admin_login():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"status": "error", "message": "Submit an email and password."}), 400
+
+    email, password = payload.get("email"), payload.get("password")
+    if not isinstance(email, str) or not isinstance(password, str) or not email.strip() or not password:
+        return jsonify({"status": "error", "message": "Email and password are required."}), 400
+
+    connection = cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT user_id, email, password_hash, role, account_status "
+            "FROM users WHERE email = %s LIMIT 1",
+            (email.strip().lower(),),
+        )
+        user = cursor.fetchone()
+    except mysql.connector.Error:
+        return jsonify({"status": "error", "message": "Login is temporarily unavailable."}), 503
+    finally:
+        if cursor is not None:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+        if connection is not None:
+            try:
+                connection.close()
+            except Exception:
+                pass
+
+    if (
+        not user
+        or user.get("role") != "ADMIN"
+        or user.get("account_status") != "ACTIVE"
+        or not check_password_hash(user.get("password_hash", ""), password)
+    ):
+        # Use a generic response to avoid disclosing account roles/existence.
+        return jsonify({"status": "error", "message": "Invalid administrator credentials."}), 401
+
+    session.clear()
+    session["user_id"] = user["user_id"]
+    session["role"] = "ADMIN"
+    session["email"] = user["email"]
+    session.permanent = True
+    return jsonify(
+        {
+            "status": "ok",
+            "message": "Administrator login successful.",
+            "admin": {"user_id": user["user_id"], "email": user["email"]},
+        }
+    ), 200
+
+
+@api.post("/admin/logout")
+@admin_required
+def admin_logout():
+    session.clear()
+    return jsonify({"status": "ok", "message": "Administrator logged out."}), 200
+
+
+@api.get("/admin/dashboard")
+@admin_required
+def admin_dashboard():
+    return jsonify({"status": "ok", "message": "Administrator access granted."}), 200
 
 
 @api.get("/stations")
