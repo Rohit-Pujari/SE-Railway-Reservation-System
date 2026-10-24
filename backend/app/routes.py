@@ -102,6 +102,7 @@ def admin_login():
         or user.get("account_status") != "ACTIVE"
         or not check_password_hash(user.get("password_hash", ""), password)
     ):
+        # Use a generic response to avoid disclosing account roles/existence.
         return jsonify({"status": "error", "message": "Invalid administrator credentials."}), 401
 
     session.clear()

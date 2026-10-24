@@ -3,15 +3,39 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Railway Reservation System">
+  <meta name="description" content="Search scheduled trains for your railway journey.">
   <title>Railway Reservation System</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="page-shell">
-    <section class="welcome-card" aria-labelledby="page-title">
+    <section class="welcome-card search-card" aria-labelledby="search-title">
       <p class="eyebrow">Railway Reservation System</p>
-      <h1 id="page-title">Create your account</h1>
+      <h1 id="search-title">Find a train</h1>
+      <p class="intro">Choose your stations and journey date to see scheduled trains.</p>
+      <form id="train-search-form">
+        <label for="source-station">From</label>
+        <select id="source-station" name="source_station_id" required disabled>
+          <option value="">Loading stations…</option>
+        </select>
+        <label for="destination-station">To</label>
+        <select id="destination-station" name="destination_station_id" required disabled>
+          <option value="">Loading stations…</option>
+        </select>
+        <label for="journey-date">Journey date</label>
+        <input id="journey-date" name="journey_date" type="date" required>
+        <button type="submit" id="search-button" disabled>Search trains</button>
+        <p id="search-message" class="form-message" role="status" aria-live="polite"></p>
+      </form>
+      <section id="search-results" class="search-results" aria-labelledby="results-title" hidden>
+        <h2 id="results-title">Matching trains</h2>
+        <p id="results-summary" class="results-summary"></p>
+        <div id="train-results-list" class="train-results-list"></div>
+      </section>
+    </section>
+
+    <section class="welcome-card registration-card" aria-labelledby="registration-title">
+      <h2 id="registration-title">Create your account</h2>
       <p class="intro">Register to get started with railway reservations.</p>
       <form id="registration-form" novalidate>
         <label for="full-name">Full name</label>
