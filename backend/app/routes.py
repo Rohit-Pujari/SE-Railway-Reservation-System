@@ -1,4 +1,4 @@
-"""API endpoints for health checks and user registration."""
+""""API endpoints for health checks, registration, and train search."""
 
 import mysql.connector
 from flask import Blueprint, jsonify, request
@@ -6,6 +6,11 @@ from mysql.connector import IntegrityError
 
 from .db import get_db_connection
 from .registration import RegistrationValidationError, register_user
+from .train_search import (
+    TrainSearchValidationError,
+    get_active_stations,
+    search_trains,
+)
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
@@ -53,3 +58,33 @@ def registration():
     except Exception:
         return jsonify({"status": "error", "message": "Registration could not be completed. Please try again."}), 500
     return jsonify({"status": "ok", "message": "Account created successfully.", "user": user}), 201
+
+
+@api.get("/stations")
+def stations():
+    """Return active stations for the passenger search form."""
+    try:
+        return jsonify({"status": "ok", "stations": get_active_stations()}), 200
+    except mysql.connector.Error:
+        return jsonify({"status": "error", "message": "Stations are temporarily unavailable."}), 503
+    except Exception:
+        return jsonify({"status": "error", "message": "Stations could not be loaded."}), 500
+
+
+@api.get("/trains/search")
+def train_search():
+    """Find scheduled trains that stop at the requested origin and destination."""
+    try:
+        results = search_trains(
+            request.args.get("source_station_id"),
+            request.args.get("destination_station_id"),
+            request.args.get("journey_date"),
+        )
+    except TrainSearchValidationError as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 400
+    except mysql.connector.Error:
+        return jsonify({"status": "error", "message": "Train search is temporarily unavailable."}), 503
+    except Exception:
+        return jsonify({"status": "error", "message": "Train search could not be completed."}), 500
+
+    return jsonify({"status": "ok", "count": len(results), "trains": results}), 200
