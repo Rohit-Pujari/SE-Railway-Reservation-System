@@ -4,6 +4,22 @@ const registrationForm = document.querySelector("#registration-form");
 const formMessage = document.querySelector("#form-message");
 const registerButton = document.querySelector("#register-button");
 
+const trainSearchForm = document.querySelector("#train-search-form");
+const sourceStation = document.querySelector("#source-station");
+const destinationStation = document.querySelector("#destination-station");
+const journeyDate = document.querySelector("#journey-date");
+const searchButton = document.querySelector("#search-button");
+const searchMessage = document.querySelector("#search-message");
+const searchResults = document.querySelector("#search-results");
+const resultsSummary = document.querySelector("#results-summary");
+const trainResultsList = document.querySelector("#train-results-list");
+
+function setMessage(element, message, isError = false) {
+  element.textContent = message;
+  element.classList.toggle("is-error", isError);
+  element.classList.toggle("is-success", !isError && Boolean(message));
+}
+
 async function checkApiStatus() {
   try {
     const response = await fetch("/api/health", { headers: { Accept: "application/json" } });
@@ -18,6 +34,131 @@ async function checkApiStatus() {
     statusIndicator.classList.add("is-offline");
   }
 }
+
+function addStationOptions(select, stations) {
+  select.replaceChildren(new Option("Select a station", ""));
+  for (const station of stations) {
+    const label = `${station.station_name} (${station.station_code}) — ${station.city}`;
+    select.add(new Option(label, String(station.station_id)));
+  }
+  select.disabled = stations.length === 0;
+}
+
+async function loadStations() {
+  try {
+    const response = await fetch("/api/stations", { headers: { Accept: "application/json" } });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "Could not load stations.");
+    addStationOptions(sourceStation, result.stations);
+    addStationOptions(destinationStation, result.stations);
+    searchButton.disabled = result.stations.length === 0;
+    if (result.stations.length === 0) {
+      setMessage(searchMessage, "No active stations are available yet.", true);
+    } else {
+      setMessage(searchMessage, "");
+    }
+  } catch (error) {
+    addStationOptions(sourceStation, []);
+    addStationOptions(destinationStation, []);
+    setMessage(searchMessage, error.message || "Unable to load stations. Please retry later.", true);
+  }
+}
+
+function formatTime(value) {
+  if (!value) return "Time unavailable";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value.replace("T", " ");
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "numeric",
+    month: "short",
+  }).format(parsed);
+}
+
+function renderTrainResults(trains) {
+  trainResultsList.replaceChildren();
+  if (trains.length === 0) {
+    resultsSummary.textContent = "No scheduled trains match this route and date.";
+    return;
+  }
+  resultsSummary.textContent = `${trains.length} train${trains.length === 1 ? "" : "s"} found.`;
+  for (const train of trains) {
+    const card = document.createElement("article");
+    card.className = "train-result";
+
+    const heading = document.createElement("div");
+    heading.className = "train-result-heading";
+    const name = document.createElement("h3");
+    name.textContent = train.train_name;
+    const number = document.createElement("span");
+    number.className = "train-number";
+    number.textContent = train.train_number;
+    heading.append(name, number);
+
+    const route = document.createElement("div");
+    route.className = "train-route";
+    const origin = document.createElement("div");
+    const originName = document.createElement("strong");
+    originName.textContent = train.source_station_name;
+    const originMeta = document.createElement("span");
+    originMeta.textContent = `${train.source_station_code} · ${formatTime(train.departure_at)}`;
+    origin.append(originName, originMeta);
+
+    const arrow = document.createElement("span");
+    arrow.className = "route-arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.textContent = "→";
+
+    const destination = document.createElement("div");
+    const destinationName = document.createElement("strong");
+    destinationName.textContent = train.destination_station_name;
+    const destinationMeta = document.createElement("span");
+    destinationMeta.textContent = `${train.destination_station_code} · ${formatTime(train.arrival_at)}`;
+    destination.append(destinationName, destinationMeta);
+    route.append(origin, arrow, destination);
+    card.append(heading, route);
+    trainResultsList.append(card);
+  }
+}
+
+trainSearchForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  setMessage(searchMessage, "");
+  searchResults.hidden = true;
+
+  if (sourceStation.value === destinationStation.value) {
+    setMessage(searchMessage, "Choose different source and destination stations.", true);
+    return;
+  }
+  if (!journeyDate.value) {
+    setMessage(searchMessage, "Choose a journey date.", true);
+    journeyDate.focus();
+    return;
+  }
+
+  const params = new URLSearchParams({
+    source_station_id: sourceStation.value,
+    destination_station_id: destinationStation.value,
+    journey_date: journeyDate.value,
+  });
+  searchButton.disabled = true;
+  searchButton.textContent = "Searching…";
+  try {
+    const response = await fetch(`/api/trains/search?${params.toString()}`, {
+      headers: { Accept: "application/json" },
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "Train search failed.");
+    renderTrainResults(result.trains);
+    searchResults.hidden = false;
+  } catch (error) {
+    setMessage(searchMessage, error.message || "Unable to search trains. Please try again.", true);
+  } finally {
+    searchButton.disabled = false;
+    searchButton.textContent = "Search trains";
+  }
+});
 
 registrationForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -45,4 +186,7 @@ registrationForm?.addEventListener("submit", async (event) => {
   }
 });
 
+const today = new Date();
+journeyDate.min = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+loadStations();
 checkApiStatus();
