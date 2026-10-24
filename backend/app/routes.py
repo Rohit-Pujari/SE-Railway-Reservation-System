@@ -1,4 +1,4 @@
-""""API endpoints for health checks, registration, and train search."""
+"""API endpoints for health checks, registration, and train search."""
 
 import mysql.connector
 from flask import Blueprint, jsonify, request
