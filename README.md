@@ -3,12 +3,13 @@
 Coursework project using Flask, MySQL, and a vanilla HTML/CSS/JavaScript frontend. Project requirements and test references are in [Documents](Documents/).
 
 ## Setup
-1. Install Python 3.10+ and MySQL 8.x.
-2. Create and activate a virtual environment: `python -m venv .venv`, then `source .venv/bin/activate` (Windows PowerShell: `.venv\\Scripts\\Activate.ps1`).
-3. Install dependencies: `pip install -r requirements.txt`.
-4. Copy `.env.example` to `.env`, set database credentials, and replace `SECRET_KEY` with a high-entropy random value. Never commit `.env`.
-5. Run `database/schema.sql` in MySQL.
-6. Start from the repository root with `python backend/run.py`, then open http://127.0.0.1:5000.
+1. Install Python 3.10+, MySQL 8.x, and [uv](https://docs.astral.sh/uv/).
+2. Create and activate a virtual environment: `uv venv`, then `source .venv/bin/activate` (Windows PowerShell: `.venv\\Scripts\\Activate.ps1`).
+3. Install dependencies: `uv pip install -r requirements.txt`.
+4. Copy `.env.example` to `.env` and set your database credentials. Replace `SECRET_KEY` with a high-entropy random value before deployment. Never commit `.env`.
+5. Create the schema by running `mysql -u root -p < database/schema.sql`.
+6. For a populated search demo, run `mysql -u root -p < database/demo_data.sql`. It adds seven stations, three routes, four trains, and their route and schedule stops for tomorrow. The page defaults to tomorrow and Bengaluru (SBC) → Chennai (MAS), which returns two sample trains. Rerunning the script on the same day is safe.
+7. Start from the repository root with `uv run --active python backend/run.py`, then open http://127.0.0.1:5000.
 
 ## Administrator login (Issue #5)
 Admin accounts are existing `users` rows with `role='ADMIN'` and `account_status='ACTIVE'`. Public registration cannot set a role. Create the initial admin through a trusted, access-controlled database administration process; do not expose public admin creation.
@@ -26,5 +27,13 @@ curl -i -c cookies.txt -H 'Content-Type: application/json' -d '{"email":"admin@e
 curl -i -b cookies.txt http://127.0.0.1:5000/api/admin/dashboard
 ```
 
+## Passenger login and logout (Issue #4)
+- `POST /api/login`: JSON `{"email":"passenger@example.com","password":"your-password"}`; verifies an active passenger account and establishes a session.
+- `GET /api/session`: restores the current passenger session.
+- `POST /api/logout`: clears the passenger session.
+
 ## Tests
-Run `python -m unittest discover -s backend/tests -v` from the repository root. Admin tests mock database access and cover login, invalid credentials, disabled users, passenger denial, anonymous denial, and logout.
+Run `uv run --active python -m unittest discover -s backend/tests -v` from the repository root. Authentication tests mock database access and cover login, invalid credentials, disabled users, passenger denial, anonymous denial, and logout.
+
+## Demo scope
+The current demo covers project setup, the database schema, passenger registration and login/logout, administrator login, and scheduled train search. Booking, payment, seat selection, and refunds are outside the current scope. Administrator login is currently an API flow; create an admin account only through a trusted local database administration process.

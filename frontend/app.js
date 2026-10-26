@@ -1,8 +1,16 @@
 const statusText = document.querySelector("#api-status");
 const statusIndicator = document.querySelector("#status-indicator");
 const registrationForm = document.querySelector("#registration-form");
+const loginForm = document.querySelector("#login-form");
 const formMessage = document.querySelector("#form-message");
 const registerButton = document.querySelector("#register-button");
+const loginButton = document.querySelector("#login-button");
+const logoutButton = document.querySelector("#logout-button");
+const accountTabs = document.querySelector("#account-tabs");
+const showLoginButton = document.querySelector("#show-login");
+const showRegisterButton = document.querySelector("#show-register");
+const accountPanel = document.querySelector("#account-panel");
+const accountDetails = document.querySelector("#account-details");
 
 const trainSearchForm = document.querySelector("#train-search-form");
 const sourceStation = document.querySelector("#source-station");
@@ -18,6 +26,28 @@ function setMessage(element, message, isError = false) {
   element.textContent = message;
   element.classList.toggle("is-error", isError);
   element.classList.toggle("is-success", !isError && Boolean(message));
+}
+
+function showAuthForm(mode) {
+  const isLogin = mode === "login";
+  registrationForm.hidden = isLogin;
+  loginForm.hidden = !isLogin;
+  accountPanel.hidden = true;
+  accountTabs.hidden = false;
+  showLoginButton.setAttribute("aria-pressed", String(isLogin));
+  showRegisterButton.setAttribute("aria-pressed", String(!isLogin));
+  document.querySelector("#registration-title").textContent = isLogin ? "Welcome back" : "Create your account";
+  setMessage(formMessage, "");
+}
+
+function showSignedIn(user) {
+  registrationForm.hidden = true;
+  loginForm.hidden = true;
+  accountTabs.hidden = true;
+  accountPanel.hidden = false;
+  accountDetails.textContent = `${user.full_name} · ${user.email}`;
+  document.querySelector("#registration-title").textContent = "Your account";
+  setMessage(formMessage, "");
 }
 
 async function checkApiStatus() {
@@ -51,6 +81,12 @@ async function loadStations() {
     if (!response.ok) throw new Error(result.message || "Could not load stations.");
     addStationOptions(sourceStation, result.stations);
     addStationOptions(destinationStation, result.stations);
+    const demoOrigin = result.stations.find((station) => station.station_code === "SBC");
+    const demoDestination = result.stations.find((station) => station.station_code === "MAS");
+    if (demoOrigin && demoDestination) {
+      sourceStation.value = String(demoOrigin.station_id);
+      destinationStation.value = String(demoDestination.station_id);
+    }
     searchButton.disabled = result.stations.length === 0;
     if (result.stations.length === 0) {
       setMessage(searchMessage, "No active stations are available yet.", true);
@@ -174,19 +210,93 @@ registrationForm?.addEventListener("submit", async (event) => {
       body: JSON.stringify(payload),
     });
     const result = await response.json();
-    formMessage.textContent = result.message || "Registration could not be completed.";
-    formMessage.classList.add(response.ok ? "is-success" : "is-error");
-    if (response.ok) registrationForm.reset();
+    setMessage(formMessage, result.message || "Registration could not be completed.", !response.ok);
+    if (response.ok) {
+      const registeredEmail = payload.email;
+      registrationForm.reset();
+      showAuthForm("login");
+      document.querySelector("#login-email").value = registeredEmail;
+      setMessage(formMessage, "Account created. Please log in.");
+    }
   } catch (_error) {
-    formMessage.textContent = "Unable to contact the server. Please try again.";
-    formMessage.classList.add("is-error");
+    setMessage(formMessage, "Unable to contact the server. Please try again.", true);
   } finally {
     registerButton.disabled = false;
     registerButton.textContent = "Create account";
   }
 });
 
+loginForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  setMessage(formMessage, "");
+  const payload = Object.fromEntries(new FormData(loginForm).entries());
+  loginButton.disabled = true;
+  loginButton.querySelector("span").textContent = "Signing in…";
+  try {
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      setMessage(formMessage, result.message || "Login failed.", true);
+      return;
+    }
+    showSignedIn(result.user);
+  } catch (_error) {
+    setMessage(formMessage, "Unable to contact the server. Please try again.", true);
+  } finally {
+    loginButton.disabled = false;
+    loginButton.querySelector("span").textContent = "Log in";
+  }
+});
+
+logoutButton?.addEventListener("click", async () => {
+  logoutButton.disabled = true;
+  try {
+    const response = await fetch("/api/logout", {
+      method: "POST",
+      headers: { Accept: "application/json" },
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      setMessage(formMessage, result.message || "Logout failed.", true);
+      return;
+    }
+    loginForm.reset();
+    showAuthForm("login");
+    setMessage(formMessage, "You have been logged out.");
+  } catch (_error) {
+    setMessage(formMessage, "Unable to contact the server. Please try again.", true);
+  } finally {
+    logoutButton.disabled = false;
+  }
+});
+
+showLoginButton?.addEventListener("click", () => showAuthForm("login"));
+showRegisterButton?.addEventListener("click", () => showAuthForm("register"));
+
+async function restoreSession() {
+  try {
+    const response = await fetch("/api/session", { headers: { Accept: "application/json" } });
+    if (!response.ok) return;
+    const result = await response.json();
+    if (result.authenticated) showSignedIn(result.user);
+  } catch (_error) {
+    // The API status indicator reports connection failures separately.
+  }
+}
+
+function formatLocalDate(value) {
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+}
+
 const today = new Date();
-journeyDate.min = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+const tomorrow = new Date(today);
+tomorrow.setDate(tomorrow.getDate() + 1);
+journeyDate.min = formatLocalDate(today);
+journeyDate.value = formatLocalDate(tomorrow);
 loadStations();
 checkApiStatus();
+restoreSession();

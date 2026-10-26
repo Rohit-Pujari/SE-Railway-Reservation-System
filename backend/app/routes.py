@@ -62,6 +62,77 @@ def registration():
     return jsonify({"status": "ok", "message": "Account created successfully.", "user": user}), 201
 
 
+@api.post("/login")
+def passenger_login():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"status": "error", "message": "Submit an email and password."}), 400
+
+    email, password = payload.get("email"), payload.get("password")
+    if not isinstance(email, str) or not isinstance(password, str) or not email.strip() or not password:
+        return jsonify({"status": "error", "message": "Email and password are required."}), 400
+
+    connection = cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT user_id, full_name, email, password_hash FROM users "
+            "WHERE email = %s AND account_status = 'ACTIVE' AND role = 'PASSENGER' LIMIT 1",
+            (email.strip().lower(),),
+        )
+        user = cursor.fetchone()
+    except mysql.connector.Error:
+        return jsonify({"status": "error", "message": "Login is temporarily unavailable."}), 503
+    finally:
+        if cursor is not None:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+        if connection is not None:
+            try:
+                connection.close()
+            except Exception:
+                pass
+
+    if not user or not check_password_hash(user["password_hash"], password):
+        return jsonify({"status": "error", "message": "Invalid email or password."}), 401
+
+    session.clear()
+    session["user_id"] = user["user_id"]
+    session["role"] = "PASSENGER"
+    session["full_name"] = user["full_name"]
+    session["email"] = user["email"]
+    session.permanent = True
+    return jsonify({
+        "status": "ok",
+        "message": "Login successful.",
+        "user": {"user_id": user["user_id"], "full_name": user["full_name"], "email": user["email"]},
+    }), 200
+
+
+@api.get("/session")
+def passenger_session():
+    if "user_id" not in session or session.get("role") != "PASSENGER":
+        return jsonify({"status": "unauthenticated", "authenticated": False}), 401
+    return jsonify({
+        "status": "ok",
+        "authenticated": True,
+        "user": {
+            "user_id": session["user_id"],
+            "full_name": session.get("full_name", ""),
+            "email": session.get("email", ""),
+        },
+    }), 200
+
+
+@api.post("/logout")
+def passenger_logout():
+    session.clear()
+    return jsonify({"status": "ok", "message": "Logged out successfully."}), 200
+
+
 @api.post("/admin/login")
 def admin_login():
     payload = request.get_json(silent=True)

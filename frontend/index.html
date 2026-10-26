@@ -3,59 +3,160 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Search scheduled trains for your railway journey.">
-  <title>Railway Reservation System</title>
+  <meta name="description" content="Find scheduled trains for your next railway journey.">
+  <title>Trackline — Railway Reservations</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main class="page-shell">
-    <section class="welcome-card search-card" aria-labelledby="search-title">
-      <p class="eyebrow">Railway Reservation System</p>
-      <h1 id="search-title">Find a train</h1>
-      <p class="intro">Choose your stations and journey date to see scheduled trains.</p>
-      <form id="train-search-form">
-        <label for="source-station">From</label>
-        <select id="source-station" name="source_station_id" required disabled>
-          <option value="">Loading stations…</option>
-        </select>
-        <label for="destination-station">To</label>
-        <select id="destination-station" name="destination_station_id" required disabled>
-          <option value="">Loading stations…</option>
-        </select>
-        <label for="journey-date">Journey date</label>
-        <input id="journey-date" name="journey_date" type="date" required>
-        <button type="submit" id="search-button" disabled>Search trains</button>
-        <p id="search-message" class="form-message" role="status" aria-live="polite"></p>
-      </form>
-      <section id="search-results" class="search-results" aria-labelledby="results-title" hidden>
-        <h2 id="results-title">Matching trains</h2>
-        <p id="results-summary" class="results-summary"></p>
-        <div id="train-results-list" class="train-results-list"></div>
-      </section>
-    </section>
-
-    <section class="welcome-card registration-card" aria-labelledby="registration-title">
-      <h2 id="registration-title">Create your account</h2>
-      <p class="intro">Register to get started with railway reservations.</p>
-      <form id="registration-form" novalidate>
-        <label for="full-name">Full name</label>
-        <input id="full-name" name="full_name" autocomplete="name" maxlength="120" required>
-        <label for="email">Email address</label>
-        <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required>
-        <label for="phone-number">Phone number <span>(optional)</span></label>
-        <input id="phone-number" name="phone_number" type="tel" autocomplete="tel" maxlength="25">
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required aria-describedby="password-help">
-        <p id="password-help" class="field-help">8–128 characters, including uppercase, lowercase, and a number.</p>
-        <button type="submit" id="register-button">Create account</button>
-        <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
-      </form>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Trackline home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 36 36" fill="none"><path d="M9 7.5h18a3 3 0 0 1 3 3v11a5 5 0 0 1-5 5H11a5 5 0 0 1-5-5v-11a3 3 0 0 1 3-3Z" stroke="currentColor" stroke-width="2.4"/><path d="M8 18h20M12 27l-3 4m15-4 3 4M12 12h.1M24 12h.1" stroke="currentColor" stroke-linecap="round" stroke-width="2.4"/><path d="M12 22h12" stroke="currentColor" stroke-linecap="round" stroke-width="2.4"/></svg>
+      </span>
+      <span class="brand-name">trackline<span>RAILWAY RESERVATIONS</span></span>
+    </a>
+    <nav class="top-nav" aria-label="Main navigation">
+      <a href="#plan">Plan a journey</a>
+      <a href="#account">Create account</a>
       <div class="service-status" role="status" aria-live="polite">
         <span class="status-indicator" id="status-indicator"></span>
         <span id="api-status">Checking backend connection…</span>
       </div>
+    </nav>
+  </header>
+
+  <main id="top" class="page-shell">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-line"></span> YOUR NEXT JOURNEY, MADE SIMPLE</p>
+        <h1 id="hero-title">There’s a better<br>way to <em>get there.</em></h1>
+        <p class="hero-intro">Find the right train for your plans. Pick your stations, choose a date, and explore the routes ahead.</p>
+        <a class="hero-link" href="#plan">Find your train <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="visual-orbit orbit-one"></div>
+        <div class="visual-orbit orbit-two"></div>
+        <svg class="route-illustration" viewBox="0 0 560 350" fill="none">
+          <path class="map-line map-line-one" d="M38 278c75-42 95-135 191-137 73-2 99 74 165 51 42-15 67-69 125-84"/>
+          <path class="map-line map-line-two" d="M70 62c56 26 82 74 131 78 50 4 72-39 113-31 37 7 45 44 83 44"/>
+          <path class="map-line map-line-three" d="M242 336c26-43 52-80 100-85 45-4 68 25 108 7 31-14 39-48 72-62"/>
+          <path class="journey-path" d="M95 238c63-27 83-80 143-82 56-2 78 48 129 45 50-3 69-58 122-78"/>
+          <circle class="station-point station-start" cx="95" cy="238" r="9"/>
+          <circle class="station-point station-mid" cx="238" cy="156" r="7"/>
+          <circle class="station-point station-mid" cx="367" cy="201" r="7"/>
+          <circle class="station-point station-end" cx="489" cy="123" r="9"/>
+          <g class="train-art" transform="translate(275 105) rotate(15 45 36)">
+            <rect x="0" y="0" width="94" height="65" rx="18"/>
+            <path d="M15 12h64v20H15z"/>
+            <path d="M12 42h70M23 57l-8 12m57-12 8 12"/>
+            <circle cx="27" cy="22" r="3"/><circle cx="67" cy="22" r="3"/>
+          </g>
+          <g class="sparkle"><path d="M467 51v18M458 60h18"/></g>
+          <g class="sparkle sparkle-small"><path d="M128 88v12m-6-6h12"/></g>
+        </svg>
+        <div class="route-tag tag-origin"><span class="tag-dot"></span><span><small>STARTING FROM</small><strong>Your city</strong></span></div>
+        <div class="route-tag tag-destination"><span class="tag-dot"></span><span><small>HEADING TO</small><strong>Somewhere new</strong></span></div>
+        <div class="visual-caption"><span class="caption-star">✳</span> Every great trip begins with a plan.</div>
+      </div>
+      <div class="hero-index" aria-hidden="true">01 <span></span> EXPLORE</div>
+    </section>
+
+    <section id="plan" class="search-panel" aria-labelledby="search-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">LET’S GET MOVING</p>
+          <h2 id="search-title">Where would you like to go?</h2>
+        </div>
+        <span class="step-label"><span>01</span> SEARCH TRAINS</span>
+      </div>
+      <form id="train-search-form" class="search-form">
+        <div class="field-group">
+          <label for="source-station"><span class="field-icon origin-icon" aria-hidden="true"></span>From</label>
+          <select id="source-station" name="source_station_id" required disabled>
+            <option value="">Loading stations…</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="destination-station"><span class="field-icon destination-icon" aria-hidden="true"></span>To</label>
+          <select id="destination-station" name="destination_station_id" required disabled>
+            <option value="">Loading stations…</option>
+          </select>
+        </div>
+        <div class="field-group date-field">
+          <label for="journey-date"><span class="field-icon date-icon" aria-hidden="true"></span>Journey date</label>
+          <input id="journey-date" name="journey_date" type="date" required>
+        </div>
+        <button type="submit" id="search-button" disabled><span>Search trains</span><span class="button-arrow" aria-hidden="true">↗</span></button>
+      </form>
+      <p id="search-message" class="form-message" role="status" aria-live="polite"></p>
+
+      <section id="search-results" class="search-results" aria-labelledby="results-title" hidden>
+        <div class="results-heading">
+          <div><p class="section-kicker">YOUR OPTIONS</p><h2 id="results-title">Matching trains</h2></div>
+          <p id="results-summary" class="results-summary"></p>
+        </div>
+        <div id="train-results-list" class="train-results-list"></div>
+      </section>
+    </section>
+
+    <section id="account" class="account-section" aria-labelledby="registration-title">
+      <div class="account-copy">
+        <p class="section-kicker">A LITTLE MORE CONVENIENT</p>
+        <h2>Make the next trip<br><em>yours.</em></h2>
+        <p>Create an account to get started with railway reservations. Your details stay yours.</p>
+        <div class="account-note"><span class="note-mark" aria-hidden="true">✳</span><span><strong>One less thing to do at the station.</strong><br>Set up your account before your next journey.</span></div>
+        <div class="account-decoration" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="account-form-wrap">
+        <div class="form-title-row"><div><p class="section-kicker">GET STARTED</p><h2 id="registration-title">Create your account</h2></div><span class="form-step">02</span></div>
+        <div id="account-tabs" class="account-tabs" role="group" aria-label="Account actions">
+          <button type="button" id="show-login" aria-pressed="false">Log in</button>
+          <button type="button" id="show-register" aria-pressed="true">Create account</button>
+        </div>
+        <form id="registration-form" class="registration-form" novalidate>
+          <div class="field-group">
+            <label for="full-name">Full name</label>
+            <input id="full-name" name="full_name" autocomplete="name" maxlength="120" placeholder="e.g. Aditi Rao" required>
+          </div>
+          <div class="field-group">
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
+          </div>
+          <div class="field-group">
+            <label for="phone-number">Phone number <span class="optional">OPTIONAL</span></label>
+            <input id="phone-number" name="phone_number" type="tel" autocomplete="tel" maxlength="25" placeholder="Your phone number">
+          </div>
+          <div class="field-group">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Create a strong password" required aria-describedby="password-help">
+          </div>
+          <p id="password-help" class="field-help">8–128 characters, with uppercase, lowercase, and a number.</p>
+          <button type="submit" id="register-button" class="account-submit"><span>Create account</span><span aria-hidden="true">↗</span></button>
+        </form>
+        <form id="login-form" class="registration-form" hidden novalidate>
+          <div class="field-group">
+            <label for="login-email">Email address</label>
+            <input id="login-email" name="email" type="email" autocomplete="username" maxlength="254" placeholder="you@example.com" required>
+          </div>
+          <div class="field-group">
+            <label for="login-password">Password</label>
+            <input id="login-password" name="password" type="password" autocomplete="current-password" maxlength="128" placeholder="Your password" required>
+          </div>
+          <button type="submit" id="login-button" class="account-submit"><span>Log in</span><span aria-hidden="true">↗</span></button>
+        </form>
+        <div id="account-panel" class="account-panel" hidden aria-live="polite">
+          <p class="section-kicker">SIGNED IN</p>
+          <h3>Welcome back</h3>
+          <p id="account-details"></p>
+          <button type="button" id="logout-button" class="account-submit"><span>Log out</span><span aria-hidden="true">↗</span></button>
+        </div>
+        <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
+        <p class="privacy-note"><span aria-hidden="true">▣</span> Your password is securely protected.</p>
+      </div>
     </section>
   </main>
+
+  <footer class="site-footer"><a class="footer-brand" href="#top">trackline</a><span>Plan well. Travel happy.</span><a href="#plan">Back to top ↑</a></footer>
   <script src="app.js" defer></script>
 </body>
 </html>

@@ -1,43 +1,241 @@
+:root {
+  color-scheme: light;
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  color: #172a23;
+  background: #f5f4ef;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --ink: #172a23;
+  --muted: #748078;
+  --green: #173f34;
+  --green-bright: #c6f06b;
+  --orange: #eaa964;
+  --line: #e5e7e0;
+  --paper: #fff;
+}
+
 * { box-sizing: border-box; }
-:root { color-scheme: light; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; background: #f3f6fb; }
-body { margin: 0; min-height: 100vh; }
-.page-shell { width: min(100% - 2rem, 760px); margin: 3rem auto; display: grid; gap: 1.5rem; }
-.welcome-card { background: #fff; border: 1px solid #dce3ee; border-radius: 16px; padding: clamp(1.25rem, 4vw, 2rem); box-shadow: 0 12px 36px rgb(25 42 70 / 8%); }
-.eyebrow { margin: 0 0 .5rem; color: #435d82; font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; }
-h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.2rem); }
-h2 { margin: 0; font-size: 1.35rem; }
-h3 { margin: 0; font-size: 1.05rem; }
-.intro { color: #4c586b; line-height: 1.5; }
-form { display: grid; gap: .55rem; margin: 1.5rem 0; }
-label { margin-top: .45rem; font-weight: 600; }
-label span, .field-help { color: #5c6678; font-size: .875rem; font-weight: 400; }
-input, select { width: 100%; min-height: 44px; padding: .7rem .8rem; border: 1px solid #b9c4d4; border-radius: 8px; background: #fff; font: inherit; }
-input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid #8cb8ff; outline-offset: 2px; }
-input:disabled, select:disabled { background: #f2f4f7; color: #697586; }
-.field-help { margin: 0 0 .4rem; }
-button { min-height: 46px; margin-top: .6rem; padding: .75rem 1rem; border: 0; border-radius: 8px; background: #173f78; color: #fff; font: inherit; font-weight: 650; cursor: pointer; }
-button:disabled { cursor: wait; opacity: .7; }
-.form-message { min-height: 1.4rem; margin: .3rem 0 0; }
-.is-success { color: #17683a; }
-.is-error { color: #a12525; }
-.service-status { display: flex; align-items: center; gap: .5rem; color: #4c586b; font-size: .9rem; }
-.status-indicator { width: .6rem; height: .6rem; border-radius: 50%; background: #9aa4b2; }
-.status-indicator.is-online { background: #21864a; }
-.status-indicator.is-offline { background: #b42318; }
-.search-results { margin-top: 1.5rem; }
-.results-summary { color: #4c586b; }
-.train-results-list { display: grid; gap: .8rem; }
-.train-result { border: 1px solid #dce3ee; border-radius: 12px; padding: 1rem; }
-.train-result-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
-.train-number { color: #435d82; font-size: .9rem; font-weight: 650; white-space: nowrap; }
-.train-route { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: .8rem; margin-top: 1rem; }
-.train-route > div { display: grid; gap: .25rem; min-width: 0; }
+html { scroll-behavior: smooth; }
+body { min-width: 320px; margin: 0; background: #f5f4ef; }
+button, input, select { font: inherit; }
+button, a, input, select { -webkit-tap-highlight-color: transparent; }
+a { color: inherit; }
+[hidden] { display: none !important; }
+
+.site-header {
+  width: min(1240px, calc(100% - 64px));
+  min-height: 88px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+.brand { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; }
+.brand-mark { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; color: var(--green-bright); background: var(--green); }
+.brand-mark svg { width: 28px; height: 28px; }
+.brand-name { display: grid; gap: 2px; font: 800 20px/.95 'Avenir Next', 'Segoe UI', sans-serif; letter-spacing: -.8px; }
+.brand-name span { color: #7b867e; font: 700 8px/1.2 'Avenir Next', 'Segoe UI', sans-serif; letter-spacing: 1.8px; }
+.top-nav { display: flex; align-items: center; gap: 34px; }
+.top-nav > a { color: #536158; font-size: 13px; font-weight: 600; text-decoration: none; transition: color .18s ease; }
+.top-nav > a:hover { color: var(--green); }
+.service-status { display: flex; align-items: center; gap: 9px; padding-left: 24px; border-left: 1px solid #dce0d9; color: #68756c; font-size: 11px; }
+.status-indicator { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: #a6afa8; }
+.status-indicator.is-online { background: #4d9f63; box-shadow: 0 0 0 4px rgb(77 159 99 / 12%); }
+.status-indicator.is-offline { background: #cf6659; box-shadow: 0 0 0 4px rgb(207 102 89 / 12%); }
+
+.page-shell { width: min(1240px, calc(100% - 64px)); margin: 0 auto; }
+.hero {
+  position: relative;
+  min-height: 430px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 27px;
+  background: #173f34;
+  color: #fff;
+  isolation: isolate;
+}
+.hero::before { position: absolute; z-index: -1; inset: 0; background: radial-gradient(ellipse at 84% 25%, rgb(89 132 93 / 28%), transparent 40%), linear-gradient(115deg, #173f34 0%, #153a31 53%, #214a3b 100%); content: ''; }
+.hero::after { position: absolute; z-index: -1; right: -128px; bottom: -278px; width: 520px; height: 520px; border: 1px solid rgb(255 255 255 / 7%); border-radius: 50%; box-shadow: 0 0 0 34px rgb(255 255 255 / 2%), 0 0 0 70px rgb(255 255 255 / 2%); content: ''; }
+.hero-copy { z-index: 1; padding: 58px 0 68px 72px; }
+.eyebrow, .section-kicker { margin: 0; font-size: 9px; font-weight: 700; letter-spacing: 1.75px; }
+.hero .eyebrow { display: flex; align-items: center; gap: 10px; color: #c1d4c7; }
+.eyebrow-line { width: 23px; height: 1px; background: var(--green-bright); }
+.hero h1 { margin: 28px 0 16px; font: 600 clamp(43px, 5.1vw, 66px)/1.03 'Avenir Next', 'Segoe UI', sans-serif; letter-spacing: -3.7px; }
+.hero h1 em, .account-copy h2 em { color: var(--green-bright); font-style: normal; }
+.hero-intro { max-width: 380px; margin: 0; color: #c7d4cb; font-size: 13px; line-height: 1.8; }
+.hero-link { display: inline-flex; align-items: center; gap: 12px; margin-top: 29px; color: var(--green-bright); font-size: 12px; font-weight: 700; text-decoration: none; }
+.hero-link span { display: grid; width: 25px; height: 25px; place-items: center; border: 1px solid rgb(198 240 107 / 45%); border-radius: 50%; transition: transform .2s ease; }
+.hero-link:hover span { transform: translateY(3px); }
+.hero-visual { position: relative; align-self: stretch; min-height: 350px; }
+.route-illustration { position: absolute; top: 25px; right: -8px; width: min(100%, 570px); height: calc(100% - 40px); overflow: visible; }
+.map-line { stroke: rgb(221 239 219 / 12%); stroke-width: 1.2; stroke-dasharray: 4 8; }
+.journey-path { stroke: #c6f06b; stroke-width: 2; stroke-dasharray: 5 8; }
+.station-point { fill: #173f34; stroke: #c6f06b; stroke-width: 3; }
+.station-mid { fill: #c6f06b; stroke: #173f34; stroke-width: 3; }
+.train-art rect { fill: #eaa964; }
+.train-art path { stroke: #173f34; stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }
+.train-art path:nth-child(2) { fill: #fff5e8; stroke: none; }
+.train-art circle { fill: #173f34; }
+.sparkle path { stroke: #eaa964; stroke-linecap: round; stroke-width: 2; }
+.sparkle-small { opacity: .65; }
+.visual-orbit { position: absolute; width: 350px; height: 350px; right: 90px; top: 44px; border: 1px solid rgb(234 249 235 / 8%); border-radius: 50%; }
+.orbit-two { width: 260px; height: 260px; right: 135px; top: 89px; }
+.route-tag { position: absolute; display: flex; align-items: center; gap: 10px; padding: 11px 14px; border: 1px solid rgb(255 255 255 / 12%); border-radius: 10px; background: rgb(255 255 255 / 9%); box-shadow: 0 12px 28px rgb(0 0 0 / 8%); backdrop-filter: blur(12px); }
+.route-tag span:last-child { display: grid; gap: 4px; }
+.route-tag small { color: #b8c9bd; font-size: 7px; font-weight: 700; letter-spacing: 1.1px; }
+.route-tag strong { color: #fff; font: 600 11px 'Avenir Next', 'Segoe UI', sans-serif; }
+.tag-dot { width: 8px; height: 8px; border: 2px solid #c6f06b; border-radius: 50%; }
+.tag-origin { left: 5%; bottom: 27%; }
+.tag-destination { right: 2%; top: 22%; }
+.tag-destination .tag-dot { border-color: #eaa964; }
+.visual-caption { position: absolute; right: 8%; bottom: 9%; color: #c4d1c7; font-size: 9px; }
+.caption-star { margin-right: 6px; color: var(--green-bright); }
+.hero-index { position: absolute; left: 72px; bottom: 22px; display: flex; align-items: center; gap: 10px; color: #9cb3a4; font-size: 8px; font-weight: 700; letter-spacing: 1.4px; }
+.hero-index span { width: 26px; height: 1px; background: rgb(255 255 255 / 22%); }
+
+.search-panel { position: relative; z-index: 2; margin: -38px 32px 0; padding: 29px 34px 25px; border: 1px solid #eceee7; border-radius: 18px; background: #fff; box-shadow: 0 18px 50px rgb(31 50 41 / 9%); }
+.section-heading, .results-heading, .form-title-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.section-kicker { color: #8b978d; }
+.section-heading h2, .results-heading h2, .form-title-row h2 { margin: 6px 0 0; font: 700 20px/1.25 'Avenir Next', 'Segoe UI', sans-serif; letter-spacing: -.7px; }
+.step-label { display: inline-flex; align-items: center; gap: 9px; color: #758077; font-size: 8px; font-weight: 700; letter-spacing: 1px; }
+.step-label span, .form-step { display: grid; width: 27px; height: 27px; place-items: center; border: 1px solid #e5e9df; border-radius: 50%; color: #456251; font-size: 9px; letter-spacing: 0; }
+.search-form { display: grid; grid-template-columns: 1fr 1fr 1fr 176px; gap: 13px; align-items: end; margin: 24px 0 0; }
+.field-group { min-width: 0; }
+.field-group label { display: flex; align-items: center; gap: 7px; margin: 0 0 8px; color: #526057; font-size: 10px; font-weight: 700; }
+.field-icon { position: relative; display: inline-block; width: 13px; height: 13px; color: #71927c; }
+.origin-icon::before, .destination-icon::before { position: absolute; inset: 1px 2px 2px; border: 1.5px solid currentColor; border-radius: 50% 50% 50% 0; content: ''; transform: rotate(-45deg); }
+.origin-icon::after { position: absolute; top: 5px; left: 5px; width: 3px; height: 3px; border-radius: 50%; background: currentColor; content: ''; }
+.destination-icon::before { border-radius: 50%; }
+.destination-icon::after { position: absolute; top: 5px; left: 5px; width: 3px; height: 3px; border-radius: 50%; background: currentColor; content: ''; }
+.date-icon::before { position: absolute; inset: 2px 1px 1px; border: 1.5px solid currentColor; border-radius: 3px; content: ''; }
+.date-icon::after { position: absolute; top: 5px; left: 3px; width: 7px; height: 1px; background: currentColor; content: ''; box-shadow: 0 3px currentColor; }
+input, select { width: 100%; min-height: 47px; padding: 0 13px; border: 1px solid #e3e7df; border-radius: 8px; outline: 0; background: #fbfcfa; color: #25382e; font-size: 11px; transition: border-color .18s ease, box-shadow .18s ease, background .18s ease; }
+input::placeholder { color: #9ca69d; }
+select { padding-right: 30px; }
+input:focus, select:focus { border-color: #789c81; background: #fff; box-shadow: 0 0 0 3px rgb(120 156 129 / 13%); }
+input:disabled, select:disabled { background: #f2f4f0; color: #858f88; cursor: wait; }
+button { cursor: pointer; }
+.search-form button, .account-submit { min-height: 47px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 16px; border: 0; border-radius: 8px; background: var(--green); color: #fff; font-size: 10px; font-weight: 700; transition: background .18s ease, transform .18s ease; }
+.search-form button:hover:not(:disabled), .account-submit:hover:not(:disabled) { background: #245b49; transform: translateY(-1px); }
+.search-form button:disabled, .account-submit:disabled { background: #8b9d90; cursor: wait; }
+.button-arrow { display: grid; width: 23px; height: 23px; place-items: center; border-radius: 50%; background: rgb(255 255 255 / 14%); font-size: 13px; }
+.form-message { min-height: 0; margin: 0; color: #4c7456; font-size: 11px; }
+.form-message:not(:empty) { margin-top: 10px; }
+.is-success { color: #39764b; }
+.is-error { color: #a8463c; }
+.search-results { margin-top: 27px; padding-top: 24px; border-top: 1px solid var(--line); }
+.results-heading { margin-bottom: 15px; }
+.results-heading h2 { font-size: 18px; }
+.results-summary { margin: 0; color: #758077; font-size: 10px; }
+.train-results-list { display: grid; gap: 10px; }
+.train-result { padding: 16px 18px; border: 1px solid #e8ebe5; border-radius: 11px; background: #fcfdfa; }
+.train-result-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+.train-result h3 { margin: 0; font: 700 13px 'Avenir Next', 'Segoe UI', sans-serif; }
+.train-number { color: #6d7f70; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.train-route { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; margin-top: 15px; }
+.train-route > div { display: grid; min-width: 0; gap: 4px; }
 .train-route > div:last-child { text-align: right; }
-.train-route span { color: #4c586b; font-size: .85rem; overflow-wrap: anywhere; }
-.route-arrow { color: #435d82; }
-.registration-card { margin-bottom: 2rem; }
-@media (max-width: 480px) {
-  .page-shell { margin: 1rem auto; }
-  .train-route { gap: .45rem; }
-  .train-route span { font-size: .78rem; }
+.train-route strong { overflow-wrap: anywhere; color: #263a2f; font: 700 12px 'Avenir Next', 'Segoe UI', sans-serif; }
+.train-route span { overflow-wrap: anywhere; color: #808c82; font-size: 9px; }
+.route-arrow { color: #91a995; }
+
+.account-section { display: grid; grid-template-columns: .83fr 1.17fr; overflow: hidden; margin: 47px 32px 62px; border: 1px solid #e7e9e2; border-radius: 19px; background: #fff; box-shadow: 0 12px 35px rgb(31 50 41 / 4%); }
+.account-copy { position: relative; min-height: 390px; overflow: hidden; padding: 43px 38px; background: #edf2e9; }
+.account-copy .section-kicker { color: #738471; }
+.account-copy h2 { position: relative; z-index: 1; margin: 18px 0 12px; font: 700 clamp(27px, 3vw, 37px)/1.1 'Avenir Next', 'Segoe UI', sans-serif; letter-spacing: -1.5px; }
+.account-copy h2 em { color: #729553; }
+.account-copy > p:not(.section-kicker) { position: relative; z-index: 1; max-width: 275px; margin: 0; color: #68766b; font-size: 11px; line-height: 1.8; }
+.account-note { position: relative; z-index: 1; display: flex; gap: 10px; margin-top: 28px; color: #647168; font-size: 9px; line-height: 1.8; }
+.account-note strong { color: #344a3b; font-size: 9px; }
+.note-mark { color: #829f60; font-size: 17px; line-height: 1; }
+.account-decoration { position: absolute; right: -30px; bottom: -82px; display: flex; align-items: center; gap: 10px; width: 360px; height: 210px; padding: 30px; border: 1px solid rgb(91 123 89 / 15%); border-radius: 50%; transform: rotate(-22deg); }
+.account-decoration::before, .account-decoration::after { position: absolute; inset: 18px; border: 1px solid rgb(91 123 89 / 12%); border-radius: 50%; content: ''; }
+.account-decoration::after { inset: 39px; }
+.account-decoration span { z-index: 1; width: 7px; height: 7px; border: 2px solid #8ca77b; border-radius: 50%; background: #edf2e9; }
+.account-decoration span:nth-child(2n) { margin-top: 23px; }
+.account-decoration span:nth-child(3n) { margin-top: -22px; }
+.account-form-wrap { padding: 39px 45px 32px; }
+.form-title-row { align-items: flex-start; margin-bottom: 21px; }
+.form-title-row h2 { font-size: 19px; }
+.form-step { width: 31px; height: 31px; border-color: #e5e9df; color: #759076; }
+.account-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 0 0 17px; padding: 4px; border-radius: 9px; background: #f1f4ee; }
+.account-tabs button { min-height: 34px; border: 0; border-radius: 6px; background: transparent; color: #718076; font-size: 10px; font-weight: 700; }
+.account-tabs button[aria-pressed="true"] { background: #fff; color: var(--green); box-shadow: 0 1px 4px rgb(23 42 35 / 10%); }
+.registration-form { display: grid; grid-template-columns: 1fr 1fr; gap: 13px 14px; margin: 0; }
+.registration-form .field-group label { display: flex; justify-content: space-between; margin-bottom: 7px; color: #536158; font-size: 10px; }
+.registration-form input { min-height: 42px; background: #fbfcfa; font-size: 10px; }
+.optional { color: #99a39b; font-size: 7px; font-weight: 700; letter-spacing: .8px; }
+.field-help { grid-column: 1 / -1; margin: -3px 0 0; color: #828d84; font-size: 9px; }
+.account-submit { grid-column: 1 / -1; margin-top: 1px; }
+.account-submit > span:last-child { font-size: 14px; }
+.registration-form .form-message { grid-column: 1 / -1; }
+.account-panel { padding: 18px; border: 1px solid #e7ebe3; border-radius: 10px; background: #fbfcfa; }
+.account-panel h3 { margin: 8px 0 4px; color: #263a2f; font-size: 17px; }
+.account-panel > p:not(.section-kicker) { margin: 0 0 15px; color: #718076; font-size: 10px; }
+.account-panel .account-submit { width: 100%; }
+.privacy-note { display: flex; align-items: center; gap: 7px; margin: 16px 0 0; color: #8c978f; font-size: 8px; }
+.privacy-note span { color: #729078; font-size: 11px; }
+
+.site-footer { width: min(1240px, calc(100% - 64px)); display: flex; align-items: center; justify-content: space-between; margin: 0 auto; padding: 0 0 25px; color: #879188; font-size: 9px; }
+.site-footer a { color: #66736a; text-decoration: none; }
+.site-footer .footer-brand { color: var(--green); font: 800 13px 'Avenir Next', 'Segoe UI', sans-serif; letter-spacing: -.4px; }
+
+:focus-visible { outline: 3px solid #a7c87b; outline-offset: 3px; }
+@media (max-width: 900px) {
+  .site-header, .page-shell, .site-footer { width: min(100% - 40px, 760px); }
+  .hero { min-height: 395px; grid-template-columns: 1.05fr .95fr; }
+  .hero-copy { padding-left: 45px; }
+  .hero-index { left: 45px; }
+  .hero h1 { font-size: clamp(39px, 6vw, 56px); }
+  .tag-origin { left: 0; }
+  .tag-destination { right: 0; }
+  .search-panel { margin-right: 17px; margin-left: 17px; }
+  .search-form { grid-template-columns: 1fr 1fr; }
+  .search-form button { min-height: 45px; }
+  .account-section { margin-right: 17px; margin-left: 17px; }
+  .account-copy { padding: 37px 28px; }
+  .account-form-wrap { padding-right: 30px; padding-left: 30px; }
+}
+@media (max-width: 620px) {
+  .site-header, .page-shell, .site-footer { width: calc(100% - 28px); }
+  .site-header { min-height: 72px; }
+  .brand-mark { width: 37px; height: 37px; }
+  .brand-name { font-size: 17px; }
+  .top-nav { gap: 12px; }
+  .top-nav > a { display: none; }
+  .service-status { gap: 7px; padding-left: 13px; font-size: 9px; }
+  .hero { min-height: 520px; display: block; border-radius: 20px; }
+  .hero-copy { position: relative; z-index: 2; padding: 37px 28px 0; }
+  .hero h1 { margin-top: 23px; font-size: clamp(42px, 11vw, 58px); letter-spacing: -2.8px; }
+  .hero-intro { max-width: 330px; font-size: 12px; }
+  .hero-link { margin-top: 22px; }
+  .hero-visual { position: absolute; inset: 220px 0 5px; min-height: 0; }
+  .route-illustration { top: 0; right: -30px; width: 110%; height: 100%; }
+  .visual-orbit { top: 14px; right: 35px; width: 280px; height: 280px; }
+  .orbit-two { top: 49px; right: 70px; width: 210px; height: 210px; }
+  .tag-origin { left: 5%; bottom: 13%; }
+  .tag-destination { top: 14%; right: 2%; }
+  .visual-caption { right: 8%; bottom: 4%; }
+  .hero-index { left: 28px; bottom: 16px; }
+  .search-panel { margin: -23px 8px 0; padding: 23px 18px 20px; border-radius: 15px; }
+  .section-heading h2 { max-width: 245px; font-size: 18px; }
+  .step-label { gap: 6px; font-size: 7px; }
+  .search-form { grid-template-columns: 1fr; gap: 13px; margin-top: 20px; }
+  .search-form button { min-height: 48px; }
+  .search-panel .form-message:not(:empty) { margin-top: 10px; }
+  .account-section { grid-template-columns: 1fr; margin: 30px 8px 42px; }
+  .account-copy { min-height: 290px; padding: 30px 25px; }
+  .account-copy h2 { font-size: 33px; }
+  .account-note { margin-top: 20px; }
+  .account-decoration { right: -90px; bottom: -125px; }
+  .account-form-wrap { padding: 28px 22px 25px; }
+  .registration-form { grid-template-columns: 1fr; gap: 12px; }
+  .field-help, .account-submit, .registration-form .form-message { grid-column: 1; }
+  .site-footer { padding-bottom: 18px; font-size: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
