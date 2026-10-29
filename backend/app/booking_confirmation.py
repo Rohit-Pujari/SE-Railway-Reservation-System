@@ -31,7 +31,7 @@ def confirm_booking(booking_id, user_id, connection_factory=None):
     try:
         connection = factory()
         # Explicit transaction: don't rely on connector defaults.
-        connection.start_transaction()
+        connection.start_transaction(isolation_level="READ COMMITTED")
         cursor = connection.cursor(dictionary=True)
 
         cursor.execute(
