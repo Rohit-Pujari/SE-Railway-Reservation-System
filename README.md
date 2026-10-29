@@ -8,8 +8,7 @@ Coursework project using Flask, MySQL, and a vanilla HTML/CSS/JavaScript fronten
 3. Install dependencies: `uv pip install -r requirements.txt`.
 4. Copy `.env.example` to `.env` and set your database credentials. Replace `SECRET_KEY` with a high-entropy random value before deployment. Never commit `.env`.
 5. Create the schema by running `mysql -u root -p < database/schema.sql`.
-6. For a populated search demo, run `mysql -u root -p < database/demo_data.sql`. It adds seven stations, three routes, four trains, and their route and schedule stops for tomorrow. The page defaults to tomorrow and Bengaluru (SBC) → Chennai (MAS), which returns two sample trains. Rerunning the script on the same day is safe.
-7. Start from the repository root with `uv run --active python backend/run.py`, then open http://127.0.0.1:5000.
+6. Start from the repository root with `uv run --active python backend/run.py`, then open http://127.0.0.1:5000.
 
 ## Administrator login (Issue #5)
 Admin accounts are existing `users` rows with `role='ADMIN'` and `account_status='ACTIVE'`. Public registration cannot set a role. Create the initial admin through a trusted, access-controlled database administration process; do not expose public admin creation.
@@ -35,5 +34,5 @@ curl -i -b cookies.txt http://127.0.0.1:5000/api/admin/dashboard
 ## Tests
 Run `uv run --active python -m unittest discover -s backend/tests -v` from the repository root. Authentication tests mock database access and cover login, invalid credentials, disabled users, passenger denial, anonymous denial, and logout.
 
-## Demo scope
-The current demo covers project setup, the database schema, passenger registration and login/logout, administrator login, and scheduled train search. Booking, payment, seat selection, and refunds are outside the current scope. Administrator login is currently an API flow; create an admin account only through a trusted local database administration process.
+## Current scope
+The implemented features are project setup, the database schema, passenger registration and login/logout, administrator login, and scheduled train search with displayed starting fares and seat availability. Administrator login is currently an API flow; create an admin account only through a trusted local database administration process.
