@@ -259,6 +259,7 @@ def train_search():
             request.args.get("source_station_id"),
             request.args.get("destination_station_id"),
             request.args.get("journey_date"),
+            request.args.get("class_id"),
         )
     except TrainSearchValidationError as exc:
         return jsonify({"status": "error", "message": str(exc)}), 400
