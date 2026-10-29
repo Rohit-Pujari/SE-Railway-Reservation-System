@@ -113,7 +113,74 @@ def search_trains(source_station_id, destination_station_id, journey_date, conne
                    destination.station_name AS destination_station_name,
                    destination.city AS destination_city,
                    origin_stop.departure_at AS departure_at,
-                   destination_stop.arrival_at AS arrival_at
+                   destination_stop.arrival_at AS arrival_at,
+                   (
+                       SELECT fare.fare_amount
+                       FROM route_fares AS fare
+                       JOIN route_stops AS fare_origin
+                         ON fare_origin.route_stop_id = fare.from_route_stop_id
+                       JOIN route_stops AS fare_destination
+                         ON fare_destination.route_stop_id = fare.to_route_stop_id
+                       JOIN travel_classes AS fare_class
+                         ON fare_class.class_id = fare.class_id
+                       WHERE fare.route_id = route.route_id
+                         AND fare_origin.route_stop_id = origin_stop.route_stop_id
+                         AND fare_destination.route_stop_id = destination_stop.route_stop_id
+                         AND fare_origin.stop_sequence < fare_destination.stop_sequence
+                         AND fare_class.class_status = 'ACTIVE'
+                       ORDER BY fare.fare_amount ASC
+                       LIMIT 1
+                   ) AS starting_fare,
+                   (
+                       SELECT fare.currency_code
+                       FROM route_fares AS fare
+                       JOIN route_stops AS fare_origin
+                         ON fare_origin.route_stop_id = fare.from_route_stop_id
+                       JOIN route_stops AS fare_destination
+                         ON fare_destination.route_stop_id = fare.to_route_stop_id
+                       JOIN travel_classes AS fare_class
+                         ON fare_class.class_id = fare.class_id
+                       WHERE fare.route_id = route.route_id
+                         AND fare_origin.route_stop_id = origin_stop.route_stop_id
+                         AND fare_destination.route_stop_id = destination_stop.route_stop_id
+                         AND fare_origin.stop_sequence < fare_destination.stop_sequence
+                         AND fare_class.class_status = 'ACTIVE'
+                       ORDER BY fare.fare_amount ASC
+                       LIMIT 1
+                   ) AS currency_code,
+                   (
+                       SELECT COUNT(*)
+                       FROM schedule_seats AS available_seat
+                       JOIN seats AS physical_seat
+                         ON physical_seat.seat_id = available_seat.seat_id
+                       JOIN travel_classes AS seat_class
+                         ON seat_class.class_id = available_seat.class_id
+                       WHERE available_seat.schedule_id = schedule.schedule_id
+                         AND available_seat.operational_status = 'IN_SERVICE'
+                         AND physical_seat.seat_status = 'ACTIVE'
+                         AND seat_class.class_status = 'ACTIVE'
+                         AND NOT EXISTS (
+                             SELECT 1
+                             FROM seat_allocations AS allocation
+                             JOIN bookings AS booking
+                               ON booking.booking_id = allocation.booking_id
+                             JOIN schedule_stops AS boarding_stop
+                               ON boarding_stop.schedule_stop_id = booking.boarding_schedule_stop_id
+                             JOIN schedule_stops AS alighting_stop
+                               ON alighting_stop.schedule_stop_id = booking.alighting_schedule_stop_id
+                             WHERE allocation.schedule_id = schedule.schedule_id
+                               AND allocation.schedule_seat_id = available_seat.schedule_seat_id
+                               AND (
+                                   allocation.allocation_status = 'CONFIRMED'
+                                   OR (
+                                       allocation.allocation_status = 'HELD'
+                                       AND allocation.hold_expires_at > CURRENT_TIMESTAMP
+                                   )
+                               )
+                               AND boarding_stop.stop_sequence < destination_stop.stop_sequence
+                               AND alighting_stop.stop_sequence > origin_stop.stop_sequence
+                         )
+                   ) AS available_seats
                FROM train_schedules AS schedule
                JOIN trains AS train
                  ON train.train_id = schedule.train_id
@@ -158,6 +225,9 @@ def search_trains(source_station_id, destination_station_id, journey_date, conne
                 "destination_city": row["destination_city"],
                 "departure_at": _format_datetime(row["departure_at"]),
                 "arrival_at": _format_datetime(row["arrival_at"]),
+                "starting_fare": float(row["starting_fare"]) if row.get("starting_fare") is not None else None,
+                "currency_code": row.get("currency_code") or "INR",
+                "available_seats": int(row.get("available_seats") or 0),
             }
             for row in rows
         ]
