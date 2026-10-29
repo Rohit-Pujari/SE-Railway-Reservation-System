@@ -6,6 +6,7 @@ from mysql.connector import IntegrityError
 from werkzeug.security import check_password_hash
 
 from .admin_auth import admin_required
+from .booking_confirmation import BookingConfirmationError, confirm_booking
 from .db import get_db_connection
 from .registration import RegistrationValidationError, register_user
 from .seat_availability import (
@@ -269,3 +270,20 @@ def train_search():
         return jsonify({"status": "error", "message": "Train search could not be completed."}), 500
 
     return jsonify({"status": "ok", "count": len(results), "trains": results}), 200
+
+
+
+@api.post("/bookings/<int:booking_id>/confirm")
+def booking_confirmation(booking_id):
+    """Atomically confirm a pending booking and allocate non-conflicting seats."""
+    if "user_id" not in session or session.get("role") != "PASSENGER":
+        return jsonify({"status": "error", "message": "Please log in to confirm a booking."}), 401
+    try:
+        result = confirm_booking(booking_id, session["user_id"])
+    except BookingConfirmationError as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 409
+    except mysql.connector.Error:
+        return jsonify({"status": "error", "message": "Booking could not be confirmed right now."}), 503
+    except Exception:
+        return jsonify({"status": "error", "message": "Booking could not be confirmed."}), 500
+    return jsonify({"status": "ok", **result}), 200
