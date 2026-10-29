@@ -17,6 +17,8 @@ const sourceStation = document.querySelector("#source-station");
 const destinationStation = document.querySelector("#destination-station");
 const journeyDate = document.querySelector("#journey-date");
 const travelClass = document.querySelector("#travel-class");
+const passengerCount = document.querySelector("#passenger-count");
+let currentTrainResults = [];
 let stationsLoaded = false;
 let classesLoaded = false;
 
@@ -145,6 +147,7 @@ function formatTime(value) {
 }
 
 function renderTrainResults(trains) {
+  currentTrainResults = trains;
   trainResultsList.replaceChildren();
   if (trains.length === 0) {
     resultsSummary.textContent = "No scheduled trains match this route and date.";
@@ -193,7 +196,7 @@ function renderTrainResults(trains) {
     fare.className = "train-result-detail";
     const fareLabel = document.createElement("span");
     const selectedClassLabel = travelClass.selectedOptions[0]?.textContent || "selected class";
-    fareLabel.textContent = `Fare · ${selectedClassLabel}`;
+    fareLabel.textContent = `Fare per passenger · ${selectedClassLabel}`;
     const fareValue = document.createElement("strong");
     if (train.starting_fare === null || train.starting_fare === undefined) {
       fareValue.textContent = "Fare unavailable";
@@ -210,6 +213,28 @@ function renderTrainResults(trains) {
       }
     }
     fare.append(fareLabel, fareValue);
+
+    const totalFare = document.createElement("div");
+    totalFare.className = "train-result-detail";
+    const totalFareLabel = document.createElement("span");
+    totalFareLabel.textContent = `Estimated total · ${passengerCount.value} passenger${Number(passengerCount.value) === 1 ? "" : "s"}`;
+    const totalFareValue = document.createElement("strong");
+    if (train.starting_fare === null || train.starting_fare === undefined) {
+      totalFareValue.textContent = "Total unavailable";
+    } else {
+      const estimatedTotal = Number(train.starting_fare) * Number(passengerCount.value);
+      const currency = train.currency_code || "INR";
+      try {
+        totalFareValue.textContent = new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency,
+          maximumFractionDigits: 2,
+        }).format(estimatedTotal);
+      } catch (_error) {
+        totalFareValue.textContent = `${currency} ${estimatedTotal.toFixed(2)}`;
+      }
+    }
+    totalFare.append(totalFareLabel, totalFareValue);
 
     const seats = document.createElement("div");
     seats.className = "train-result-detail";
@@ -238,11 +263,15 @@ function renderTrainResults(trains) {
       seatsValue.textContent = "Availability unavailable";
     });
 
-    details.append(fare, seats);
+    details.append(fare, totalFare, seats);
     card.append(heading, route, details);
     trainResultsList.append(card);
   }
 }
+
+passengerCount?.addEventListener("change", () => {
+  if (currentTrainResults.length) renderTrainResults(currentTrainResults);
+});
 
 trainSearchForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
