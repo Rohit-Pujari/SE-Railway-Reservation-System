@@ -87,6 +87,29 @@ class BookingConfirmationTests(unittest.TestCase):
         connection.rollback.assert_called_once_with()
         self.assertEqual(connection.cursor.return_value.execute.call_count, 1)
 
+
+    def test_failure_during_allocation_rolls_back_partial_writes(self):
+        connection = configured_connection()
+        cursor = connection.cursor.return_value
+        original_execute = cursor.execute
+        allocation_inserts = {"count": 0}
+
+        def fail_second_allocation(sql, params=None):
+            if "INSERT INTO seat_allocations" in sql:
+                allocation_inserts["count"] += 1
+                if allocation_inserts["count"] == 2:
+                    raise mysql.connector.Error("simulated insert failure")
+            return None
+
+        cursor.execute.side_effect = fail_second_allocation
+        with self.assertRaises(mysql.connector.Error):
+            confirm_booking(41, 7, connection_factory=lambda: connection)
+
+        self.assertEqual(allocation_inserts["count"], 2)
+        connection.rollback.assert_called_once_with()
+        connection.commit.assert_not_called()
+        connection.close.assert_called_once()
+
     def test_database_error_rolls_back_and_propagates(self):
         connection = MagicMock()
         connection.cursor.return_value.execute.side_effect = mysql.connector.Error("db down")
