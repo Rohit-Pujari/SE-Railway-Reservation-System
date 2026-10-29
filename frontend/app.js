@@ -192,7 +192,8 @@ function renderTrainResults(trains) {
     const fare = document.createElement("div");
     fare.className = "train-result-detail";
     const fareLabel = document.createElement("span");
-    fareLabel.textContent = "Starting fare";
+    const selectedClassLabel = travelClass.selectedOptions[0]?.textContent || "selected class";
+    fareLabel.textContent = `Fare · ${selectedClassLabel}`;
     const fareValue = document.createElement("strong");
     if (train.starting_fare === null || train.starting_fare === undefined) {
       fareValue.textContent = "Fare unavailable";
@@ -267,6 +268,7 @@ trainSearchForm?.addEventListener("submit", async (event) => {
     source_station_id: sourceStation.value,
     destination_station_id: destinationStation.value,
     journey_date: journeyDate.value,
+    class_id: travelClass.value,
   });
   searchButton.disabled = true;
   searchButton.textContent = "Searching…";
