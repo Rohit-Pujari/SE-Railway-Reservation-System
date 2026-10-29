@@ -127,3 +127,30 @@ def get_seat_availability(schedule_id, source_station_id, destination_station_id
                 connection.close()
             except Exception:
                 pass
+
+
+
+def get_active_travel_classes(connection_factory=None):
+    """Return active travel classes for the passenger search form."""
+    factory = connection_factory or get_db_connection
+    connection = cursor = None
+    try:
+        connection = factory()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT class_id, class_code, class_name "
+            "FROM travel_classes WHERE class_status = 'ACTIVE' "
+            "ORDER BY class_id"
+        )
+        return cursor.fetchall()
+    finally:
+        if cursor is not None:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+        if connection is not None:
+            try:
+                connection.close()
+            except Exception:
+                pass
