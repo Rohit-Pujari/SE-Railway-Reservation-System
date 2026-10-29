@@ -18,7 +18,7 @@ class TrainSearchValidationTests(unittest.TestCase):
     def test_valid_search_normalizes_station_ids_and_date(self):
         self.assertEqual(
             validate_search("1", "2", "2026-11-15"),
-            (1, 2, date(2026, 11, 15)),
+            (1, 2, date(2026, 11, 15), None),
         )
 
     def test_missing_or_non_numeric_station_ids_are_rejected(self):
@@ -77,11 +77,12 @@ class TrainSearchQueryTests(unittest.TestCase):
         self.assertIn("origin_stop.stop_sequence < destination_stop.stop_sequence", sql)
         self.assertIn("route_fares", sql)
         self.assertIn("seat_allocations", sql)
-        self.assertEqual(params[0], 1)
-        self.assertEqual(params[1], 2)
-        self.assertEqual(params[2], datetime(2026, 11, 15, 0, 0))
-        self.assertEqual(params[3], datetime(2026, 11, 16, 0, 0))
-        self.assertEqual(params[4], 100)
+        self.assertEqual(params[0:6], (None, None, None, None, None, None))
+        self.assertEqual(params[6], 1)
+        self.assertEqual(params[7], 2)
+        self.assertEqual(params[8], datetime(2026, 11, 15, 0, 0))
+        self.assertEqual(params[9], datetime(2026, 11, 16, 0, 0))
+        self.assertEqual(params[10], 100)
         connection.close.assert_called_once()
         cursor.close.assert_called_once()
 
@@ -128,7 +129,7 @@ class TrainSearchEndpointTests(unittest.TestCase):
             "departure_at": "2026-11-15T09:30:00", "arrival_at": "2026-11-15T12:15:00",
         }]
         response = self.client.get(
-            "/api/trains/search?source_station_id=1&destination_station_id=2&journey_date=2026-11-15"
+            "/api/trains/search?source_station_id=1&destination_station_id=2&journey_date=2026-11-15&class_id=3"
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json["count"], 1)
