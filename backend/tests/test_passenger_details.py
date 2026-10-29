@@ -55,7 +55,7 @@ class PassengerDetailsServiceTests(unittest.TestCase):
 
     def test_rejects_wrong_owner_or_missing_booking(self):
         connection = configured_connection(booking=None)
-        connection.cursor.return_value.fetchone.return_value = None
+        connection.cursor.return_value.fetchone.side_effect = [None]
         with self.assertRaisesRegex(PassengerDetailsValidationError, "not found"):
             save_passenger_details(41, 8, [{"passenger_name": "A", "age": 20}],
                                    connection_factory=lambda: connection)
