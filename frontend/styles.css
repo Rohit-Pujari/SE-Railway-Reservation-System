@@ -145,6 +145,18 @@ button { cursor: pointer; }
 .train-result-detail span { color: #808c82; font-size: 9px; }
 .train-result-detail strong { color: #173f34; font-size: 12px; font-weight: 700; }
 .train-result-detail:last-child strong { color: #47724f; }
+.book-train-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; padding: 11px 16px; border: 0; border-radius: 999px; background: #254d3f; color: #fff; font: 700 11px 'Avenir Next', 'Segoe UI', sans-serif; transition: background .18s ease, transform .18s ease; }
+.book-train-button:hover:not(:disabled) { background: #173b30; transform: translateY(-1px); }
+.book-train-button:disabled { cursor: wait; opacity: .65; }
+.booking-panel { margin-top: 28px; padding: 24px; border: 1px solid #e7e9e2; border-radius: 16px; background: #fbfcf9; }
+.booking-summary { margin: 12px 0 20px; color: #657168; font-size: 12px; line-height: 1.7; }
+.booking-passenger-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.booking-passenger-entry { display: grid; gap: 10px; min-width: 0; margin: 0; padding: 16px; border: 1px solid #e5e9e2; border-radius: 12px; background: #fff; }
+.booking-passenger-entry legend { padding: 0 6px; color: #254d3f; font: 700 12px 'Avenir Next', 'Segoe UI', sans-serif; }
+.booking-passenger-entry .field-group { gap: 6px; }
+.booking-passenger-entry .field-group label { font-size: 10px; }
+.booking-passenger-entry input, .booking-passenger-entry select { min-width: 0; padding: 10px 11px; border: 1px solid #dfe4dc; border-radius: 8px; background: #fff; color: #263a2f; font: inherit; }
+.booking-form > .account-submit { width: auto; min-width: 180px; margin-top: 18px; }
 .route-arrow { color: #91a995; }
 
 .account-section { display: grid; grid-template-columns: .83fr 1.17fr; overflow: hidden; margin: 47px 32px 62px; border: 1px solid #e7e9e2; border-radius: 19px; background: #fff; box-shadow: 0 12px 35px rgb(31 50 41 / 4%); }

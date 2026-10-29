@@ -35,4 +35,7 @@ curl -i -b cookies.txt http://127.0.0.1:5000/api/admin/dashboard
 Run `uv run --active python -m unittest discover -s backend/tests -v` from the repository root. Authentication tests mock database access and cover login, invalid credentials, disabled users, passenger denial, anonymous denial, and logout.
 
 ## Current scope
-The implemented features are project setup, the database schema, passenger registration and login/logout, administrator login, and scheduled train search with displayed starting fares and seat availability. Administrator login is currently an API flow; create an admin account only through a trusted local database administration process.
+The implemented features are project setup, the database schema, passenger registration and login/logout, administrator login, scheduled train search with displayed fares and seat availability, passenger details, and fare calculation. Ticket bookings reserve seats for 15 minutes and remain pending payment; payment processing is not implemented yet. Administrator login is currently an API flow; create an admin account only through a trusted local database administration process.
+
+## Ticket booking (Issue #13)
+Signed-in passengers can choose a train, enter traveler details, and reserve seats. The booking, passenger fares, and expiring seat allocations are written in one transaction. Seat availability is checked again while the schedule inventory is locked. A PNR is returned with the pending-payment booking; payment is a separate feature.
