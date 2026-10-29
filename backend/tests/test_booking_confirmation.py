@@ -37,7 +37,7 @@ class BookingConfirmationTests(unittest.TestCase):
         result = confirm_booking(41, 7, connection_factory=lambda: connection)
 
         self.assertEqual(result, {"booking_id": 41, "allocated_seats": 2, "status": "CONFIRMED"})
-        connection.start_transaction.assert_called_once_with()
+        connection.start_transaction.assert_called_once_with(isolation_level="READ COMMITTED")
         connection.commit.assert_called_once_with()
         connection.rollback.assert_not_called()
         cursor = connection.cursor.return_value
@@ -91,7 +91,6 @@ class BookingConfirmationTests(unittest.TestCase):
     def test_failure_during_allocation_rolls_back_partial_writes(self):
         connection = configured_connection()
         cursor = connection.cursor.return_value
-        original_execute = cursor.execute
         allocation_inserts = {"count": 0}
 
         def fail_second_allocation(sql, params=None):
