@@ -15,7 +15,7 @@ class PassengerDetailsValidationError(ValueError):
     """Passenger details are invalid or cannot be attached to the booking."""
 
 
-def _validate_passengers(passengers):
+def validate_passengers(passengers):
     if not isinstance(passengers, list) or not passengers:
         raise PassengerDetailsValidationError("Add at least one passenger.")
     if len(passengers) > MAX_PASSENGERS_PER_REQUEST:
@@ -68,7 +68,7 @@ def save_passenger_details(booking_id, user_id, passengers, connection_factory=N
         raise PassengerDetailsValidationError("Select a valid booking.") from None
     if booking_id <= 0 or user_id <= 0:
         raise PassengerDetailsValidationError("Select a valid booking.")
-    validated = _validate_passengers(passengers)
+    validated = validate_passengers(passengers)
 
     factory = connection_factory or get_db_connection
     connection = cursor = None

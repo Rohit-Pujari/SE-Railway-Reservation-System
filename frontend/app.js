@@ -21,6 +21,15 @@ const passengerCount = document.querySelector("#passenger-count");
 let currentTrainResults = [];
 let stationsLoaded = false;
 let classesLoaded = false;
+let signedInPassenger = null;
+let activeBooking = null;
+const bookingRequestKeys = new Map();
+const bookingPanel = document.querySelector("#booking-panel");
+const bookingSummary = document.querySelector("#booking-summary");
+const bookingForm = document.querySelector("#booking-form");
+const bookingPassengerFields = document.querySelector("#booking-passenger-fields");
+const bookingMessage = document.querySelector("#booking-message");
+const bookingSubmitButton = document.querySelector("#booking-submit-button");
 
 function updateSearchButton() {
   searchButton.disabled = !(stationsLoaded && classesLoaded);
@@ -50,6 +59,7 @@ function showAuthForm(mode) {
 }
 
 function showSignedIn(user) {
+  signedInPassenger = user;
   registrationForm.hidden = true;
   loginForm.hidden = true;
   accountTabs.hidden = true;
@@ -112,12 +122,6 @@ async function loadStations() {
     if (!response.ok) throw new Error(result.message || "Could not load stations.");
     addStationOptions(sourceStation, result.stations);
     addStationOptions(destinationStation, result.stations);
-    const demoOrigin = result.stations.find((station) => station.station_code === "SBC");
-    const demoDestination = result.stations.find((station) => station.station_code === "MAS");
-    if (demoOrigin && demoDestination) {
-      sourceStation.value = String(demoOrigin.station_id);
-      destinationStation.value = String(demoDestination.station_id);
-    }
     stationsLoaded = result.stations.length > 0;
     updateSearchButton();
     if (result.stations.length === 0) {
@@ -264,10 +268,183 @@ function renderTrainResults(trains) {
     });
 
     details.append(fare, totalFare, seats);
-    card.append(heading, route, details);
+    const bookButton = document.createElement("button");
+    bookButton.type = "button";
+    bookButton.className = "book-train-button";
+    bookButton.textContent = "Book ticket";
+    bookButton.addEventListener("click", () => startBooking(train));
+    card.append(heading, route, details, bookButton);
     trainResultsList.append(card);
   }
 }
+
+function createBookingRequestKey(train) {
+  const key = `${train.schedule_id}:${sourceStation.value}:${destinationStation.value}:${journeyDate.value}:${travelClass.value}:${passengerCount.value}`;
+  if (!bookingRequestKeys.has(key)) {
+    if (!globalThis.crypto?.getRandomValues) throw new Error("Secure booking requests are unavailable in this browser.");
+    const token = globalThis.crypto.randomUUID?.()
+      || Array.from(globalThis.crypto.getRandomValues(new Uint8Array(16)), (value) => value.toString(16).padStart(2, "0")).join("");
+    bookingRequestKeys.set(key, token);
+  }
+  return key;
+}
+
+function formatCurrency(amount, currency) {
+  const code = currency || "INR";
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency: code }).format(amount);
+  } catch (_error) {
+    return `${code} ${Number(amount).toFixed(2)}`;
+  }
+}
+
+function appendBookingField(container, labelText, control) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "field-group";
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  label.htmlFor = control.id;
+  wrapper.append(label, control);
+  container.append(wrapper);
+}
+
+function showBookingForm(train) {
+  const requestKey = createBookingRequestKey(train);
+  activeBooking = {
+    requestKey,
+    idempotencyKey: bookingRequestKeys.get(requestKey),
+    train,
+    sourceStationId: sourceStation.value,
+    destinationStationId: destinationStation.value,
+    journeyDate: journeyDate.value,
+    classId: travelClass.value,
+    passengerCount: Number(passengerCount.value),
+  };
+  bookingSummary.textContent = `${train.train_name} (${train.train_number}) · ${train.source_station_name} to ${train.destination_station_name} · ${activeBooking.passengerCount} passenger${activeBooking.passengerCount === 1 ? "" : "s"}. Seats will be rechecked and reserved when you submit.`;
+  bookingPassengerFields.replaceChildren();
+
+  for (let index = 0; index < activeBooking.passengerCount; index += 1) {
+    const section = document.createElement("fieldset");
+    section.className = "booking-passenger-entry";
+    const legend = document.createElement("legend");
+    legend.textContent = `Passenger ${index + 1}`;
+    section.append(legend);
+
+    const name = document.createElement("input");
+    name.id = `booking-passenger-${index}-name`;
+    name.name = "passenger_name";
+    name.autocomplete = index === 0 ? "name" : "off";
+    name.maxLength = 120;
+    name.required = true;
+    if (index === 0 && signedInPassenger?.full_name) name.value = signedInPassenger.full_name;
+    appendBookingField(section, "Full name", name);
+
+    const age = document.createElement("input");
+    age.id = `booking-passenger-${index}-age`;
+    age.name = "age";
+    age.type = "number";
+    age.min = "0";
+    age.max = "120";
+    age.step = "1";
+    age.required = true;
+    appendBookingField(section, "Age", age);
+
+    const gender = document.createElement("input");
+    gender.id = `booking-passenger-${index}-gender`;
+    gender.name = "gender";
+    gender.maxLength = 30;
+    gender.placeholder = "Optional";
+    appendBookingField(section, "Gender (optional)", gender);
+
+    const berth = document.createElement("select");
+    berth.id = `booking-passenger-${index}-berth`;
+    berth.name = "berth_preference";
+    for (const [value, labelText] of [
+      ["NO_PREFERENCE", "No preference"], ["LOWER", "Lower"], ["MIDDLE", "Middle"],
+      ["UPPER", "Upper"], ["SIDE_LOWER", "Side lower"], ["SIDE_UPPER", "Side upper"],
+    ]) berth.add(new Option(labelText, value));
+    appendBookingField(section, "Berth preference", berth);
+    bookingPassengerFields.append(section);
+  }
+
+  bookingForm.hidden = false;
+  bookingPanel.hidden = false;
+  setMessage(bookingMessage, "Enter traveler details. Availability, fare, booking, and seat reservation are handled together when submitted.");
+  bookingPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function startBooking(train) {
+  if (activeBooking) {
+    bookingPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    setMessage(bookingMessage, "Finish or retry the booking already in progress.", true);
+    return;
+  }
+  if (!signedInPassenger) {
+    setMessage(searchMessage, "Log in before booking a ticket.", true);
+    showAuthForm("login");
+    document.querySelector("#account").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  try {
+    showBookingForm(train);
+    setMessage(searchMessage, "");
+  } catch (error) {
+    setMessage(searchMessage, error.message || "Could not start this booking.", true);
+  }
+}
+
+bookingForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!activeBooking) return;
+  bookingSubmitButton.disabled = true;
+  bookingSubmitButton.textContent = "Checking seats…";
+  setMessage(bookingMessage, "");
+
+  try {
+    const passengers = Array.from(bookingPassengerFields.querySelectorAll(".booking-passenger-entry"), (entry) => ({
+      passenger_name: entry.querySelector('[name="passenger_name"]').value,
+      age: entry.querySelector('[name="age"]').value,
+      gender: entry.querySelector('[name="gender"]').value,
+      berth_preference: entry.querySelector('[name="berth_preference"]').value,
+    }));
+    const response = await fetch("/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        schedule_id: activeBooking.train.schedule_id,
+        source_station_id: activeBooking.sourceStationId,
+        destination_station_id: activeBooking.destinationStationId,
+        journey_date: activeBooking.journeyDate,
+        class_id: activeBooking.classId,
+        passengers,
+        idempotency_key: activeBooking.idempotencyKey,
+      }),
+    });
+    const booking = await response.json();
+    if (!response.ok) throw new Error(booking.message || "Booking could not be completed.");
+
+    const assignedSeats = (booking.assigned_seats || [])
+      .map((seat) => `${seat.coach_number}-${seat.seat_number}`)
+      .join(", ");
+    const expiry = booking.hold_expires_at
+      ? new Date(booking.hold_expires_at.replace(" ", "T")).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "soon";
+    bookingForm.hidden = true;
+    setMessage(
+      bookingMessage,
+      `Seats reserved pending payment. PNR ${booking.pnr} · ${assignedSeats} · ${formatCurrency(booking.total_fare, booking.currency_code)} total. Seat hold expires at ${expiry}.`,
+    );
+    bookingRequestKeys.delete(activeBooking.requestKey);
+    activeBooking = null;
+    renderTrainResults(currentTrainResults);
+  } catch (error) {
+    setMessage(bookingMessage, error.message || "Booking could not be completed. Please try again.", true);
+  } finally {
+    bookingSubmitButton.disabled = false;
+    bookingSubmitButton.textContent = "Book and reserve seats";
+  }
+});
 
 passengerCount?.addEventListener("change", () => {
   if (currentTrainResults.length) renderTrainResults(currentTrainResults);
@@ -386,6 +563,9 @@ logoutButton?.addEventListener("click", async () => {
       return;
     }
     loginForm.reset();
+    signedInPassenger = null;
+    activeBooking = null;
+    bookingPanel.hidden = true;
     showAuthForm("login");
     setMessage(formMessage, "You have been logged out.");
   } catch (_error) {
@@ -414,10 +594,8 @@ function formatLocalDate(value) {
 }
 
 const today = new Date();
-const tomorrow = new Date(today);
-tomorrow.setDate(tomorrow.getDate() + 1);
 journeyDate.min = formatLocalDate(today);
-journeyDate.value = formatLocalDate(tomorrow);
+journeyDate.value = formatLocalDate(today);
 loadStations();
 loadTravelClasses();
 checkApiStatus();

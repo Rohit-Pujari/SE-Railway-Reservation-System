@@ -6,6 +6,7 @@ from mysql.connector import IntegrityError
 from werkzeug.security import check_password_hash
 
 from .admin_auth import admin_required
+from .booking import BookingRequestError, BookingUnavailableError, create_booking
 from .booking_confirmation import BookingConfirmationError, confirm_booking
 from .passenger_details import PassengerDetailsValidationError, save_passenger_details
 from .db import get_db_connection
@@ -272,6 +273,42 @@ def train_search():
         return jsonify({"status": "error", "message": "Train search could not be completed."}), 500
 
     return jsonify({"status": "ok", "count": len(results), "trains": results}), 200
+
+
+@api.post("/bookings")
+def booking_create():
+    """Create a pending booking for a signed-in passenger."""
+    if "user_id" not in session or session.get("role") != "PASSENGER":
+        return jsonify({"status": "error", "message": "Please log in to book a train."}), 401
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"status": "error", "message": "Submit booking details as JSON."}), 400
+    try:
+        result = create_booking(
+            session["user_id"],
+            payload.get("schedule_id"),
+            payload.get("source_station_id"),
+            payload.get("destination_station_id"),
+            payload.get("journey_date"),
+            payload.get("class_id"),
+            payload.get("passengers"),
+            payload.get("idempotency_key"),
+        )
+    except BookingUnavailableError as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 409
+    except BookingRequestError as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 400
+    except PassengerDetailsValidationError as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 400
+    except IntegrityError as exc:
+        if getattr(exc, "errno", None) == 1062:
+            return jsonify({"status": "error", "message": "This booking request was already received. Retry the same request."}), 409
+        return jsonify({"status": "error", "message": "Booking could not be created."}), 500
+    except mysql.connector.Error:
+        return jsonify({"status": "error", "message": "Booking is temporarily unavailable."}), 503
+    except Exception:
+        return jsonify({"status": "error", "message": "Booking could not be created."}), 500
+    return jsonify({"status": "ok", **result}), 200 if result.get("replayed") else 201
 
 
 
