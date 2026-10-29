@@ -1,7 +1,5 @@
 """Atomic confirmation of pending bookings with segment-aware seat allocation."""
 
-from datetime import datetime, timedelta
-
 import mysql.connector
 
 from .db import get_db_connection
@@ -132,21 +130,19 @@ def confirm_booking(booking_id, user_id, connection_factory=None):
         if len(free_seats) < len(passengers):
             raise BookingConfirmationError("Not enough seats are available for this journey.")
 
-        expiry = datetime.now() + timedelta(minutes=15)
         for passenger, seat in zip(passengers, free_seats):
             cursor.execute(
                 """INSERT INTO seat_allocations
                        (booking_id, schedule_id, class_id, booking_passenger_id,
                         schedule_seat_id, allocation_status, hold_expires_at)
-                   VALUES (%s, %s, %s, %s, %s, 'HELD', %s)""",
+                   VALUES (%s, %s, %s, %s, %s, 'CONFIRMED', NULL)""",
                 (
                     booking_id, booking["schedule_id"], booking["class_id"],
-                    passenger["booking_passenger_id"], seat["schedule_seat_id"], expiry,
+                    passenger["booking_passenger_id"], seat["schedule_seat_id"],
                 ),
             )
 
-        # Confirmation and allocation are committed atomically. HELD allocations
-        # are retained with an expiry for the payment/hold lifecycle.
+        # Confirmation and allocations are committed atomically.
         cursor.execute(
             """UPDATE bookings
                SET booking_status = 'CONFIRMED', confirmed_at = CURRENT_TIMESTAMP
