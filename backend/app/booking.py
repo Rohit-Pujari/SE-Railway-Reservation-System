@@ -11,6 +11,8 @@ from .passenger_details import validate_passengers
 
 MAX_PASSENGERS = 6
 SEAT_HOLD_MINUTES = 15
+PNR_LENGTH = 12
+PNR_INSERT_ATTEMPTS = 5
 PNR_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
 
 
@@ -57,7 +59,14 @@ def _validate_request(user_id, schedule_id, source_station_id, destination_stati
 
 
 def _new_pnr():
-    return "".join(secrets.choice(PNR_ALPHABET) for _ in range(10))
+    return "".join(secrets.choice(PNR_ALPHABET) for _ in range(PNR_LENGTH))
+
+
+def _is_pnr_collision(error):
+    return (
+        getattr(error, "errno", None) == 1062
+        and "uq_bookings_pnr" in str(error).lower()
+    )
 
 
 def _active_allocated_seats(cursor, booking_id):
@@ -282,29 +291,39 @@ def create_booking(user_id, schedule_id, source_station_id, destination_station_
         fare_per_passenger = Decimal(str(fare["fare_amount"])).quantize(Decimal("0.01"))
         base_total = fare_per_passenger * len(validated_passengers)
 
-        pnr = _new_pnr()
-        cursor.execute(
-            """INSERT INTO bookings (
-                   pnr, user_id, schedule_id, boarding_schedule_stop_id,
-                   alighting_schedule_stop_id, class_id, train_number_snapshot,
-                   train_name_snapshot, boarding_station_code_snapshot,
-                   boarding_station_name_snapshot, alighting_station_code_snapshot,
-                   alighting_station_name_snapshot, departure_at_snapshot,
-                   arrival_at_snapshot, class_code_snapshot, base_fare_total,
-                   other_charges, total_fare, currency_code, idempotency_key
-               ) VALUES (
-                   %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                   %s, %s, %s, %s, 0.00, %s, %s, %s
-               )""",
-            (
-                pnr, user, schedule, itinerary["boarding_stop_id"],
-                itinerary["alighting_stop_id"], travel_class, itinerary["train_number"],
-                itinerary["train_name"], itinerary["source_code"], itinerary["source_name"],
-                itinerary["destination_code"], itinerary["destination_name"],
-                itinerary["departure_at"], itinerary["arrival_at"], itinerary["class_code"],
-                base_total, base_total, fare["currency_code"], request_key,
-            ),
+        insert_booking_sql = """INSERT INTO bookings (
+               pnr, user_id, schedule_id, boarding_schedule_stop_id,
+               alighting_schedule_stop_id, class_id, train_number_snapshot,
+               train_name_snapshot, boarding_station_code_snapshot,
+               boarding_station_name_snapshot, alighting_station_code_snapshot,
+               alighting_station_name_snapshot, departure_at_snapshot,
+               arrival_at_snapshot, class_code_snapshot, base_fare_total,
+               other_charges, total_fare, currency_code, idempotency_key
+           ) VALUES (
+               %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+               %s, %s, %s, %s, 0.00, %s, %s, %s
+           )"""
+        booking_values = (
+            user, schedule, itinerary["boarding_stop_id"],
+            itinerary["alighting_stop_id"], travel_class, itinerary["train_number"],
+            itinerary["train_name"], itinerary["source_code"], itinerary["source_name"],
+            itinerary["destination_code"], itinerary["destination_name"],
+            itinerary["departure_at"], itinerary["arrival_at"], itinerary["class_code"],
+            base_total, base_total, fare["currency_code"], request_key,
         )
+        pnr = None
+        for attempt in range(PNR_INSERT_ATTEMPTS):
+            candidate_pnr = _new_pnr()
+            try:
+                cursor.execute(insert_booking_sql, (candidate_pnr, *booking_values))
+            except mysql.connector.IntegrityError as exc:
+                if not _is_pnr_collision(exc) or attempt == PNR_INSERT_ATTEMPTS - 1:
+                    raise
+            else:
+                pnr = candidate_pnr
+                break
+        if pnr is None:
+            raise BookingUnavailableError("A unique booking reference could not be generated. Please retry.")
         booking_id = int(cursor.lastrowid)
         assignments = []
         hold_expiry = None
