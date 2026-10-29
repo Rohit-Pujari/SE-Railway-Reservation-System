@@ -62,13 +62,21 @@ class TrainSearchQueryTests(unittest.TestCase):
             "destination_city": "Beta City",
             "departure_at": datetime(2026, 11, 15, 9, 30),
             "arrival_at": datetime(2026, 11, 15, 12, 15),
+            "starting_fare": 450.00,
+            "currency_code": "INR",
+            "available_seats": 42,
         }]
         result = search_trains("1", "2", "2026-11-15", connection_factory=lambda: connection)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["departure_at"], "2026-11-15T09:30:00")
         self.assertEqual(result[0]["arrival_at"], "2026-11-15T12:15:00")
+        self.assertEqual(result[0]["starting_fare"], 450.0)
+        self.assertEqual(result[0]["currency_code"], "INR")
+        self.assertEqual(result[0]["available_seats"], 42)
         sql, params = cursor.execute.call_args.args
         self.assertIn("origin_stop.stop_sequence < destination_stop.stop_sequence", sql)
+        self.assertIn("route_fares", sql)
+        self.assertIn("seat_allocations", sql)
         self.assertEqual(params[0], 1)
         self.assertEqual(params[1], 2)
         self.assertEqual(params[2], datetime(2026, 11, 15, 0, 0))
