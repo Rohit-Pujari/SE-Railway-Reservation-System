@@ -116,6 +116,7 @@ class BookingTransactionTests(unittest.TestCase):
         result = self.create(connection)
 
         self.assertEqual(result["booking_id"], 88)
+        self.assertEqual(len(result["pnr"]), 12)
         self.assertEqual(result["pnr"], result["pnr"].upper())
         self.assertEqual(result["status"], "PENDING_PAYMENT")
         self.assertEqual(result["currency_code"], "INR")
@@ -136,6 +137,52 @@ class BookingTransactionTests(unittest.TestCase):
         self.assertEqual(len(allocation_inserts), 2)
         self.assertTrue(all("'HELD'" in call.args[0] for call in allocation_inserts))
         connection.close.assert_called_once_with()
+
+    @patch("backend.app.booking._new_pnr", side_effect=["DUPLICATE0001", "UNIQUE000002"])
+    def test_duplicate_pnr_collision_retries_before_saving_booking(self, new_pnr):
+        connection = configured_connection()
+        cursor = connection.cursor.return_value
+        original_execute = cursor.execute.side_effect
+        collision = {"raised": False}
+
+        def collide_once(sql, params=None):
+            if "INSERT INTO bookings" in sql and not collision["raised"]:
+                collision["raised"] = True
+                raise mysql.connector.IntegrityError(
+                    errno=1062, msg="Duplicate entry for key 'uq_bookings_pnr'"
+                )
+            original_execute(sql, params)
+
+        cursor.execute.side_effect = collide_once
+        result = self.create(connection)
+
+        self.assertEqual(result["pnr"], "UNIQUE000002")
+        booking_inserts = [call for call in cursor.execute.call_args_list if "INSERT INTO bookings" in call.args[0]]
+        self.assertEqual(
+            [call.args[1][0] for call in booking_inserts],
+            ["DUPLICATE0001", "UNIQUE000002"],
+        )
+        self.assertEqual(new_pnr.call_count, 2)
+        connection.commit.assert_called_once_with()
+
+    @patch("backend.app.booking._new_pnr", return_value="UNIQUE000002")
+    def test_non_pnr_duplicate_is_not_retried(self, new_pnr):
+        connection = configured_connection()
+        cursor = connection.cursor.return_value
+
+        def duplicate_idempotency_key(sql, params=None):
+            if "INSERT INTO bookings" in sql:
+                raise mysql.connector.IntegrityError(
+                    errno=1062, msg="Duplicate entry for key 'uq_bookings_user_idempotency'"
+                )
+
+        cursor.execute.side_effect = duplicate_idempotency_key
+        with self.assertRaises(mysql.connector.IntegrityError):
+            self.create(connection)
+
+        new_pnr.assert_called_once_with()
+        connection.rollback.assert_called_once_with()
+        connection.commit.assert_not_called()
 
     def test_insufficient_seats_rolls_back_without_booking(self):
         connection = configured_connection(available_seats=1)
