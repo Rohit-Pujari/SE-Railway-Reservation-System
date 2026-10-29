@@ -16,6 +16,13 @@ const trainSearchForm = document.querySelector("#train-search-form");
 const sourceStation = document.querySelector("#source-station");
 const destinationStation = document.querySelector("#destination-station");
 const journeyDate = document.querySelector("#journey-date");
+const travelClass = document.querySelector("#travel-class");
+let stationsLoaded = false;
+let classesLoaded = false;
+
+function updateSearchButton() {
+  searchButton.disabled = !(stationsLoaded && classesLoaded);
+}
 const searchButton = document.querySelector("#search-button");
 const searchMessage = document.querySelector("#search-message");
 const searchResults = document.querySelector("#search-results");
@@ -74,6 +81,28 @@ function addStationOptions(select, stations) {
   select.disabled = stations.length === 0;
 }
 
+async function loadTravelClasses() {
+  try {
+    const response = await fetch("/api/travel-classes", { headers: { Accept: "application/json" } });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "Could not load travel classes.");
+    travelClass.replaceChildren(new Option("Select a travel class", ""));
+    for (const item of result.travel_classes) {
+      travelClass.add(new Option(`${item.class_name} (${item.class_code})`, String(item.class_id)));
+    }
+    classesLoaded = result.travel_classes.length > 0;
+    travelClass.disabled = !classesLoaded;
+    updateSearchButton();
+    if (!classesLoaded) setMessage(searchMessage, "No active travel classes are available yet.", true);
+  } catch (error) {
+    travelClass.replaceChildren(new Option("Travel classes unavailable", ""));
+    travelClass.disabled = true;
+    classesLoaded = false;
+    updateSearchButton();
+    setMessage(searchMessage, error.message || "Unable to load travel classes. Please retry later.", true);
+  }
+}
+
 async function loadStations() {
   try {
     const response = await fetch("/api/stations", { headers: { Accept: "application/json" } });
@@ -81,7 +110,14 @@ async function loadStations() {
     if (!response.ok) throw new Error(result.message || "Could not load stations.");
     addStationOptions(sourceStation, result.stations);
     addStationOptions(destinationStation, result.stations);
-    searchButton.disabled = result.stations.length === 0;
+    const demoOrigin = result.stations.find((station) => station.station_code === "SBC");
+    const demoDestination = result.stations.find((station) => station.station_code === "MAS");
+    if (demoOrigin && demoDestination) {
+      sourceStation.value = String(demoOrigin.station_id);
+      destinationStation.value = String(demoDestination.station_id);
+    }
+    stationsLoaded = result.stations.length > 0;
+    updateSearchButton();
     if (result.stations.length === 0) {
       setMessage(searchMessage, "No active stations are available yet.", true);
     } else {
@@ -90,6 +126,8 @@ async function loadStations() {
   } catch (error) {
     addStationOptions(sourceStation, []);
     addStationOptions(destinationStation, []);
+    stationsLoaded = false;
+    updateSearchButton();
     setMessage(searchMessage, error.message || "Unable to load stations. Please retry later.", true);
   }
 }
@@ -177,11 +215,27 @@ function renderTrainResults(trains) {
     const seatsLabel = document.createElement("span");
     seatsLabel.textContent = "Seats available";
     const seatsValue = document.createElement("strong");
-    const availableSeats = Number(train.available_seats);
-    seatsValue.textContent = Number.isFinite(availableSeats)
-      ? `${availableSeats} ${availableSeats === 1 ? "seat" : "seats"}`
-      : "Availability unavailable";
+    seatsValue.textContent = "Checking…";
     seats.append(seatsLabel, seatsValue);
+    const availabilityParams = new URLSearchParams({
+      schedule_id: String(train.schedule_id),
+      source_station_id: sourceStation.value,
+      destination_station_id: destinationStation.value,
+      journey_date: journeyDate.value,
+      class_id: travelClass.value,
+    });
+    fetch(`/api/seats/availability?${availabilityParams.toString()}`, {
+      headers: { Accept: "application/json" },
+    }).then(async (response) => {
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Availability unavailable");
+      const count = Number(result.available_seats);
+      seatsValue.textContent = Number.isFinite(count)
+        ? `${count} ${count === 1 ? "seat" : "seats"} · ${result.class_code || travelClass.selectedOptions[0].textContent}`
+        : "Availability unavailable";
+    }).catch(() => {
+      seatsValue.textContent = "Availability unavailable";
+    });
 
     details.append(fare, seats);
     card.append(heading, route, details);
@@ -201,6 +255,11 @@ trainSearchForm?.addEventListener("submit", async (event) => {
   if (!journeyDate.value) {
     setMessage(searchMessage, "Choose a journey date.", true);
     journeyDate.focus();
+    return;
+  }
+  if (!travelClass.value) {
+    setMessage(searchMessage, "Choose a travel class.", true);
+    travelClass.focus();
     return;
   }
 
@@ -324,8 +383,11 @@ function formatLocalDate(value) {
 }
 
 const today = new Date();
+const tomorrow = new Date(today);
+tomorrow.setDate(tomorrow.getDate() + 1);
 journeyDate.min = formatLocalDate(today);
-journeyDate.value = formatLocalDate(today);
+journeyDate.value = formatLocalDate(tomorrow);
 loadStations();
+loadTravelClasses();
 checkApiStatus();
 restoreSession();
