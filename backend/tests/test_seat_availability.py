@@ -9,9 +9,33 @@ import mysql.connector
 from backend.app import create_app
 from backend.app.seat_availability import (
     SeatAvailabilityValidationError,
+    get_active_travel_classes,
     get_seat_availability,
     validate_availability,
 )
+
+
+class TravelClassQueryTests(unittest.TestCase):
+    def test_returns_active_travel_classes_and_closes_resources(self):
+        connection = MagicMock()
+        cursor = connection.cursor.return_value
+        cursor.fetchall.return_value = [
+            {"class_id": 1, "class_code": "SL", "class_name": "Sleeper"},
+        ]
+        result = get_active_travel_classes(connection_factory=lambda: connection)
+        self.assertEqual(result, [{"class_id": 1, "class_code": "SL", "class_name": "Sleeper"}])
+        sql = cursor.execute.call_args.args[0]
+        self.assertIn("class_status = 'ACTIVE'", sql)
+        self.assertIn("ORDER BY class_id", sql)
+        cursor.close.assert_called_once()
+        connection.close.assert_called_once()
+
+    def test_database_errors_propagate(self):
+        connection = MagicMock()
+        connection.cursor.return_value.execute.side_effect = mysql.connector.Error("db unavailable")
+        with self.assertRaises(mysql.connector.Error):
+            get_active_travel_classes(connection_factory=lambda: connection)
+        connection.close.assert_called_once()
 
 
 class SeatAvailabilityValidationTests(unittest.TestCase):
@@ -92,6 +116,20 @@ class SeatAvailabilityEndpointTests(unittest.TestCase):
         self.app = create_app()
         self.app.config.update(TESTING=True, SECRET_KEY="test-secret")
         self.client = self.app.test_client()
+
+    @patch("backend.app.routes.get_active_travel_classes")
+    def test_travel_classes_endpoint_returns_active_classes(self, get_classes):
+        get_classes.return_value = [{"class_id": 1, "class_code": "SL", "class_name": "Sleeper"}]
+        response = self.client.get("/api/travel-classes")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["travel_classes"][0]["class_code"], "SL")
+
+    @patch("backend.app.routes.get_active_travel_classes")
+    def test_travel_classes_database_error_is_safe(self, get_classes):
+        get_classes.side_effect = mysql.connector.Error("secret database details")
+        response = self.client.get("/api/travel-classes")
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn("secret database details", response.get_data(as_text=True))
 
     @patch("backend.app.routes.get_seat_availability")
     def test_endpoint_returns_class_availability(self, availability):
