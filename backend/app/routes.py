@@ -6,7 +6,8 @@ from mysql.connector import IntegrityError
 from werkzeug.security import check_password_hash
 
 from .admin_auth import admin_required
-from .booking_confirmation import BookingConfirmationError, confirm_booking\nfrom .passenger_details import PassengerDetailsValidationError, save_passenger_details
+from .booking_confirmation import BookingConfirmationError, confirm_booking
+from .passenger_details import PassengerDetailsValidationError, save_passenger_details
 from .db import get_db_connection
 from .registration import RegistrationValidationError, register_user
 from .seat_availability import (
