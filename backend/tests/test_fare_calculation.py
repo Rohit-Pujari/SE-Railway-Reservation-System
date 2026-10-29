@@ -43,10 +43,11 @@ class FareCalculationServiceTests(unittest.TestCase):
             "other_charges": 20.0,
             "total_fare": 271.0,
         })
-        self.assertEqual(self.cursor.execute.call_count, 3)
+        self.assertEqual(self.cursor.execute.call_count, 5)
         self.assertEqual(self.cursor.execute.call_args_list[1].args[1], (10,))
+        self.assertEqual(self.cursor.execute.call_args_list[3].args[1], (Decimal("125.50"), 10))
         self.assertEqual(
-            self.cursor.execute.call_args_list[2].args[1],
+            self.cursor.execute.call_args_list[4].args[1],
             (Decimal("251.00"), Decimal("271.00"), "INR", 10, 5),
         )
         self.connection.commit.assert_called_once()
