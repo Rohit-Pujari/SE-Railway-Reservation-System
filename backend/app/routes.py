@@ -274,7 +274,7 @@ def train_search():
 
 
 @api.post("/bookings/<int:booking_id>/confirm")
-def booking_confirmation():
+def booking_confirmation(booking_id):
     """Atomically confirm a pending booking and allocate non-conflicting seats."""
     if "user_id" not in session or session.get("role") != "PASSENGER":
         return jsonify({"status": "error", "message": "Please log in to confirm a booking."}), 401
