@@ -1,29 +1,42 @@
 # Railway Reservation System
 
-Coursework project using Flask, MySQL, and a vanilla HTML/CSS/JavaScript frontend. Project requirements and test references are in [Documents](Documents/).
+Coursework project using Django REST Framework, React, and MySQL. Project requirements and test references are in [Documents](Documents/).
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser[Browser] -->|React app| Vite[React + Vite frontend]
+    Vite -->|/api requests| Django[Django REST Framework API]
+    Django -->|parameterized SQL| MySQL[(Existing MySQL schema)]
+```
+
+During development, `run-dev.sh` starts the Vite frontend and Django API as separate local servers; Vite forwards `/api` requests to Django. For a built deployment, Django can serve the generated React assets. Django keeps the existing MySQL schema and accesses it through the project's parameterized `mysql-connector-python` services.
 
 ## Setup
-1. Install Python 3.10+, MySQL 8.x, and [uv](https://docs.astral.sh/uv/).
-2. Create and activate a virtual environment: `uv venv`, then `source .venv/bin/activate` (Windows PowerShell: `.venv\\Scripts\\Activate.ps1`).
-3. Install dependencies: `uv pip install -r requirements.txt`.
-4. Copy `.env.example` to `.env` and set your database credentials. Replace `SECRET_KEY` with a high-entropy random value before deployment. Never commit `.env`.
-5. Create the schema by running `mysql -u root -p < database/schema.sql`.
-6. Start from the repository root with `uv run --active python backend/run.py`, then open http://127.0.0.1:5000.
+1. Install Python 3.10+, Node.js 20+, MySQL 8.x, [uv](https://docs.astral.sh/uv/), and npm.
+2. Create and activate a Python virtual environment: `uv venv`, then `source .venv/bin/activate` (Windows PowerShell: `.venv\\Scripts\\Activate.ps1`).
+3. Install backend dependencies: `uv pip install -r requirements.txt`.
+4. Install frontend dependencies from the lockfile: `cd frontend && npm ci && cd ..`.
+5. Copy `.env.example` to `.env` and set your MySQL credentials. Use a high-entropy `SECRET_KEY` and never commit `.env`.
+6. Create the project schema if needed: `mysql -u root -p < database/schema.sql`. The app uses that existing schema and does not run Django migrations against it.
+7. Run `./run-dev.sh` from the repository root, then open http://127.0.0.1:5173. This single launcher starts the Django REST API and React/Vite frontend together, creates `.venv` if needed, and installs missing project dependencies. MySQL must already be running with the existing schema; the script does not create or migrate database tables. Press Ctrl+C to stop both servers.
+
+To serve the built React app from Django, run `cd frontend && npm run build`, then open http://127.0.0.1:8000. Django serves the generated files from the ignored `frontend/dist/` directory.
+
+The API uses Django signed-cookie sessions and Django CSRF protection. Cookies are HttpOnly for sessions, SameSite=Lax, and have a 30-minute lifetime. Set `SESSION_COOKIE_SECURE=true` behind HTTPS. The existing services continue to issue parameterized `mysql-connector-python` SQL against `database/schema.sql`; no tables or columns were renamed or added for the migration.
 
 ## Administrator login (Issue #5)
 Admin accounts are existing `users` rows with `role='ADMIN'` and `account_status='ACTIVE'`. Public registration cannot set a role. Create the initial admin through a trusted, access-controlled database administration process; do not expose public admin creation.
 
 - `POST /api/admin/login`: JSON `{"email":"admin@example.com","password":"your-password"}`; verifies the stored Werkzeug password hash, role, and active status, then establishes a session.
 - `POST /api/admin/logout`: clears the authenticated admin session.
-- `GET /api/admin/dashboard`: protected example endpoint (401 anonymous, 403 authenticated non-admin).
-- Decorate every future admin-only route with `@admin_required` from `backend.app.admin_auth`.
-
-Sessions use HttpOnly, SameSite=Lax cookies and a 30-minute lifetime. Set a stable random `SECRET_KEY` in deployment and `SESSION_COOKIE_SECURE=true` behind HTTPS. The development fallback secret is generated at startup and is not suitable for deployment.
 
 Example:
 ```bash
-curl -i -c cookies.txt -H 'Content-Type: application/json' -d '{"email":"admin@example.com","password":"your-password"}' http://127.0.0.1:5000/api/admin/login
-curl -i -b cookies.txt http://127.0.0.1:5000/api/admin/dashboard
+curl -i -c cookies.txt http://127.0.0.1:8000/api/csrf
+curl -i -b cookies.txt -H 'X-CSRFToken: <token>' -H 'Content-Type: application/json' -d '{"email":"admin@example.com","password":"your-password"}' http://127.0.0.1:8000/api/admin/login
+curl -i -b cookies.txt -H 'X-CSRFToken: <token>' -X POST http://127.0.0.1:8000/api/admin/logout
 ```
 
 ## Passenger login and logout (Issue #4)
@@ -32,10 +45,10 @@ curl -i -b cookies.txt http://127.0.0.1:5000/api/admin/dashboard
 - `POST /api/logout`: clears the passenger session.
 
 ## Tests
-Run `uv run --active python -m unittest discover -s backend/tests -v` from the repository root. Authentication tests mock database access and cover login, invalid credentials, disabled users, passenger denial, anonymous denial, and logout.
+Run `cd frontend && npm ci && npm run build && cd ..`, then `uv run --active python -m unittest discover -s backend/tests -v` from the repository root. Tests exercise Django/DRF endpoints, CSRF/session behavior, the React build entry and lockfile, and the one-command launcher; database access is mocked, so no development MySQL database is changed by the test suite.
 
 ## Current scope
-The implemented features are project setup, the database schema, passenger registration and login/logout, administrator login, scheduled train search with displayed fares and seat availability, passenger details, and fare calculation. Ticket bookings reserve seats for 15 minutes and remain pending payment; payment processing is not implemented yet. Administrator login is currently an API flow; create an admin account only through a trusted local database administration process.
+The implemented scope is limited to the completed project-board features: project setup and database schema; passenger registration and login/logout; administrator login; train search and results with travel-class fares and seat availability; passenger details and fare calculation; ticket booking with duplicate-request protection and a unique PNR. Ticket bookings reserve seats for 15 minutes and remain pending payment. Payment, refunds, booking history, and train/route/schedule administration are outside the current scope. Administrator login is an API flow; create an admin account only through a trusted local database administration process.
 
 ## Ticket booking (Issue #13)
-Signed-in passengers can choose a train, enter traveler details, and reserve seats. The booking, passenger fares, and expiring seat allocations are written in one transaction. Seat availability is checked again while the schedule inventory is locked. A PNR is returned with the pending-payment booking; payment is a separate feature.
+Signed-in passengers can choose a train, enter traveler details, and reserve seats. The booking, passenger fares, and expiring seat allocations are written in one transaction. Seat availability is checked again while the schedule inventory is locked. A unique PNR is returned with the pending-payment booking; payment is a separate feature.

@@ -1,21 +1,19 @@
-"""Tests for administrator login and role-protected API routes."""
+"""Tests for administrator login and logout."""
 
 import unittest
 from unittest.mock import MagicMock, patch
 
 from werkzeug.security import generate_password_hash
 
-from backend.app import create_app
+from backend.tests.drf_client import RailwayAPIClient, set_session
 
 
 class AdminAuthenticationTests(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
-        self.app.config.update(TESTING=True, SECRET_KEY="test-secret-key")
-        self.client = self.app.test_client()
+        self.client = RailwayAPIClient()
 
-    @patch("backend.app.routes.get_db_connection")
-    def test_admin_can_login_and_access_admin_endpoint(self, get_connection):
+    @patch("backend.app.django_views.get_db_connection")
+    def test_admin_can_login_and_logout(self, get_connection):
         connection = MagicMock()
         cursor = MagicMock()
         cursor.fetchone.return_value = {
@@ -33,24 +31,20 @@ class AdminAuthenticationTests(unittest.TestCase):
             json={"email": "ADMIN@example.com", "password": "AdminPass123"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.client.get("/api/admin/dashboard").status_code, 200)
+        self.assertEqual(self.client.session["role"], "ADMIN")
+        self.assertEqual(self.client.post("/api/admin/logout").status_code, 200)
+        self.assertNotIn("role", self.client.session)
         cursor.execute.assert_called_once_with(
             unittest.mock.ANY, ("admin@example.com",)
         )
         connection.close.assert_called_once()
 
-    def test_dashboard_rejects_anonymous_request(self):
-        response = self.client.get("/api/admin/dashboard")
-        self.assertEqual(response.status_code, 401)
-
-    def test_dashboard_rejects_passenger_session(self):
-        with self.client.session_transaction() as session:
-            session["user_id"] = 10
-            session["role"] = "PASSENGER"
-        response = self.client.get("/api/admin/dashboard")
+    def test_passenger_cannot_use_admin_logout(self):
+        set_session(self.client, user_id=10, role="PASSENGER")
+        response = self.client.post("/api/admin/logout")
         self.assertEqual(response.status_code, 403)
 
-    @patch("backend.app.routes.get_db_connection")
+    @patch("backend.app.django_views.get_db_connection")
     def test_invalid_password_is_rejected(self, get_connection):
         connection = MagicMock()
         cursor = MagicMock()
@@ -68,9 +62,9 @@ class AdminAuthenticationTests(unittest.TestCase):
             json={"email": "admin@example.com", "password": "WrongPass123"},
         )
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(self.client.get("/api/admin/dashboard").status_code, 401)
+        self.assertNotIn("role", self.client.session)
 
-    @patch("backend.app.routes.get_db_connection")
+    @patch("backend.app.django_views.get_db_connection")
     def test_passenger_cannot_login_to_admin_endpoint(self, get_connection):
         connection = MagicMock()
         cursor = MagicMock()
@@ -90,9 +84,9 @@ class AdminAuthenticationTests(unittest.TestCase):
         # Keep login failures indistinguishable so the endpoint does not
         # reveal whether an account is a passenger or an administrator.
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(self.client.get("/api/admin/dashboard").status_code, 401)
+        self.assertNotIn("role", self.client.session)
 
-    @patch("backend.app.routes.get_db_connection")
+    @patch("backend.app.django_views.get_db_connection")
     def test_disabled_admin_is_rejected(self, get_connection):
         connection = MagicMock()
         cursor = MagicMock()
@@ -112,12 +106,10 @@ class AdminAuthenticationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_logout_clears_admin_session(self):
-        with self.client.session_transaction() as session:
-            session["user_id"] = 7
-            session["role"] = "ADMIN"
+        set_session(self.client, user_id=7, role="ADMIN")
         response = self.client.post("/api/admin/logout")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.client.get("/api/admin/dashboard").status_code, 401)
+        self.assertNotIn("role", self.client.session)
 
 
 if __name__ == "__main__":

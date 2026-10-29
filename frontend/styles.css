@@ -116,11 +116,11 @@ input, select { width: 100%; min-height: 47px; padding: 0 13px; border: 1px soli
 input::placeholder { color: #9ca69d; }
 select { padding-right: 30px; }
 input:focus, select:focus { border-color: #789c81; background: #fff; box-shadow: 0 0 0 3px rgb(120 156 129 / 13%); }
-input:disabled, select:disabled { background: #f2f4f0; color: #858f88; cursor: wait; }
+input:disabled, select:disabled { background: #f2f4f0; color: #858f88; cursor: not-allowed; }
 button { cursor: pointer; }
 .search-form button, .account-submit { min-height: 47px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 16px; border: 0; border-radius: 8px; background: var(--green); color: #fff; font-size: 10px; font-weight: 700; transition: background .18s ease, transform .18s ease; }
 .search-form button:hover:not(:disabled), .account-submit:hover:not(:disabled) { background: #245b49; transform: translateY(-1px); }
-.search-form button:disabled, .account-submit:disabled { background: #8b9d90; cursor: wait; }
+.search-form button:disabled, .account-submit:disabled { background: #8b9d90; cursor: not-allowed; }
 .button-arrow { display: grid; width: 23px; height: 23px; place-items: center; border-radius: 50%; background: rgb(255 255 255 / 14%); font-size: 13px; }
 .form-message { min-height: 0; margin: 0; color: #4c7456; font-size: 11px; }
 .form-message:not(:empty) { margin-top: 10px; }

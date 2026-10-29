@@ -3,16 +3,16 @@
 import mysql.connector
 from mysql.connector import MySQLConnection
 
-from .config import Config
+from .config import DatabaseConfig
 
 
 def get_db_connection() -> MySQLConnection:
     """Open a MySQL connection using the current environment configuration."""
     return mysql.connector.connect(
-        host=Config.DB_HOST,
-        port=Config.DB_PORT,
-        database=Config.DB_NAME,
-        user=Config.DB_USER,
-        password=Config.DB_PASSWORD,
+        host=DatabaseConfig.DB_HOST,
+        port=DatabaseConfig.DB_PORT,
+        database=DatabaseConfig.DB_NAME,
+        user=DatabaseConfig.DB_USER,
+        password=DatabaseConfig.DB_PASSWORD,
         connection_timeout=5,
     )

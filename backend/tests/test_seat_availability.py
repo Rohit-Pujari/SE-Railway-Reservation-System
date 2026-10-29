@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import mysql.connector
 
-from backend.app import create_app
+from backend.tests.drf_client import RailwayAPIClient, set_session
 from backend.app.seat_availability import (
     SeatAvailabilityValidationError,
     get_active_travel_classes,
@@ -113,25 +113,23 @@ class SeatAvailabilityQueryTests(unittest.TestCase):
 
 class SeatAvailabilityEndpointTests(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
-        self.app.config.update(TESTING=True, SECRET_KEY="test-secret")
-        self.client = self.app.test_client()
+        self.client = RailwayAPIClient()
 
-    @patch("backend.app.routes.get_active_travel_classes")
+    @patch("backend.app.django_views.get_active_travel_classes")
     def test_travel_classes_endpoint_returns_active_classes(self, get_classes):
         get_classes.return_value = [{"class_id": 1, "class_code": "SL", "class_name": "Sleeper"}]
         response = self.client.get("/api/travel-classes")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json["travel_classes"][0]["class_code"], "SL")
+        self.assertEqual(response.json()["travel_classes"][0]["class_code"], "SL")
 
-    @patch("backend.app.routes.get_active_travel_classes")
+    @patch("backend.app.django_views.get_active_travel_classes")
     def test_travel_classes_database_error_is_safe(self, get_classes):
         get_classes.side_effect = mysql.connector.Error("secret database details")
         response = self.client.get("/api/travel-classes")
         self.assertEqual(response.status_code, 503)
-        self.assertNotIn("secret database details", response.get_data(as_text=True))
+        self.assertNotIn("secret database details", response.content.decode())
 
-    @patch("backend.app.routes.get_seat_availability")
+    @patch("backend.app.django_views.get_seat_availability")
     def test_endpoint_returns_class_availability(self, availability):
         availability.return_value = {
             "schedule_id": 9,
@@ -144,16 +142,16 @@ class SeatAvailabilityEndpointTests(unittest.TestCase):
             "&destination_station_id=2&journey_date=2026-11-15&class_id=3"
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json["available_seats"], 27)
-        self.assertEqual(response.json["class_code"], "3A")
+        self.assertEqual(response.json()["available_seats"], 27)
+        self.assertEqual(response.json()["class_code"], "3A")
 
-    @patch("backend.app.routes.get_seat_availability")
+    @patch("backend.app.django_views.get_seat_availability")
     def test_invalid_search_returns_400(self, availability):
         availability.side_effect = SeatAvailabilityValidationError("Select a valid travel class.")
         response = self.client.get("/api/seats/availability")
         self.assertEqual(response.status_code, 400)
 
-    @patch("backend.app.routes.get_seat_availability")
+    @patch("backend.app.django_views.get_seat_availability")
     def test_database_error_is_safe(self, availability):
         availability.side_effect = mysql.connector.Error("secret database details")
         response = self.client.get(
@@ -161,7 +159,7 @@ class SeatAvailabilityEndpointTests(unittest.TestCase):
             "&destination_station_id=2&journey_date=2026-11-15&class_id=3"
         )
         self.assertEqual(response.status_code, 503)
-        self.assertNotIn("secret database details", response.get_data(as_text=True))
+        self.assertNotIn("secret database details", response.content.decode())
 
 
 if __name__ == "__main__":
