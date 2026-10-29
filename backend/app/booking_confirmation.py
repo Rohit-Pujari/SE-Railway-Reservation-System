@@ -120,7 +120,8 @@ def confirm_booking(booking_id, user_id, connection_factory=None):
                        AND occupied_boarding.stop_sequence < %s
                        AND occupied_alighting.stop_sequence > %s
                  )
-               ORDER BY available_seat.schedule_seat_id""",
+               ORDER BY available_seat.schedule_seat_id
+               FOR UPDATE""",
             (
                 booking["schedule_id"], booking["class_id"],
                 alighting["stop_sequence"], boarding["stop_sequence"],
