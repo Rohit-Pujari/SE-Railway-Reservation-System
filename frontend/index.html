@@ -86,6 +86,12 @@
           <label for="journey-date"><span class="field-icon date-icon" aria-hidden="true"></span>Journey date</label>
           <input id="journey-date" name="journey_date" type="date" required>
         </div>
+        <div class="field-group">
+          <label for="travel-class">Travel class</label>
+          <select id="travel-class" name="class_id" required disabled>
+            <option value="">Loading classes…</option>
+          </select>
+        </div>
         <button type="submit" id="search-button" disabled><span>Search trains</span><span class="button-arrow" aria-hidden="true">↗</span></button>
       </form>
       <p id="search-message" class="form-message" role="status" aria-live="polite"></p>
