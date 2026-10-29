@@ -8,7 +8,11 @@ from werkzeug.security import check_password_hash
 from .admin_auth import admin_required
 from .db import get_db_connection
 from .registration import RegistrationValidationError, register_user
-from .seat_availability import SeatAvailabilityValidationError, get_seat_availability
+from .seat_availability import (
+    SeatAvailabilityValidationError,
+    get_active_travel_classes,
+    get_seat_availability,
+)
 from .train_search import (
     TrainSearchValidationError,
     get_active_stations,
@@ -202,6 +206,18 @@ def admin_logout():
 @admin_required
 def admin_dashboard():
     return jsonify({"status": "ok", "message": "Administrator access granted."}), 200
+
+
+@api.get("/travel-classes")
+def travel_classes():
+    """Return active travel classes for the passenger search form."""
+    try:
+        classes = get_active_travel_classes()
+    except mysql.connector.Error:
+        return jsonify({"status": "error", "message": "Travel classes are temporarily unavailable."}), 503
+    except Exception:
+        return jsonify({"status": "error", "message": "Travel classes could not be loaded."}), 500
+    return jsonify({"status": "ok", "travel_classes": classes}), 200
 
 
 @api.get("/seats/availability")
