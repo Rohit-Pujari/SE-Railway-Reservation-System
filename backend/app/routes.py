@@ -9,6 +9,7 @@ from .admin_auth import admin_required
 from .booking_confirmation import BookingConfirmationError, confirm_booking
 from .passenger_details import PassengerDetailsValidationError, save_passenger_details
 from .db import get_db_connection
+from .fare_calculation import FareCalculationError, calculate_booking_fare
 from .registration import RegistrationValidationError, register_user
 from .seat_availability import (
     SeatAvailabilityValidationError,
@@ -307,3 +308,20 @@ def booking_passenger_details(booking_id):
     except Exception:
         return jsonify({"status": "error", "message": "Passenger details could not be saved."}), 500
     return jsonify({"status": "ok", **result}), 201
+
+
+
+@api.post("/bookings/<int:booking_id>/fare")
+def booking_fare(booking_id):
+    """Calculate and persist the total fare before payment."""
+    if "user_id" not in session or session.get("role") != "PASSENGER":
+        return jsonify({"status": "error", "message": "Please log in to calculate the fare."}), 401
+    try:
+        result = calculate_booking_fare(booking_id, session["user_id"])
+    except FareCalculationError as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 409
+    except mysql.connector.Error:
+        return jsonify({"status": "error", "message": "Fare calculation is temporarily unavailable."}), 503
+    except Exception:
+        return jsonify({"status": "error", "message": "Fare could not be calculated."}), 500
+    return jsonify({"status": "ok", **result}), 200
