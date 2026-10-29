@@ -7,6 +7,7 @@ from werkzeug.security import check_password_hash
 
 from .admin_auth import admin_required
 from .booking_confirmation import BookingConfirmationError, confirm_booking
+from .passenger_details import PassengerDetailsValidationError, save_passenger_details
 from .db import get_db_connection
 from .registration import RegistrationValidationError, register_user
 from .seat_availability import (
@@ -287,3 +288,22 @@ def booking_confirmation(booking_id):
     except Exception:
         return jsonify({"status": "error", "message": "Booking could not be confirmed."}), 500
     return jsonify({"status": "ok", **result}), 200
+
+
+@api.post("/bookings/<int:booking_id>/passengers")
+def booking_passenger_details(booking_id):
+    """Validate and save passenger details on the signed-in user's pending booking."""
+    if "user_id" not in session or session.get("role") != "PASSENGER":
+        return jsonify({"status": "error", "message": "Please log in to add passenger details."}), 401
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"status": "error", "message": "Submit passenger details as JSON."}), 400
+    try:
+        result = save_passenger_details(booking_id, session["user_id"], payload.get("passengers"))
+    except PassengerDetailsValidationError as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 400
+    except mysql.connector.Error:
+        return jsonify({"status": "error", "message": "Passenger details could not be saved right now."}), 503
+    except Exception:
+        return jsonify({"status": "error", "message": "Passenger details could not be saved."}), 500
+    return jsonify({"status": "ok", **result}), 201
