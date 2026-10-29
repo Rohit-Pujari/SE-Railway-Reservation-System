@@ -140,6 +140,11 @@ button { cursor: pointer; }
 .train-route > div:last-child { text-align: right; }
 .train-route strong { overflow-wrap: anywhere; color: #263a2f; font: 700 12px 'Avenir Next', 'Segoe UI', sans-serif; }
 .train-route span { overflow-wrap: anywhere; color: #808c82; font-size: 9px; }
+.train-result-details { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 16px; padding-top: 13px; border-top: 1px solid #e8ebe5; }
+.train-result-detail { display: grid; gap: 5px; min-width: 110px; }
+.train-result-detail span { color: #808c82; font-size: 9px; }
+.train-result-detail strong { color: #173f34; font-size: 12px; font-weight: 700; }
+.train-result-detail:last-child strong { color: #47724f; }
 .route-arrow { color: #91a995; }
 
 .account-section { display: grid; grid-template-columns: .83fr 1.17fr; overflow: hidden; margin: 47px 32px 62px; border: 1px solid #e7e9e2; border-radius: 19px; background: #fff; box-shadow: 0 12px 35px rgb(31 50 41 / 4%); }

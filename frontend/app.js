@@ -153,7 +153,44 @@ function renderTrainResults(trains) {
     destinationMeta.textContent = `${train.destination_station_code} · ${formatTime(train.arrival_at)}`;
     destination.append(destinationName, destinationMeta);
     route.append(origin, arrow, destination);
-    card.append(heading, route);
+
+    const details = document.createElement("div");
+    details.className = "train-result-details";
+
+    const fare = document.createElement("div");
+    fare.className = "train-result-detail";
+    const fareLabel = document.createElement("span");
+    fareLabel.textContent = "Starting fare";
+    const fareValue = document.createElement("strong");
+    if (train.starting_fare === null || train.starting_fare === undefined) {
+      fareValue.textContent = "Fare unavailable";
+    } else {
+      const currency = train.currency_code || "INR";
+      try {
+        fareValue.textContent = new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency,
+          maximumFractionDigits: 2,
+        }).format(train.starting_fare);
+      } catch (_error) {
+        fareValue.textContent = `${currency} ${Number(train.starting_fare).toFixed(2)}`;
+      }
+    }
+    fare.append(fareLabel, fareValue);
+
+    const seats = document.createElement("div");
+    seats.className = "train-result-detail";
+    const seatsLabel = document.createElement("span");
+    seatsLabel.textContent = "Seats available";
+    const seatsValue = document.createElement("strong");
+    const availableSeats = Number(train.available_seats);
+    seatsValue.textContent = Number.isFinite(availableSeats)
+      ? `${availableSeats} ${availableSeats === 1 ? "seat" : "seats"}`
+      : "Availability unavailable";
+    seats.append(seatsLabel, seatsValue);
+
+    details.append(fare, seats);
+    card.append(heading, route, details);
     trainResultsList.append(card);
   }
 }
