@@ -14,7 +14,7 @@ class TrainSearchValidationError(ValueError):
     """Raised when train-search parameters are missing or invalid."""
 
 
-def validate_search(source_station_id, destination_station_id, journey_date):
+def validate_search(source_station_id, destination_station_id, journey_date, class_id=None):
     """Normalize search inputs before any database query is made."""
     try:
         source_id = int(source_station_id)
@@ -36,7 +36,15 @@ def validate_search(source_station_id, destination_station_id, journey_date):
     if parsed_date.isoformat() != journey_date:
         raise TrainSearchValidationError("Journey date must use YYYY-MM-DD format.")
 
-    return source_id, destination_id, parsed_date
+    if class_id is not None:
+        try:
+            class_id = int(class_id)
+        except (TypeError, ValueError):
+            raise TrainSearchValidationError("Select a valid travel class.") from None
+        if class_id <= 0:
+            raise TrainSearchValidationError("Select a valid travel class.")
+
+    return source_id, destination_id, parsed_date, class_id
 
 
 def _format_datetime(value):
@@ -87,10 +95,10 @@ def get_active_stations(connection_factory=None):
                 pass
 
 
-def search_trains(source_station_id, destination_station_id, journey_date, connection_factory=None):
+def search_trains(source_station_id, destination_station_id, journey_date, class_id=None, connection_factory=None):
     """Return active scheduled trains stopping at origin before destination."""
-    source_id, destination_id, travel_date = validate_search(
-        source_station_id, destination_station_id, journey_date
+    source_id, destination_id, travel_date, selected_class_id = validate_search(
+        source_station_id, destination_station_id, journey_date, class_id
     )
     start_at = datetime.combine(travel_date, time.min)
     end_at = start_at + timedelta(days=1)
@@ -128,6 +136,7 @@ def search_trains(source_station_id, destination_station_id, journey_date, conne
                          AND fare_destination.route_stop_id = destination_stop.route_stop_id
                          AND fare_origin.stop_sequence < fare_destination.stop_sequence
                          AND fare_class.class_status = 'ACTIVE'
+                         AND (%s IS NULL OR fare_class.class_id = %s)
                        ORDER BY fare.fare_amount ASC
                        LIMIT 1
                    ) AS starting_fare,
@@ -145,6 +154,7 @@ def search_trains(source_station_id, destination_station_id, journey_date, conne
                          AND fare_destination.route_stop_id = destination_stop.route_stop_id
                          AND fare_origin.stop_sequence < fare_destination.stop_sequence
                          AND fare_class.class_status = 'ACTIVE'
+                         AND (%s IS NULL OR fare_class.class_id = %s)
                        ORDER BY fare.fare_amount ASC
                        LIMIT 1
                    ) AS currency_code,
@@ -157,6 +167,7 @@ def search_trains(source_station_id, destination_station_id, journey_date, conne
                          ON seat_class.class_id = available_seat.class_id
                        WHERE available_seat.schedule_id = schedule.schedule_id
                          AND available_seat.operational_status = 'IN_SERVICE'
+                         AND (%s IS NULL OR available_seat.class_id = %s)
                          AND physical_seat.seat_status = 'ACTIVE'
                          AND seat_class.class_status = 'ACTIVE'
                          AND NOT EXISTS (
@@ -207,7 +218,12 @@ def search_trains(source_station_id, destination_station_id, journey_date, conne
                  AND destination.station_status = 'ACTIVE'
                ORDER BY origin_stop.departure_at, train.train_number
                LIMIT %s""",
-            (source_id, destination_id, start_at, end_at, MAX_SEARCH_RESULTS),
+            (
+                selected_class_id, selected_class_id,
+                selected_class_id, selected_class_id,
+                selected_class_id, selected_class_id,
+                source_id, destination_id, start_at, end_at, MAX_SEARCH_RESULTS,
+            ),
         )
         rows = cursor.fetchall()
         return [
