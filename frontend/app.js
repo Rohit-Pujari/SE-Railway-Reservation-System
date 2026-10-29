@@ -81,12 +81,6 @@ async function loadStations() {
     if (!response.ok) throw new Error(result.message || "Could not load stations.");
     addStationOptions(sourceStation, result.stations);
     addStationOptions(destinationStation, result.stations);
-    const demoOrigin = result.stations.find((station) => station.station_code === "SBC");
-    const demoDestination = result.stations.find((station) => station.station_code === "MAS");
-    if (demoOrigin && demoDestination) {
-      sourceStation.value = String(demoOrigin.station_id);
-      destinationStation.value = String(demoDestination.station_id);
-    }
     searchButton.disabled = result.stations.length === 0;
     if (result.stations.length === 0) {
       setMessage(searchMessage, "No active stations are available yet.", true);
@@ -330,10 +324,8 @@ function formatLocalDate(value) {
 }
 
 const today = new Date();
-const tomorrow = new Date(today);
-tomorrow.setDate(tomorrow.getDate() + 1);
 journeyDate.min = formatLocalDate(today);
-journeyDate.value = formatLocalDate(tomorrow);
+journeyDate.value = formatLocalDate(today);
 loadStations();
 checkApiStatus();
 restoreSession();
