@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import mysql.connector
 
-from backend.app import create_app
+from backend.tests.drf_client import RailwayAPIClient, set_session
 from backend.app.passenger_details import (
     PassengerDetailsValidationError,
     save_passenger_details,
@@ -88,9 +88,7 @@ class PassengerDetailsServiceTests(unittest.TestCase):
 
 class PassengerDetailsEndpointTests(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
-        self.app.config.update(TESTING=True, SECRET_KEY="test-secret")
-        self.client = self.app.test_client()
+        self.client = RailwayAPIClient()
 
     def test_requires_passenger_login(self):
         response = self.client.post("/api/bookings/41/passengers", json={
@@ -99,18 +97,14 @@ class PassengerDetailsEndpointTests(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_rejects_invalid_json_shape(self):
-        with self.client.session_transaction() as session:
-            session["user_id"] = 7
-            session["role"] = "PASSENGER"
+        set_session(self.client, user_id=7, role="PASSENGER")
         response = self.client.post("/api/bookings/41/passengers", json=["not", "an object"])
         self.assertEqual(response.status_code, 400)
 
     def test_saves_passengers_for_authenticated_user(self):
         from unittest.mock import patch
-        with self.client.session_transaction() as session:
-            session["user_id"] = 7
-            session["role"] = "PASSENGER"
-        with patch("backend.app.routes.save_passenger_details") as save:
+        set_session(self.client, user_id=7, role="PASSENGER")
+        with patch("backend.app.django_views.save_passenger_details") as save:
             save.return_value = {"booking_id": 41, "passengers_added": 1,
                                  "passengers": [{"passenger_name": "A", "age": 20,
                                                  "gender": None, "berth_preference": "NO_PREFERENCE"}]}
@@ -118,7 +112,7 @@ class PassengerDetailsEndpointTests(unittest.TestCase):
                 "passengers": [{"passenger_name": "A", "age": 20}]
             })
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json["passengers_added"], 1)
+        self.assertEqual(response.json()["passengers_added"], 1)
         save.assert_called_once_with(41, 7, [{"passenger_name": "A", "age": 20}])
 
 

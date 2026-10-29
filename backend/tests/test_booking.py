@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import mysql.connector
 
-from backend.app import create_app
+from backend.tests.drf_client import RailwayAPIClient, set_session
 from backend.app.booking import (
     BookingRequestError,
     BookingUnavailableError,
@@ -138,7 +138,7 @@ class BookingTransactionTests(unittest.TestCase):
         self.assertTrue(all("'HELD'" in call.args[0] for call in allocation_inserts))
         connection.close.assert_called_once_with()
 
-    @patch("backend.app.booking._new_pnr", side_effect=["DUPLICATE0001", "UNIQUE000002"])
+    @patch("backend.app.booking._new_pnr", side_effect=["DUPLICATE001", "UNIQUE000002"])
     def test_duplicate_pnr_collision_retries_before_saving_booking(self, new_pnr):
         connection = configured_connection()
         cursor = connection.cursor.return_value
@@ -158,10 +158,7 @@ class BookingTransactionTests(unittest.TestCase):
 
         self.assertEqual(result["pnr"], "UNIQUE000002")
         booking_inserts = [call for call in cursor.execute.call_args_list if "INSERT INTO bookings" in call.args[0]]
-        self.assertEqual(
-            [call.args[1][0] for call in booking_inserts],
-            ["DUPLICATE0001", "UNIQUE000002"],
-        )
+        self.assertEqual([call.args[1][0] for call in booking_inserts], ["DUPLICATE001", "UNIQUE000002"])
         self.assertEqual(new_pnr.call_count, 2)
         connection.commit.assert_called_once_with()
 
@@ -246,15 +243,13 @@ class BookingTransactionTests(unittest.TestCase):
 
 class BookingEndpointTests(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
-        self.app.config.update(TESTING=True, SECRET_KEY="test-secret")
-        self.client = self.app.test_client()
+        self.client = RailwayAPIClient()
 
     def test_anonymous_user_cannot_create_booking(self):
         response = self.client.post("/api/bookings", json={})
         self.assertEqual(response.status_code, 401)
 
-    @patch("backend.app.routes.create_booking")
+    @patch("backend.app.django_views.create_booking")
     def test_authenticated_passenger_can_start_booking(self, create):
         create.return_value = {
             "booking_id": 88,
@@ -263,9 +258,7 @@ class BookingEndpointTests(unittest.TestCase):
             "assigned_seats": [{"coach_number": "S1", "seat_number": "1"}],
             "replayed": False,
         }
-        with self.client.session_transaction() as session:
-            session["user_id"] = 7
-            session["role"] = "PASSENGER"
+        set_session(self.client, user_id=7, role="PASSENGER")
         response = self.client.post("/api/bookings", json={
             "schedule_id": 9,
             "source_station_id": 1,
@@ -276,15 +269,13 @@ class BookingEndpointTests(unittest.TestCase):
             "idempotency_key": "request-1",
         })
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json["pnr"], "AB23456789")
+        self.assertEqual(response.json()["pnr"], "AB23456789")
         create.assert_called_once()
 
-    @patch("backend.app.routes.create_booking")
+    @patch("backend.app.django_views.create_booking")
     def test_no_seats_returns_conflict(self, create):
         create.side_effect = BookingUnavailableError("No seats remain.")
-        with self.client.session_transaction() as session:
-            session["user_id"] = 7
-            session["role"] = "PASSENGER"
+        set_session(self.client, user_id=7, role="PASSENGER")
         response = self.client.post("/api/bookings", json={"idempotency_key": "request-1"})
         self.assertEqual(response.status_code, 409)
 

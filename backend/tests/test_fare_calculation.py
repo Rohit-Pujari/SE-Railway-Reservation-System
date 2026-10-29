@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import mysql.connector
 
-from backend.app import create_app
+from backend.tests.drf_client import RailwayAPIClient, set_session
 from backend.app.fare_calculation import FareCalculationError, calculate_booking_fare
 
 
@@ -99,38 +99,32 @@ class FareCalculationServiceTests(unittest.TestCase):
 
 class FareCalculationEndpointTests(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
-        self.app.config.update(TESTING=True, SECRET_KEY="fare-test-secret")
-        self.client = self.app.test_client()
+        self.client = RailwayAPIClient()
 
     def test_requires_passenger_login(self):
         response = self.client.post("/api/bookings/10/fare")
         self.assertEqual(response.status_code, 401)
 
-    @patch("backend.app.routes.calculate_booking_fare")
+    @patch("backend.app.django_views.calculate_booking_fare")
     def test_returns_calculated_total_for_logged_in_passenger(self, calculate):
         calculate.return_value = {
             "booking_id": 10, "passenger_count": 2, "currency_code": "INR",
             "fare_per_passenger": 125.5, "base_fare_total": 251.0,
             "other_charges": 20.0, "total_fare": 271.0,
         }
-        with self.client.session_transaction() as sess:
-            sess["user_id"] = 5
-            sess["role"] = "PASSENGER"
+        set_session(self.client, user_id=5, role="PASSENGER")
         response = self.client.post("/api/bookings/10/fare")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json["total_fare"], 271.0)
+        self.assertEqual(response.json()["total_fare"], 271.0)
         calculate.assert_called_once_with(10, 5)
 
-    @patch("backend.app.routes.calculate_booking_fare")
+    @patch("backend.app.django_views.calculate_booking_fare")
     def test_validation_failure_returns_conflict(self, calculate):
         calculate.side_effect = FareCalculationError("No fare is configured.")
-        with self.client.session_transaction() as sess:
-            sess["user_id"] = 5
-            sess["role"] = "PASSENGER"
+        set_session(self.client, user_id=5, role="PASSENGER")
         response = self.client.post("/api/bookings/10/fare")
         self.assertEqual(response.status_code, 409)
-        self.assertIn("No fare is configured", response.json["message"])
+        self.assertIn("No fare is configured", response.json()["message"])
 
 
 if __name__ == "__main__":

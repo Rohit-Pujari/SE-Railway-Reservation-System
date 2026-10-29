@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import mysql.connector
 from werkzeug.security import check_password_hash
 
-from backend.app import create_app
+from backend.tests.drf_client import RailwayAPIClient, set_session
 from backend.app.registration import (
     PASSWORD_MAX_LENGTH,
     RegistrationValidationError,
@@ -73,50 +73,48 @@ class RegistrationServiceTests(unittest.TestCase):
 
 class RegistrationEndpointTests(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
-        self.app.config.update(TESTING=True)
-        self.client = self.app.test_client()
+        self.client = RailwayAPIClient()
 
-    @patch("backend.app.routes.register_user")
+    @patch("backend.app.django_views.register_user")
     def test_success(self, register):
         register.return_value = {"user_id": 42, "full_name": "Aditi Rao", "email": "aditi.rao@example.com"}
         response = self.client.post("/api/register", json=VALID)
         self.assertEqual(response.status_code, 201)
 
-    @patch("backend.app.routes.register_user")
+    @patch("backend.app.django_views.register_user")
     def test_validation_error(self, register):
         register.side_effect = RegistrationValidationError("Enter a valid email address.")
         response = self.client.post("/api/register", json=VALID)
         self.assertEqual(response.status_code, 400)
 
-    @patch("backend.app.routes.register_user")
+    @patch("backend.app.django_views.register_user")
     def test_duplicate_key_returns_conflict(self, register):
         register.side_effect = mysql.connector.IntegrityError(errno=1062, msg="duplicate")
         response = self.client.post("/api/register", json=VALID)
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.json["message"], "An account with this email already exists.")
+        self.assertEqual(response.json()["message"], "An account with this email already exists.")
 
-    @patch("backend.app.routes.register_user")
+    @patch("backend.app.django_views.register_user")
     def test_non_duplicate_integrity_error_is_safe_server_error(self, register):
         register.side_effect = mysql.connector.IntegrityError(errno=1452, msg="foreign key failure")
         response = self.client.post("/api/register", json=VALID)
         self.assertEqual(response.status_code, 500)
-        self.assertNotIn("foreign key", response.get_data(as_text=True))
-        self.assertNotIn("1452", response.get_data(as_text=True))
+        self.assertNotIn("foreign key", response.content.decode())
+        self.assertNotIn("1452", response.content.decode())
 
-    @patch("backend.app.routes.register_user")
+    @patch("backend.app.django_views.register_user")
     def test_database_error_is_not_leaked(self, register):
         register.side_effect = mysql.connector.Error("secret host/password")
         response = self.client.post("/api/register", json=VALID)
         self.assertEqual(response.status_code, 503)
-        self.assertNotIn("secret", response.get_data(as_text=True))
+        self.assertNotIn("secret", response.content.decode())
 
-    @patch("backend.app.routes.register_user")
+    @patch("backend.app.django_views.register_user")
     def test_unexpected_error_is_not_leaked(self, register):
         register.side_effect = RuntimeError("private internals")
         response = self.client.post("/api/register", json=VALID)
         self.assertEqual(response.status_code, 500)
-        self.assertNotIn("private internals", response.get_data(as_text=True))
+        self.assertNotIn("private internals", response.content.decode())
 
     def test_non_json_request_rejected(self):
         response = self.client.post("/api/register", data="not json", content_type="text/plain")

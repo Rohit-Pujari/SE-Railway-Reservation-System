@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import mysql.connector
 
-from backend.app import create_app
+from backend.tests.drf_client import RailwayAPIClient, set_session
 from backend.app.train_search import (
     TrainSearchValidationError,
     search_trains,
@@ -133,11 +133,9 @@ class TrainSearchQueryTests(unittest.TestCase):
 
 class TrainSearchEndpointTests(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
-        self.app.config.update(TESTING=True, SECRET_KEY="test-secret")
-        self.client = self.app.test_client()
+        self.client = RailwayAPIClient()
 
-    @patch("backend.app.routes.get_active_stations")
+    @patch("backend.app.django_views.get_active_stations")
     def test_station_list(self, get_stations):
         get_stations.return_value = [{
             "station_id": 1, "station_code": "AAA", "station_name": "Alpha",
@@ -145,20 +143,20 @@ class TrainSearchEndpointTests(unittest.TestCase):
         }]
         response = self.client.get("/api/stations")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json["stations"][0]["station_code"], "AAA")
+        self.assertEqual(response.json()["stations"][0]["station_code"], "AAA")
 
-    @patch("backend.app.routes.get_active_stations")
+    @patch("backend.app.django_views.get_active_stations")
     def test_station_database_error_is_safe(self, get_stations):
         get_stations.side_effect = mysql.connector.Error("secret db details")
         response = self.client.get("/api/stations")
         self.assertEqual(response.status_code, 503)
-        self.assertNotIn("secret db details", response.get_data(as_text=True))
+        self.assertNotIn("secret db details", response.content.decode())
 
     def test_missing_search_parameters_rejected(self):
         response = self.client.get("/api/trains/search")
         self.assertEqual(response.status_code, 400)
 
-    @patch("backend.app.routes.search_trains")
+    @patch("backend.app.django_views.search_trains")
     def test_search_success(self, search):
         search.return_value = [{
             "schedule_id": 9, "train_number": "12001", "train_name": "Sample Express",
@@ -169,10 +167,10 @@ class TrainSearchEndpointTests(unittest.TestCase):
             "/api/trains/search?source_station_id=1&destination_station_id=2&journey_date=2026-11-15&class_id=3"
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json["count"], 1)
-        self.assertEqual(response.json["trains"][0]["train_number"], "12001")
+        self.assertEqual(response.json()["count"], 1)
+        self.assertEqual(response.json()["trains"][0]["train_number"], "12001")
 
-    @patch("backend.app.routes.search_trains")
+    @patch("backend.app.django_views.search_trains")
     def test_search_validation_error(self, search):
         search.side_effect = TrainSearchValidationError("Source and destination stations must be different.")
         response = self.client.get(
@@ -180,14 +178,14 @@ class TrainSearchEndpointTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
-    @patch("backend.app.routes.search_trains")
+    @patch("backend.app.django_views.search_trains")
     def test_search_database_error_is_safe(self, search):
         search.side_effect = mysql.connector.Error("secret db details")
         response = self.client.get(
             "/api/trains/search?source_station_id=1&destination_station_id=2&journey_date=2026-11-15"
         )
         self.assertEqual(response.status_code, 503)
-        self.assertNotIn("secret db details", response.get_data(as_text=True))
+        self.assertNotIn("secret db details", response.content.decode())
 
 
 if __name__ == "__main__":
