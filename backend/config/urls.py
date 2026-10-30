@@ -19,6 +19,7 @@ urlpatterns = [
     path("api/bookings", django_views.booking_create, name="booking-create"),
     path("api/bookings/<int:booking_id>/passengers", django_views.booking_passenger_details, name="booking-passengers"),
     path("api/bookings/<int:booking_id>/fare", django_views.booking_fare, name="booking-fare"),
+    path("api/bookings/<int:booking_id>/payment", django_views.booking_payment, name="booking-payment"),
     path("", django_views.frontend, name="frontend"),
     re_path(r"^(?P<asset_path>assets/.+)$", django_views.frontend_asset, name="frontend-asset"),
 ]
