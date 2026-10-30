@@ -52,6 +52,7 @@ function App() {
   const [authBusy, setAuthBusy] = useState(false);
   const [passengers, setPassengers] = useState([]);
   const [bookingKey, setBookingKey] = useState("");
+  const [bookingConfirmation, setBookingConfirmation] = useState(null);
 
   async function initialize(isActive = () => true) {
     setLoadingSearchData(true);
@@ -143,6 +144,7 @@ function App() {
     })));
     setBookingMessage("");
     setBookingError(false);
+    setBookingConfirmation(null);
   }
 
   function changePassenger(index, field, value) {
@@ -167,7 +169,8 @@ function App() {
       } });
       const assigned = (result.assigned_seats || []).map((seat) => `${seat.coach_number}-${seat.seat_number}`).join(", ");
       setBookingError(false);
-      setBookingMessage(`Seats reserved pending payment. PNR ${result.pnr} · ${assigned} · ${result.currency_code} ${Number(result.total_fare).toFixed(2)} total.`);
+      setBookingMessage("");
+      setBookingConfirmation({ booking: result, train: selectedTrain, passengers: passengers.map((passenger) => ({ ...passenger })), journeyDate, className: selectedClass?.class_name || "Selected class", classCode: selectedClass?.class_code || "", passengerCount });
       setSelectedTrain(null);
       setBookingKey("");
       setTrains((current) => [...current]);
@@ -246,6 +249,7 @@ function App() {
             <form className="booking-form" onSubmit={submitBooking}><div className="booking-passenger-fields">{passengers.map((passenger, index) => <fieldset className="booking-passenger-entry" key={index}><legend>Passenger {index + 1}</legend><div className="field-group"><label htmlFor={`passenger-${index}-name`}>Full name</label><input id={`passenger-${index}-name`} maxLength="120" required value={passenger.passenger_name} onChange={(event) => changePassenger(index, "passenger_name", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-age`}>Age</label><input id={`passenger-${index}-age`} type="number" min="0" max="120" required value={passenger.age} onChange={(event) => changePassenger(index, "age", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-gender`}>Gender (optional)</label><input id={`passenger-${index}-gender`} maxLength="30" value={passenger.gender} onChange={(event) => changePassenger(index, "gender", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-berth`}>Berth preference</label><select id={`passenger-${index}-berth`} value={passenger.berth_preference} onChange={(event) => changePassenger(index, "berth_preference", event.target.value)}>{[["NO_PREFERENCE", "No preference"], ["LOWER", "Lower"], ["MIDDLE", "Middle"], ["UPPER", "Upper"], ["SIDE_LOWER", "Side lower"], ["SIDE_UPPER", "Side upper"]].map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></div></fieldset>)}</div><button type="submit" className="account-submit" disabled={submitting}>{submitting ? "Checking seats…" : "Book and reserve seats"}</button></form>
           </section>}
           {bookingMessage && <p className={`form-message ${bookingError ? "is-error" : "is-success"}`} role="status">{bookingMessage}</p>}
+          {bookingConfirmation && <TicketConfirmation confirmation={bookingConfirmation} />}
         </section>}
       </section>
       <section id="account" className="account-section" aria-labelledby="registration-title"><div className="account-copy"><p className="section-kicker">A LITTLE MORE CONVENIENT</p><h2>Make the next trip<br /><em>yours.</em></h2><p>Create an account to get started with railway reservations. Your details stay yours.</p><div className="account-note"><span className="note-mark" aria-hidden="true">✳</span><span><strong>One less thing to do at the station.</strong><br />Set up your account before your next journey.</span></div><div className="account-decoration" aria-hidden="true"><span /><span /><span /><span /><span /><span /><span /></div></div>
@@ -265,6 +269,49 @@ function App() {
     </main>
     <footer className="site-footer"><a className="footer-brand" href="#top">trackline</a><span>Plan well. Travel happy.</span><a href="#plan">Back to top ↑</a></footer>
   </>;
+}
+
+
+function TicketConfirmation({ confirmation }) {
+  const { booking, train, passengers, journeyDate, className, classCode, passengerCount } = confirmation;
+  const currency = booking.currency_code || train.currency_code || "INR";
+  const farePerPassenger = Number(booking.fare_per_passenger ?? train.starting_fare ?? 0);
+  const totalFare = Number(booking.total_fare ?? farePerPassenger * passengerCount);
+  const journeyLabel = new Date(`${journeyDate}T00:00:00`).toLocaleDateString(undefined, {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  });
+  const seats = booking.assigned_seats || [];
+
+  return <section className="ticket-confirmation" aria-labelledby="confirmation-title" aria-live="polite">
+    <div className="confirmation-heading">
+      <div><p className="section-kicker">BOOKING SUCCESSFUL</p><h2 id="confirmation-title">Your ticket details</h2></div>
+      <span className="confirmation-status">{String(booking.status || "PENDING_PAYMENT").replaceAll("_", " ")}</span>
+    </div>
+    <div className="confirmation-pnr"><span>YOUR PNR</span><strong>{booking.pnr}</strong><small>Keep this number for your journey.</small></div>
+    <div className="confirmation-grid">
+      <div><span>Train</span><strong>{train.train_name} ({train.train_number})</strong></div>
+      <div><span>Journey date</span><strong>{journeyLabel}</strong></div>
+      <div><span>From</span><strong>{train.source_station_name} ({train.source_station_code})</strong></div>
+      <div><span>To</span><strong>{train.destination_station_name} ({train.destination_station_code})</strong></div>
+      <div><span>Departure</span><strong>{train.departure_at}</strong></div>
+      <div><span>Arrival</span><strong>{train.arrival_at}</strong></div>
+      <div><span>Travel class</span><strong>{className}{classCode ? ` (${classCode})` : ""}</strong></div>
+      <div><span>Passengers</span><strong>{passengerCount}</strong></div>
+    </div>
+    <div className="confirmation-passengers">
+      <h3>Passenger and seat details</h3>
+      {passengers.map((passenger, index) => <div className="confirmation-passenger" key={index}>
+        <span><strong>{index + 1}. {passenger.passenger_name}</strong><small>Age {passenger.age}{passenger.gender ? ` · ${passenger.gender}` : ""}</small></span>
+        <strong>{seats[index] ? `${seats[index].coach_number} · Seat ${seats[index].seat_number}` : "Seat assigned"}</strong>
+      </div>)}
+    </div>
+    <div className="confirmation-fare">
+      <div><span>Fare per passenger</span><strong>{currency} {farePerPassenger.toFixed(2)}</strong></div>
+      <div><span>Total fare</span><strong>{currency} {totalFare.toFixed(2)}</strong></div>
+    </div>
+    {booking.hold_expires_at && <p className="confirmation-note">Seat hold expires: {new Date(booking.hold_expires_at).toLocaleString()}. Complete payment before expiry to retain these seats.</p>}
+    <p className="confirmation-note">Booking status: {String(booking.status || "PENDING_PAYMENT").replaceAll("_", " ")}. Your seats are reserved; payment is not yet confirmed.</p>
+  </section>;
 }
 
 function TrainCard({ train, classId, selectedClass, sourceId, destinationId, journeyDate, passengerCount, onBook }) {
