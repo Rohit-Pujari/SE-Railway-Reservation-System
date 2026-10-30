@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from .booking import BookingRequestError, BookingUnavailableError, create_booking
 from .db import get_db_connection
 from .fare_calculation import FareCalculationError, calculate_booking_fare
+from .payment import PaymentConflictError, PaymentRequestError, process_payment
 from .passenger_details import PassengerDetailsValidationError, save_passenger_details
 from .registration import RegistrationValidationError, register_user
 from .seat_availability import (
@@ -354,6 +355,32 @@ def booking_fare(request, booking_id):
     except Exception:
         return Response({"status": "error", "message": "Fare could not be calculated."}, status=500)
     return Response({"status": "ok", **result})
+
+
+@endpoint(["POST"])
+def booking_payment(request, booking_id):
+    user_id = _user_id(request)
+    if user_id is None:
+        return Response({"status": "error", "message": "Please log in before paying for a booking."}, status=401)
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit payment details as JSON."}, status=400)
+    try:
+        result = process_payment(
+            booking_id,
+            user_id,
+            payload.get("idempotency_key"),
+            payload.get("simulated_outcome"),
+        )
+    except PaymentConflictError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except PaymentRequestError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Payment is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Payment could not be completed."}, status=500)
+    return Response({"status": "ok", **result}, status=200 if result.get("replayed") else 201)
 
 
 @ensure_csrf_cookie

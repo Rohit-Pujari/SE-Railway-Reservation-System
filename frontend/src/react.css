@@ -17,4 +17,13 @@
 .account-panel h3 { margin-bottom: 4px; }
 .account-panel p { margin-top: 0; }
 .form-message.is-success { color: #3a9c70; }
+.payment-panel { display: grid; gap: 16px; margin-top: 22px; padding: 22px; border: 1px solid var(--line, #30343b); border-radius: 12px; background: var(--surface, #101318); }
+.payment-panel .results-heading { margin-bottom: 0; }
+.payment-amount { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0; color: var(--muted, #8f969e); }
+.payment-amount strong { color: var(--text, #eef0f3); font-size: 1.2rem; }
+.payment-demo-note { margin: 0; color: var(--muted, #8f969e); font-size: .9rem; }
+.payment-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.payment-fail-button { min-height: 47px; padding: 0 16px; border: 1px solid var(--line, #30343b); border-radius: 8px; background: transparent; color: var(--text, #eef0f3); font-size: 10px; font-weight: 700; }
+.payment-fail-button:hover:not(:disabled) { border-color: var(--accent, #db7944); color: var(--accent, #db7944); }
+.payment-fail-button:disabled { cursor: not-allowed; opacity: .65; }
 @media (max-width: 760px) { .train-result-details { grid-template-columns: 1fr; } .booking-passenger-entry { grid-template-columns: 1fr; } .hero-visual { min-height: 210px; } }

@@ -48,6 +48,10 @@ function App() {
   const [selectedTrain, setSelectedTrain] = useState(null);
   const [bookingMessage, setBookingMessage] = useState("");
   const [bookingError, setBookingError] = useState(false);
+  const [paymentBooking, setPaymentBooking] = useState(null);
+  const [paymentMessage, setPaymentMessage] = useState("");
+  const [paymentError, setPaymentError] = useState(false);
+  const [paymentBusy, setPaymentBusy] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const [passengers, setPassengers] = useState([]);
@@ -167,7 +171,10 @@ function App() {
       } });
       const assigned = (result.assigned_seats || []).map((seat) => `${seat.coach_number}-${seat.seat_number}`).join(", ");
       setBookingError(false);
-      setBookingMessage(`Seats reserved pending payment. PNR ${result.pnr} · ${assigned} · ${result.currency_code} ${Number(result.total_fare).toFixed(2)} total.`);
+      setBookingMessage(`Seats held for 15 minutes. PNR ${result.pnr} · ${assigned}.`);
+      setPaymentBooking({ ...result, booking_status: result.status });
+      setPaymentMessage("");
+      setPaymentError(false);
       setSelectedTrain(null);
       setBookingKey("");
       setTrains((current) => [...current]);
@@ -176,6 +183,30 @@ function App() {
       setBookingMessage(messageText(error));
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function submitSimulatedPayment(simulatedOutcome) {
+    if (!paymentBooking || paymentBooking.booking_status === "CONFIRMED") return;
+    setPaymentBusy(true);
+    setPaymentMessage("");
+    try {
+      const idempotencyKey = globalThis.crypto?.randomUUID?.();
+      if (!idempotencyKey) throw new Error("Secure payment requests are unavailable in this browser.");
+      const result = await api(`/bookings/${paymentBooking.booking_id}/payment`, {
+        method: "POST",
+        body: { idempotency_key: idempotencyKey, simulated_outcome: simulatedOutcome },
+      });
+      setPaymentBooking((current) => ({ ...current, booking_status: result.booking_status }));
+      setPaymentError(result.payment_status !== "SUCCEEDED");
+      setPaymentMessage(result.payment_status === "SUCCEEDED"
+        ? `Simulated payment succeeded. Booking ${result.pnr} is confirmed.`
+        : `Simulated payment failed. Booking ${result.pnr} remains pending while the seat hold is active.`);
+    } catch (error) {
+      setPaymentError(true);
+      setPaymentMessage(messageText(error));
+    } finally {
+      setPaymentBusy(false);
     }
   }
 
@@ -240,6 +271,7 @@ function App() {
         </form>
         {searchDataError && <p className="form-message is-error" role="alert">{searchDataError} <button type="button" className="retry-button" onClick={() => initialize()} disabled={loadingSearchData}>{loadingSearchData ? "Retrying…" : "Retry"}</button></p>}
         <p className={`form-message ${searchError ? "is-error" : ""}`} role="status">{searchMessage}</p>
+        {paymentBooking && <section className="payment-panel" aria-labelledby="payment-title"><div className="results-heading"><div><p className="section-kicker">PAYMENT</p><h2 id="payment-title">Complete your booking</h2></div><span className="step-label">{paymentBooking.booking_status === "CONFIRMED" ? "CONFIRMED" : "PENDING"}</span></div><p className="payment-amount">Amount to pay <strong>{paymentBooking.currency_code} {Number(paymentBooking.total_fare).toFixed(2)}</strong></p><p className="payment-demo-note">Demo payment only. No real payment is processed. Choose an outcome to test the booking flow.</p>{paymentBooking.booking_status !== "CONFIRMED" && <div className="payment-actions"><button type="button" className="account-submit" disabled={paymentBusy} onClick={() => submitSimulatedPayment("SUCCESS")}>{paymentBusy ? "Processing…" : "Simulate successful payment"}</button><button type="button" className="payment-fail-button" disabled={paymentBusy} onClick={() => submitSimulatedPayment("FAILURE")}>{paymentBusy ? "Processing…" : "Simulate declined payment"}</button></div>}<p className={`form-message ${paymentError ? "is-error" : "is-success"}`} role="status" aria-live="polite">{paymentMessage}</p></section>}
         {trains.length > 0 && <section className="search-results" aria-labelledby="results-title"><div className="results-heading"><div><p className="section-kicker">YOUR OPTIONS</p><h2 id="results-title">Matching trains</h2></div><p className="results-summary">{trains.length} scheduled service{trains.length === 1 ? "" : "s"}</p></div>
           <div className="train-results-list">{trains.map((train) => <TrainCard key={train.schedule_id} train={train} classId={classId} selectedClass={selectedClass} sourceId={sourceId} destinationId={destinationId} journeyDate={journeyDate} passengerCount={passengerCount} onBook={beginBooking} />)}</div>
           {selectedTrain && <section className="booking-panel" aria-labelledby="booking-title"><div className="results-heading"><div><p className="section-kicker">COMPLETE YOUR JOURNEY</p><h2 id="booking-title">Traveler details</h2></div><span className="step-label">BOOK TICKET</span></div><p className="booking-summary">{selectedTrain.train_name} ({selectedTrain.train_number}) · {selectedTrain.source_station_name} to {selectedTrain.destination_station_name} · {passengerCount} passenger{passengerCount === 1 ? "" : "s"}</p>
