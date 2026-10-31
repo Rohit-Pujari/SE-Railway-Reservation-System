@@ -332,6 +332,7 @@ export default function AdminApp() {
         <p className="admin-form-note">Intermediate station times are estimated from route distances. Schedules with bookings can have their status updated, but their train, route and timetable are locked to protect existing tickets.</p>
         <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Train</th><th>Route</th><th>Departure</th><th>Arrival</th><th>Status</th><th>Seats</th><th>Action</th></tr></thead><tbody>{(data?.schedules||[]).map(schedule=><tr key={schedule.schedule_id}><td>{schedule.schedule_id}</td><td>{schedule.train_number} — {schedule.train_name}</td><td>{schedule.route_name}</td><td>{date(schedule.departure_at)}</td><td>{date(schedule.arrival_at)}</td><td>{schedule.schedule_status}</td><td>{schedule.available_seats}/{schedule.total_seats}</td><td><button className="admin-small-button" onClick={()=>startEditSchedule(schedule)}>Edit</button></td></tr>)}</tbody></table>{!data?.schedules?.length&&<p className="admin-empty">No train schedules found.</p>}</div>
       </>}
+      {tab==="schedules" && (
         <section className="admin-seat-inventory">
           <div className="admin-title-row">
             <div>
@@ -400,6 +401,7 @@ export default function AdminApp() {
           )}
           <p className="admin-form-note">Seats with confirmed bookings or unexpired reservation holds are protected and cannot be taken out of service. Returning an out-of-service seat to service makes it eligible for future availability checks.</p>
         </section>
+      )}
       {tab==="bookings" && <><p className="section-kicker">RESERVATIONS</p><h2>Bookings</h2>{rows(data?.bookings,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["email","Email"],["booking_status","Status"],["passenger_count","Passengers"],["total_fare","Fare"],["created_at","Created"]])}</>}
       {tab==="cancellations" && <><p className="section-kicker">SERVICE RECORDS</p><h2>Cancellation records</h2>{rows(data?.cancellations,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Requested by"],["cancellation_status","Status"],["passenger_items","Passengers"],["cancellation_charge","Charge"],["refund_amount","Refund"],["requested_at","Requested"]])}</>}
     </div>
