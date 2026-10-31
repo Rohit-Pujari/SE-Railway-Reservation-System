@@ -18,6 +18,7 @@ urlpatterns = [
     path("api/trains/search", django_views.train_search, name="train-search"),
     path("api/bookings", django_views.booking_create, name="booking-create"),
     path("api/bookings/history", django_views.passenger_booking_history, name="booking-history"),
+    path("api/bookings/status", django_views.passenger_booking_status, name="booking-status"),
     path("api/bookings/<int:booking_id>/passengers", django_views.booking_passenger_details, name="booking-passengers"),
     path("api/bookings/<int:booking_id>/fare", django_views.booking_fare, name="booking-fare"),
     path("", django_views.frontend, name="frontend"),
