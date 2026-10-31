@@ -22,6 +22,13 @@ class StationRouteValidationTests(unittest.TestCase):
         with self.assertRaises(StationRouteValidationError):
             validate_route("Bengaluru-Mysuru", [{"station_id": 1, "sequence": 1}])
 
+    def test_route_requires_explicit_distance_for_every_stop(self):
+        with self.assertRaises(StationRouteValidationError):
+            validate_route("Route", [
+                {"station_id": 1, "sequence": 1},
+                {"station_id": 2, "sequence": 2, "distance_from_origin_km": 10},
+            ])
+
     def test_route_rejects_duplicate_stations(self):
         with self.assertRaises(StationRouteValidationError):
             validate_route("Loop", [
