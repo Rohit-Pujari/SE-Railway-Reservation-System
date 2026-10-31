@@ -323,3 +323,6 @@ button { cursor: pointer; }
 .admin-edit-train-fields>button:disabled{opacity:.6;cursor:wait}
 @media(max-width:850px){.admin-edit-train-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.admin-edit-train-fields{grid-template-columns:1fr}.admin-edit-train-fields>button{width:100%}}
+
+.admin-danger-button{border:1px solid #c98b83;background:#fff;border-radius:4px;padding:7px 10px;color:#963f35;cursor:pointer}
+.admin-danger-button:disabled{opacity:.6;cursor:wait}

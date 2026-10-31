@@ -448,10 +448,29 @@ def admin_dashboard_data(request):
         return Response({"status": "error", "message": "Dashboard data could not be loaded."}, status=500)
 
 
-@endpoint(["PATCH"])
+@endpoint(["PATCH", "DELETE"])
 @_admin_required
 def admin_train_update(request, train_id):
-    """Update train number, name, and/or operating status for an administrator."""
+    """Update train details or safely remove a train for an administrator."""
+    if request.method == "DELETE":
+        from .train_management import remove_train
+        try:
+            result = remove_train(train_id)
+        except ValueError as exc:
+            return Response({"status": "error", "message": str(exc)}, status=400)
+        except LookupError as exc:
+            return Response({"status": "error", "message": str(exc)}, status=404)
+        except IntegrityError:
+            return Response({
+                "status": "error",
+                "message": "Train is still linked to railway records and could not be deleted.",
+            }, status=409)
+        except mysql.connector.Error:
+            return Response({"status": "error", "message": "Train management is temporarily unavailable."}, status=503)
+        except Exception:
+            return Response({"status": "error", "message": "Train could not be removed."}, status=500)
+        return Response({"status": "ok", "message": result["message"], "train": result})
+
     payload = _payload(request)
     if payload is None or not any(key in payload for key in ("train_number", "train_name", "train_status")):
         return Response({"status": "error", "message": "Submit at least one valid train detail."}, status=400)

@@ -29,6 +29,7 @@ export default function AdminApp() {
   const [editingTrainId, setEditingTrainId] = useState(null);
   const [editTrain, setEditTrain] = useState({ train_number: "", train_name: "", train_status: "ACTIVE" });
   const [savingTrain, setSavingTrain] = useState(false);
+  const [removingTrainId, setRemovingTrainId] = useState(null);
 
   async function loadDashboard() {
     setBusy(true); setError("");
@@ -75,6 +76,22 @@ export default function AdminApp() {
     } catch (err) { setError(err.message); }
   }
 
+  async function removeTrain(train) {
+    const confirmed = window.confirm(
+      "Remove train " + train.train_number + " — " + train.train_name +
+      "? Trains with schedules or booking history will be deactivated to preserve existing records."
+    );
+    if (!confirmed) return;
+    setRemovingTrainId(train.train_id);
+    setError(""); setNotice("");
+    try {
+      const result = await request("/admin/trains/" + train.train_id, { method: "DELETE" });
+      setNotice(result.message || "Train removed successfully.");
+      await loadDashboard();
+      setTab("trains");
+    } catch (err) { setError(err.message); }
+    finally { setRemovingTrainId(null); }
+  }
   function startEditTrain(train) {
     setEditingTrainId(train.train_id);
     setEditTrain({
@@ -121,7 +138,7 @@ export default function AdminApp() {
             <div><label htmlFor="edit-train-status">Status</label><select id="edit-train-status" value={editTrain.train_status} onChange={e=>setEditTrain({...editTrain,train_status:e.target.value})}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></div>
             <button type="submit" disabled={savingTrain}>{savingTrain?"Saving…":"Save changes"}</button>
           </div>
-        </form>}<div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Train no.</th><th>Train name</th><th>Status</th><th>Action</th></tr></thead><tbody>{(data?.trains||[]).map(train=><tr key={train.train_id}><td>{train.train_number}</td><td>{train.train_name}</td><td><span className={`admin-status ${train.train_status.toLowerCase()}`}>{train.train_status}</span></td><td><button className="admin-small-button" onClick={()=>startEditTrain(train)}>Edit</button> <button className="admin-small-button" onClick={()=>changeTrainStatus(train)}>{train.train_status==="ACTIVE"?"Deactivate":"Activate"}</button></td></tr>)}</tbody></table>{!data?.trains?.length&&<p className="admin-empty">No trains found.</p>}</div></>}
+        </form>}<div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Train no.</th><th>Train name</th><th>Status</th><th>Action</th></tr></thead><tbody>{(data?.trains||[]).map(train=><tr key={train.train_id}><td>{train.train_number}</td><td>{train.train_name}</td><td><span className={`admin-status ${train.train_status.toLowerCase()}`}>{train.train_status}</span></td><td><button className="admin-small-button" onClick={()=>startEditTrain(train)}>Edit</button> <button className="admin-small-button" onClick={()=>changeTrainStatus(train)}>{train.train_status==="ACTIVE"?"Deactivate":"Activate"}</button> <button className="admin-danger-button" onClick={()=>removeTrain(train)} disabled={removingTrainId===train.train_id}>{removingTrainId===train.train_id?"Removing…":"Remove"}</button></td></tr>)}</tbody></table>{!data?.trains?.length&&<p className="admin-empty">No trains found.</p>}</div></>}
       {tab==="routes" && <><p className="section-kicker">NETWORK</p><h2>Routes and stops</h2>{rows(data?.routes,[["route_name","Route"],["route_status","Status"],["stops","Station sequence"]])}</>}
       {tab==="schedules" && <><p className="section-kicker">TIMETABLE & INVENTORY</p><h2>Schedules and seat availability</h2>{rows(data?.schedules,[["train_number","Train no."],["train_name","Train"],["route_name","Route"],["departure_at","Departure"],["arrival_at","Arrival"],["schedule_status","Status"],["available_seats","Available seats"],["total_seats","Total seats"]])}</>}
       {tab==="bookings" && <><p className="section-kicker">RESERVATIONS</p><h2>Bookings</h2>{rows(data?.bookings,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["email","Email"],["booking_status","Status"],["passenger_count","Passengers"],["total_fare","Fare"],["created_at","Created"]])}</>}

@@ -67,6 +67,80 @@ def create_train(train_number, train_name, train_status="ACTIVE", connection_fac
         connection.close()
 
 
+def remove_train(train_id, connection_factory=None):
+    """Remove a train when safe; retain scheduled/booking history by deactivating it."""
+    if isinstance(train_id, bool) or not str(train_id).isdigit() or int(train_id) <= 0:
+        raise ValueError("Enter a valid train ID.")
+
+    train_id = int(train_id)
+    connection = (connection_factory or get_db_connection)()
+    cursor = None
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT train_id, train_number, train_name, train_status "
+            "FROM trains WHERE train_id = %s FOR UPDATE",
+            (train_id,),
+        )
+        train = cursor.fetchone()
+        if train is None:
+            raise LookupError("Train not found.")
+
+        cursor.execute(
+            "SELECT COUNT(DISTINCT schedule.schedule_id) AS schedule_count, "
+            "COUNT(DISTINCT booking.booking_id) AS booking_count "
+            "FROM train_schedules AS schedule "
+            "LEFT JOIN bookings AS booking ON booking.schedule_id = schedule.schedule_id "
+            "WHERE schedule.train_id = %s",
+            (train_id,),
+        )
+        dependencies = cursor.fetchone() or {}
+        schedule_count = int(dependencies.get("schedule_count") or 0)
+        booking_count = int(dependencies.get("booking_count") or 0)
+
+        if schedule_count:
+            cursor.execute(
+                "UPDATE trains SET train_status = 'INACTIVE' WHERE train_id = %s",
+                (train_id,),
+            )
+            connection.commit()
+            if booking_count:
+                message = (
+                    "This train has booking history. It was deactivated instead of deleted "
+                    "so passenger and booking records remain available."
+                )
+            else:
+                message = (
+                    "This train is linked to existing schedules. It was deactivated instead "
+                    "of deleted so schedule records remain intact."
+                )
+            return {
+                "train_id": train_id,
+                "action": "deactivated",
+                "train_number": train["train_number"],
+                "train_name": train["train_name"],
+                "message": message,
+            }
+
+        cursor.execute("DELETE FROM seats WHERE train_id = %s", (train_id,))
+        cursor.execute("DELETE FROM trains WHERE train_id = %s", (train_id,))
+        if cursor.rowcount != 1:
+            raise LookupError("Train not found.")
+        connection.commit()
+        return {
+            "train_id": train_id,
+            "action": "deleted",
+            "train_number": train["train_number"],
+            "train_name": train["train_name"],
+            "message": "Train removed successfully.",
+        }
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        if cursor is not None:
+            cursor.close()
+        connection.close()
 
 def update_train(train_id, train_number=None, train_name=None, train_status=None, connection_factory=None):
     """Update editable train details while preserving fields omitted by the caller."""
