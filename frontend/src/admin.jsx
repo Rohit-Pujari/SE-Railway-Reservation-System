@@ -50,6 +50,9 @@ export default function AdminApp() {
   const [bookingSearch, setBookingSearch] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookingDetailLoading, setBookingDetailLoading] = useState(false);
+  const [cancellationRecords, setCancellationRecords] = useState([]);
+  const [cancellationLoading, setCancellationLoading] = useState(false);
+  const [cancellationSearch, setCancellationSearch] = useState("");
 
   async function loadDashboard() {
     setBusy(true); setError("");
@@ -58,6 +61,17 @@ export default function AdminApp() {
     finally { setBusy(false); }
   }
   useEffect(() => { request("/csrf").catch(() => {}); }, []);
+
+  async function loadCancellationRecords() {
+    setCancellationLoading(true);
+    try { const result = await request("/admin/cancellations"); setCancellationRecords(result.cancellations || []); }
+    catch (err) { setError(err.message); }
+    finally { setCancellationLoading(false); }
+  }
+
+  useEffect(() => {
+    if (admin && tab === "cancellations") loadCancellationRecords();
+  }, [admin, tab]);
 
   async function login(event) {
     event.preventDefault(); setBusy(true); setError("");
@@ -459,7 +473,32 @@ export default function AdminApp() {
           </section>
         </>}
       </>}
-      {tab==="cancellations" && <><p className="section-kicker">SERVICE RECORDS</p><h2>Cancellation records</h2>{rows(data?.cancellations,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Requested by"],["cancellation_status","Status"],["passenger_items","Passengers"],["cancellation_charge","Charge"],["refund_amount","Refund"],["requested_at","Requested"]])}</>}
+      {tab==="cancellations" && <>
+        <div className="admin-title-row"><div><p className="section-kicker">SERVICE RECORDS</p><h2>Cancellation records</h2><p>Review each cancelled passenger and every associated refund attempt.</p></div><button onClick={loadCancellationRecords} disabled={cancellationLoading}>{cancellationLoading?"Refreshing…":"Refresh ↻"}</button></div>
+        <div className="admin-booking-search">
+          <label htmlFor="cancellation-search">Search by PNR, passenger, requester, train or cancellation/refund status</label>
+          <input id="cancellation-search" type="search" value={cancellationSearch} onChange={event=>setCancellationSearch(event.target.value)} placeholder="e.g. PNR, passenger, email or refund status" />
+        </div>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Requested</th><th>PNR / Train</th><th>Passenger</th><th>Requested by</th><th>Cancellation</th><th>Charge</th><th>Expected refund</th><th>Refund attempt</th><th>Refund amount</th><th>Provider reference / error</th><th>Refund dates</th></tr></thead><tbody>
+          {cancellationRecords.filter(item=>[item.pnr,item.train_number_snapshot,item.train_name_snapshot,item.passenger_name,item.requested_by_name,item.requested_by_email,item.cancellation_status,item.item_status,item.refund_status,item.provider_refund_id,item.failure_code].some(value=>String(value||"").toLowerCase().includes(cancellationSearch.trim().toLowerCase()))).map((item,index)=><tr key={item.refund_id||item.cancellation_item_id||item.cancellation_id+"-"+index}>
+            <td>{date(item.requested_at)}</td>
+            <td>{item.pnr}<br/><span className="admin-muted">{item.train_number_snapshot} — {item.train_name_snapshot}</span></td>
+            <td>{item.passenger_name||"All / not itemized"}</td>
+            <td>{item.requested_by_name}<br/><span className="admin-muted">{item.requested_by_email}</span></td>
+            <td>{item.cancellation_status} / {item.item_status||"—"}<br/><span className="admin-muted">{item.reason||"No reason provided"}</span></td>
+            <td>{money(item.cancellation_charge,item.currency_code)}</td>
+            <td>{money(item.expected_refund_amount,item.currency_code)}</td>
+            <td>{item.refund_status||"Not initiated"}{item.refund_id?" · #"+item.refund_id:""}</td>
+            <td>{item.refund_id?money(item.refund_amount,item.refund_currency):"—"}</td>
+            <td>{item.provider_refund_id||item.failure_code||"—"}</td>
+            <td>{date(item.refund_created_at)}{item.refund_completed_at?" / "+date(item.refund_completed_at):""}</td>
+          </tr>)}
+        </tbody></table>
+        {!cancellationLoading && !cancellationRecords.length && <p className="admin-empty">No cancellation records found.</p>}
+        {!cancellationLoading && cancellationRecords.length>0 && !cancellationRecords.some(item=>[item.pnr,item.train_number_snapshot,item.train_name_snapshot,item.passenger_name,item.requested_by_name,item.requested_by_email,item.cancellation_status,item.item_status,item.refund_status,item.provider_refund_id,item.failure_code].some(value=>String(value||"").toLowerCase().includes(cancellationSearch.trim().toLowerCase()))) && <p className="admin-empty">No cancellation records match your search.</p>}
+        {cancellationLoading && <p className="admin-form-note">Loading cancellation and refund history…</p>}
+        </div>
+      </>}
     </div>
     <footer className="admin-footer">Trackline Railway Reservations · Administrator workspace</footer>
   </main>;
