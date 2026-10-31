@@ -38,6 +38,11 @@ export default function AdminApp() {
   const [routeSaving, setRouteSaving] = useState(false);
   const [assignmentForm, setAssignmentForm] = useState({ train_id: "", route_id: "" });
   const [assignmentSaving, setAssignmentSaving] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({
+    train_id: "", route_id: "", departure_at: "", arrival_at: "", schedule_status: "SCHEDULED",
+  });
+  const [editingScheduleId, setEditingScheduleId] = useState(null);
+  const [scheduleSaving, setScheduleSaving] = useState(false);
 
   async function loadDashboard() {
     setBusy(true); setError("");
@@ -176,6 +181,34 @@ export default function AdminApp() {
     } catch (err) { setError(err.message); }
   }
 
+  async function saveSchedule(event) {
+    event.preventDefault(); setScheduleSaving(true); setError(""); setNotice("");
+    try {
+      const result = await request(
+        editingScheduleId ? "/admin/schedules/" + editingScheduleId : "/admin/schedules",
+        { method: editingScheduleId ? "PATCH" : "POST", body: {
+          train_id: Number(scheduleForm.train_id), route_id: Number(scheduleForm.route_id),
+          departure_at: scheduleForm.departure_at, arrival_at: scheduleForm.arrival_at,
+          schedule_status: scheduleForm.schedule_status,
+        }}
+      );
+      setNotice(result.message || "Train schedule saved successfully.");
+      setScheduleForm({ train_id: "", route_id: "", departure_at: "", arrival_at: "", schedule_status: "SCHEDULED" });
+      setEditingScheduleId(null); await loadDashboard(); setTab("schedules");
+    } catch (err) { setError(err.message); }
+    finally { setScheduleSaving(false); }
+  }
+
+  function startEditSchedule(schedule) {
+    const localValue = value => value ? String(value).replace(" ", "T").slice(0, 16) : "";
+    setEditingScheduleId(schedule.schedule_id);
+    setScheduleForm({
+      train_id: String(schedule.train_id), route_id: String(schedule.route_id),
+      departure_at: localValue(schedule.departure_at), arrival_at: localValue(schedule.arrival_at),
+      schedule_status: schedule.schedule_status,
+    });
+    setError(""); setNotice("");
+  }
   function startEditTrain(train) {
     setEditingTrainId(train.train_id);
     setEditTrain({
