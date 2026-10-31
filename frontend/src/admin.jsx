@@ -125,10 +125,10 @@ export default function AdminApp() {
       const ids = routeForm.stop_ids.split(",").map(value => value.trim()).filter(Boolean);
       const distances = routeForm.distances.trim() ? routeForm.distances.split(",").map(value => value.trim()) : [];
       if (ids.length < 2) throw new Error("Enter at least two station IDs in route order.");
-      if (distances.length && distances.length !== ids.length) throw new Error("Enter one distance per station, or leave distances empty.");
+      if (distances.length !== ids.length) throw new Error("Enter one cumulative distance for every station.");
       const stops = ids.map((id, index) => ({
         station_id: Number(id), sequence: index + 1,
-        distance_from_origin_km: distances.length ? Number(distances[index]) : (index === 0 ? 0 : index),
+        distance_from_origin_km: Number(distances[index]),
       }));
       if (stops.some(stop => !Number.isInteger(stop.station_id) || stop.station_id <= 0 || !Number.isFinite(stop.distance_from_origin_km))) {
         throw new Error("Station IDs and distances must be valid numbers.");
@@ -241,7 +241,7 @@ export default function AdminApp() {
           <div><label htmlFor="route-name">Route name</label><input id="route-name" value={routeForm.route_name} onChange={e=>setRouteForm({...routeForm,route_name:e.target.value})} maxLength="150" required /></div>
           <div><label htmlFor="route-status">Status</label><select id="route-status" value={routeForm.route_status} onChange={e=>setRouteForm({...routeForm,route_status:e.target.value})}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></div>
           <div className="admin-management-wide"><label htmlFor="route-stop-ids">Station IDs in order (comma-separated)</label><input id="route-stop-ids" value={routeForm.stop_ids} onChange={e=>setRouteForm({...routeForm,stop_ids:e.target.value})} placeholder="e.g. 1, 4, 7" required /></div>
-          <div className="admin-management-wide"><label htmlFor="route-distances">Cumulative distances in km (comma-separated)</label><input id="route-distances" value={routeForm.distances} onChange={e=>setRouteForm({...routeForm,distances:e.target.value})} placeholder="e.g. 0, 42.5, 118 (optional)" /></div>
+          <div className="admin-management-wide"><label htmlFor="route-distances">Cumulative distances in km (comma-separated)</label><input id="route-distances" value={routeForm.distances} onChange={e=>setRouteForm({...routeForm,distances:e.target.value})} placeholder="e.g. 0, 42.5, 118" required /></div>
           <button type="submit" disabled={routeSaving}>{routeSaving?"Saving…":editingRouteId?"Update route":"Create route +"}</button>
           {editingRouteId && <button type="button" className="admin-small-button" onClick={()=>{setEditingRouteId(null);setRouteForm({route_name:"",route_status:"ACTIVE",stop_ids:"",distances:""});}}>Cancel</button>}
         </form>
