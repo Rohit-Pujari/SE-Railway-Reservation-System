@@ -51,7 +51,7 @@ class BookingCancellationServiceTests(unittest.TestCase):
         self.assertIn("WHERE booking_id = %s AND user_id = %s", cursor.execute.call_args_list[0].args[0])
         refund_inserts = [call for call in cursor.execute.call_args_list if "INSERT INTO refunds" in call.args[0]]
         self.assertEqual(len(refund_inserts), 2)
-        self.assertTrue(all(call.args[1][4].startswith("cancellation-item-") for call in refund_inserts))
+        self.assertTrue(all(call.args[1][3].startswith("cancellation-item-") for call in refund_inserts))
         connection.commit.assert_called_once_with()
         connection.rollback.assert_not_called()
         connection.close.assert_called_once_with()
