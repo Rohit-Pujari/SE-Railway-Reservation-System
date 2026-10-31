@@ -47,6 +47,9 @@ export default function AdminApp() {
   const [seatInventory, setSeatInventory] = useState(null);
   const [seatLoading, setSeatLoading] = useState(false);
   const [seatSavingId, setSeatSavingId] = useState(null);
+  const [bookingSearch, setBookingSearch] = useState("");
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [bookingDetailLoading, setBookingDetailLoading] = useState(false);
 
   async function loadDashboard() {
     setBusy(true); setError("");
@@ -213,6 +216,15 @@ export default function AdminApp() {
     });
     setError(""); setNotice("");
   }
+  async function viewBookingDetails(bookingId) {
+    setBookingDetailLoading(true); setError(""); setSelectedBooking(null);
+    try {
+      const result = await request(`/admin/bookings/${bookingId}`);
+      setSelectedBooking(result);
+    } catch (err) { setError(err.message); }
+    finally { setBookingDetailLoading(false); }
+  }
+
   async function loadScheduleSeats(scheduleId = seatScheduleId) {
     if (!scheduleId) { setSeatInventory(null); return; }
     setSeatLoading(true); setError("");
@@ -402,7 +414,51 @@ export default function AdminApp() {
           <p className="admin-form-note">Seats with confirmed bookings or unexpired reservation holds are protected and cannot be taken out of service. Returning an out-of-service seat to service makes it eligible for future availability checks.</p>
         </section>
       )}
-      {tab==="bookings" && <><p className="section-kicker">RESERVATIONS</p><h2>Bookings</h2>{rows(data?.bookings,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["email","Email"],["booking_status","Status"],["passenger_count","Passengers"],["total_fare","Fare"],["created_at","Created"]])}</>}
+      {tab==="bookings" && <>
+        <div className="admin-title-row"><div><p className="section-kicker">RESERVATIONS</p><h2>Passenger bookings</h2><p>Search reservations and open a booking to inspect passenger, seat, payment and cancellation details.</p></div><button onClick={loadDashboard} disabled={busy}>{busy?"Refreshing…":"Refresh ↻"}</button></div>
+        <div className="admin-booking-search">
+          <label htmlFor="booking-search">Search by PNR, passenger, account email, train or booking status</label>
+          <input id="booking-search" type="search" value={bookingSearch} onChange={event=>setBookingSearch(event.target.value)} placeholder="e.g. PNR, name, email or train number" />
+        </div>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>PNR</th><th>Train</th><th>Passenger / account</th><th>Status</th><th>Passengers</th><th>Fare</th><th>Booked</th><th>Details</th></tr></thead><tbody>
+          {(data?.bookings||[]).filter(item=>[item.pnr,item.train_number_snapshot,item.train_name_snapshot,item.full_name,item.email,item.booking_status].some(value=>String(value||"").toLowerCase().includes(bookingSearch.trim().toLowerCase()))).map(item=><tr key={item.booking_id}>
+            <td>{item.pnr}</td><td>{item.train_number_snapshot} — {item.train_name_snapshot}</td><td>{item.full_name}<br/><span className="admin-muted">{item.email}</span></td><td>{item.booking_status}</td><td>{item.passenger_count}</td><td>{money(item.total_fare,item.currency_code)}</td><td>{date(item.created_at)}</td><td><button className="admin-small-button" onClick={()=>viewBookingDetails(item.booking_id)}>View details</button></td>
+          </tr>)}
+        </tbody></table>
+        {!(data?.bookings||[]).some(item=>[item.pnr,item.train_number_snapshot,item.train_name_snapshot,item.full_name,item.email,item.booking_status].some(value=>String(value||"").toLowerCase().includes(bookingSearch.trim().toLowerCase())) ) && <p className="admin-empty">No bookings match your search.</p>}
+        </div>
+        {bookingDetailLoading && <p className="admin-form-note">Loading full reservation details…</p>}
+        {selectedBooking && <>
+          <section className="admin-booking-detail">
+            <div className="admin-title-row"><div><p className="section-kicker">RESERVATION DETAIL</p><h3>PNR {selectedBooking.booking.pnr}</h3></div><button className="admin-small-button" onClick={()=>setSelectedBooking(null)}>Close details</button></div>
+            <div className="admin-booking-facts">
+              <div><span>Booking status</span><strong>{selectedBooking.booking.booking_status}</strong></div>
+              <div><span>Passenger account</span><strong>{selectedBooking.booking.account_name}</strong><small>{selectedBooking.booking.email}</small></div>
+              <div><span>Contact</span><strong>{selectedBooking.booking.phone_number||"Not provided"}</strong></div>
+              <div><span>Train</span><strong>{selectedBooking.booking.train_number_snapshot} — {selectedBooking.booking.train_name_snapshot}</strong></div>
+              <div><span>Journey</span><strong>{selectedBooking.booking.boarding_station_name_snapshot} ({selectedBooking.booking.boarding_station_code_snapshot}) → {selectedBooking.booking.alighting_station_name_snapshot} ({selectedBooking.booking.alighting_station_code_snapshot})</strong></div>
+              <div><span>Departure / arrival</span><strong>{date(selectedBooking.booking.departure_at_snapshot)} – {date(selectedBooking.booking.arrival_at_snapshot)}</strong></div>
+              <div><span>Class</span><strong>{selectedBooking.booking.class_code_snapshot}</strong></div>
+              <div><span>Booked / confirmed</span><strong>{date(selectedBooking.booking.created_at)} / {date(selectedBooking.booking.confirmed_at)}</strong></div>
+              <div><span>Base fare</span><strong>{money(selectedBooking.booking.base_fare_total,selectedBooking.booking.currency_code)}</strong></div>
+              <div><span>Other charges</span><strong>{money(selectedBooking.booking.other_charges,selectedBooking.booking.currency_code)}</strong></div>
+              <div><span>Total fare</span><strong>{money(selectedBooking.booking.total_fare,selectedBooking.booking.currency_code)}</strong></div>
+            </div>
+            <h4>Booked passengers and seats</h4>
+            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Passenger</th><th>Age</th><th>Gender</th><th>Berth preference</th><th>Coach / seat</th><th>Allocation</th><th>Fare</th></tr></thead><tbody>
+              {selectedBooking.passengers.map(passenger=><tr key={passenger.booking_passenger_id}><td>{passenger.passenger_name}</td><td>{passenger.age}</td><td>{passenger.gender||"—"}</td><td>{String(passenger.berth_preference||"—").replaceAll("_"," ")}</td><td>{passenger.coach_number&&passenger.seat_number?passenger.coach_number+" / "+passenger.seat_number:"Not assigned"}</td><td>{passenger.allocation_status||"—"}</td><td>{money(passenger.passenger_fare,selectedBooking.booking.currency_code)}</td></tr>)}
+            </tbody></table>{!selectedBooking.passengers.length&&<p className="admin-empty">No passenger records.</p>}</div>
+            <h4>Payment history</h4>
+            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Payment ID</th><th>Method</th><th>Status</th><th>Amount</th><th>Transaction reference</th><th>Created / completed</th></tr></thead><tbody>
+              {selectedBooking.payments.map(payment=><tr key={payment.payment_id}><td>{payment.payment_id}</td><td>{payment.payment_method}</td><td>{payment.payment_status}</td><td>{money(payment.amount,payment.currency_code)}</td><td>{payment.provider_transaction_id||payment.failure_code||"—"}</td><td>{date(payment.created_at)} / {date(payment.completed_at)}</td></tr>)}
+            </tbody></table>{!selectedBooking.payments.length&&<p className="admin-empty">No payment attempts recorded.</p>}</div>
+            <h4>Cancellation and refund history</h4>
+            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Requested</th><th>Status</th><th>Passenger</th><th>Reason</th><th>Charge</th><th>Refund</th><th>Refund status</th></tr></thead><tbody>
+              {selectedBooking.cancellations.map((item,index)=><tr key={item.cancellation_item_id||item.cancellation_id+"-"+index}><td>{date(item.requested_at)}</td><td>{item.cancellation_status} / {item.item_status||"—"}</td><td>{item.passenger_name||"—"}</td><td>{item.reason||"—"}</td><td>{money(item.cancellation_charge,selectedBooking.booking.currency_code)}</td><td>{money(item.refunded_amount??item.refund_amount,item.refund_currency||selectedBooking.booking.currency_code)}</td><td>{item.refund_status||"—"}</td></tr>)}
+            </tbody></table>{!selectedBooking.cancellations.length&&<p className="admin-empty">No cancellation or refund records.</p>}</div>
+          </section>
+        </>}
+      </>}
       {tab==="cancellations" && <><p className="section-kicker">SERVICE RECORDS</p><h2>Cancellation records</h2>{rows(data?.cancellations,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Requested by"],["cancellation_status","Status"],["passenger_items","Passengers"],["cancellation_charge","Charge"],["refund_amount","Refund"],["requested_at","Requested"]])}</>}
     </div>
     <footer className="admin-footer">Trackline Railway Reservations · Administrator workspace</footer>
