@@ -35,7 +35,7 @@ def get_admin_dashboard(connection_factory=None):
             })
             if row["station_id"] is not None:
                 route["stops"].append({
-                    "sequence": row["stop_sequence"], "station_code": row["station_code"],
+                    "sequence": row["stop_sequence"], "station_id": row["station_id"], "station_code": row["station_code"],
                     "station_name": row["station_name"], "city": row["city"],
                     "distance_km": float(row["distance_from_origin_km"] or 0),
                 })

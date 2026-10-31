@@ -326,3 +326,15 @@ button { cursor: pointer; }
 
 .admin-danger-button{border:1px solid #c98b83;background:#fff;border-radius:4px;padding:7px 10px;color:#963f35;cursor:pointer}
 .admin-danger-button:disabled{opacity:.6;cursor:wait}
+
+
+/* Station and route administration — Issue #27 */
+.admin-management-form{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));align-items:end;gap:13px;background:#fff;border:1px solid #e1e5e0;border-radius:7px;padding:18px;margin:14px 0 20px}
+.admin-management-form>div{display:grid;gap:7px;min-width:0}
+.admin-management-form label{font-size:.82rem;font-weight:650;color:#52615a}
+.admin-management-form input,.admin-management-form select{width:100%;min-width:0;padding:11px 12px;border:1px solid #d7ded8;border-radius:4px;background:#fff;color:#202a28;font:inherit}
+.admin-management-form>button{border:0;background:#24483e;color:#fff;border-radius:5px;padding:12px 15px;font-weight:650;cursor:pointer;white-space:nowrap}
+.admin-management-form>button:disabled{opacity:.6;cursor:wait}
+.admin-management-wide{grid-column:span 2}
+@media(max-width:850px){.admin-management-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.admin-management-form{grid-template-columns:1fr}.admin-management-wide{grid-column:span 1}.admin-management-form>button{width:100%}}
