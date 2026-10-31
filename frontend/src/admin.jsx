@@ -26,6 +26,9 @@ export default function AdminApp() {
   const [notice, setNotice] = useState("");
   const [newTrain, setNewTrain] = useState({ train_number: "", train_name: "", train_status: "ACTIVE" });
   const [creatingTrain, setCreatingTrain] = useState(false);
+  const [editingTrainId, setEditingTrainId] = useState(null);
+  const [editTrain, setEditTrain] = useState({ train_number: "", train_name: "", train_status: "ACTIVE" });
+  const [savingTrain, setSavingTrain] = useState(false);
 
   async function loadDashboard() {
     setBusy(true); setError("");
@@ -72,6 +75,33 @@ export default function AdminApp() {
     } catch (err) { setError(err.message); }
   }
 
+  function startEditTrain(train) {
+    setEditingTrainId(train.train_id);
+    setEditTrain({
+      train_number: train.train_number,
+      train_name: train.train_name,
+      train_status: train.train_status,
+    });
+    setError(""); setNotice("");
+  }
+
+  async function saveTrainEdits(event) {
+    event.preventDefault();
+    if (editingTrainId === null) return;
+    setSavingTrain(true); setError(""); setNotice("");
+    try {
+      const result = await request(`/admin/trains/${editingTrainId}`, {
+        method: "PATCH",
+        body: editTrain,
+      });
+      setNotice(result.message || "Train details updated successfully.");
+      setEditingTrainId(null);
+      await loadDashboard();
+      setTab("trains");
+    } catch (err) { setError(err.message); }
+    finally { setSavingTrain(false); }
+  }
+
   const nav = [["overview","Overview"],["trains","Trains"],["routes","Routes"],["schedules","Schedules & seats"],["bookings","Bookings"],["cancellations","Cancellations"]];
   if (!admin) return <main className="admin-shell"><a className="admin-back" href="/">← Back to Trackline</a><section className="admin-login-card"><p className="section-kicker">TRACKLINE · ADMINISTRATION</p><h1>Administrator sign in</h1><p>Use an active administrator account to access railway operations.</p><form onSubmit={login}><label htmlFor="admin-email">Email</label><input id="admin-email" type="email" autoComplete="username" required value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/><label htmlFor="admin-password">Password</label><input id="admin-password" type="password" autoComplete="current-password" required value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/><button disabled={busy}>{busy ? "Signing in…" : "Sign in to dashboard ↗"}</button></form>{error && <p className="admin-error" role="alert">{error}</p>}{notice && <p className="admin-notice">{notice}</p>}</section></main>;
 
@@ -83,7 +113,15 @@ export default function AdminApp() {
     {error && <p className="admin-error" role="alert">{error}</p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
     <div className="admin-content">
       {tab==="overview" && <><div className="admin-title-row"><div><p className="section-kicker">AT A GLANCE</p><h2>Railway operations</h2></div><button onClick={loadDashboard} disabled={busy}>{busy?"Refreshing…":"Refresh data ↻"}</button></div><div className="admin-metrics">{[["Trains",summary.total_trains],["Routes",summary.total_routes],["Schedules",summary.total_schedules],["Bookings",summary.total_bookings],["Active bookings",summary.active_bookings],["Cancellations",summary.total_cancellations]].map(([label,value])=><article key={label}><span>{label}</span><strong>{Number(value||0).toLocaleString()}</strong></article>)}</div><h3>Recent bookings</h3>{rows((data?.bookings||[]).slice(0,8),[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["booking_status","Status"],["total_fare","Fare"]])}</>}
-      {tab==="trains" && <><div className="admin-title-row"><div><p className="section-kicker">FLEET</p><h2>Train management</h2><p>Add a train or activate/deactivate an existing service.</p></div><button onClick={loadDashboard} disabled={busy}>Refresh ↻</button></div><form className="admin-add-train-form" onSubmit={addTrain}><div><label htmlFor="new-train-number">Train number</label><input id="new-train-number" value={newTrain.train_number} onChange={e=>setNewTrain({...newTrain,train_number:e.target.value})} maxLength="20" pattern="[A-Za-z0-9-]{1,20}" title="Use 1–20 letters, numbers, or hyphens." placeholder="e.g. 12627" required /></div><div><label htmlFor="new-train-name">Train name</label><input id="new-train-name" value={newTrain.train_name} onChange={e=>setNewTrain({...newTrain,train_name:e.target.value})} maxLength="150" placeholder="e.g. Karnataka Express" required /></div><div><label htmlFor="new-train-status">Initial status</label><select id="new-train-status" value={newTrain.train_status} onChange={e=>setNewTrain({...newTrain,train_status:e.target.value})}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></div><button type="submit" disabled={creatingTrain}>{creatingTrain?"Adding…":"Add train +"}</button></form><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Train no.</th><th>Train name</th><th>Status</th><th>Action</th></tr></thead><tbody>{(data?.trains||[]).map(train=><tr key={train.train_id}><td>{train.train_number}</td><td>{train.train_name}</td><td><span className={`admin-status ${train.train_status.toLowerCase()}`}>{train.train_status}</span></td><td><button className="admin-small-button" onClick={()=>changeTrainStatus(train)}>{train.train_status==="ACTIVE"?"Deactivate":"Activate"}</button></td></tr>)}</tbody></table>{!data?.trains?.length&&<p className="admin-empty">No trains found.</p>}</div></>}
+      {tab==="trains" && <><div className="admin-title-row"><div><p className="section-kicker">FLEET</p><h2>Train management</h2><p>Add a train or activate/deactivate an existing service.</p></div><button onClick={loadDashboard} disabled={busy}>Refresh ↻</button></div><form className="admin-add-train-form" onSubmit={addTrain}><div><label htmlFor="new-train-number">Train number</label><input id="new-train-number" value={newTrain.train_number} onChange={e=>setNewTrain({...newTrain,train_number:e.target.value})} maxLength="20" pattern="[A-Za-z0-9-]{1,20}" title="Use 1–20 letters, numbers, or hyphens." placeholder="e.g. 12627" required /></div><div><label htmlFor="new-train-name">Train name</label><input id="new-train-name" value={newTrain.train_name} onChange={e=>setNewTrain({...newTrain,train_name:e.target.value})} maxLength="150" placeholder="e.g. Karnataka Express" required /></div><div><label htmlFor="new-train-status">Initial status</label><select id="new-train-status" value={newTrain.train_status} onChange={e=>setNewTrain({...newTrain,train_status:e.target.value})}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></div><button type="submit" disabled={creatingTrain}>{creatingTrain?"Adding…":"Add train +"}</button></form>{editingTrainId !== null && <form className="admin-edit-train-form" onSubmit={saveTrainEdits}>
+          <div className="admin-edit-train-heading"><div><p className="section-kicker">EDIT TRAIN</p><h3>Update train details</h3></div><button type="button" className="admin-small-button" onClick={()=>setEditingTrainId(null)}>Cancel</button></div>
+          <div className="admin-edit-train-fields">
+            <div><label htmlFor="edit-train-number">Train number</label><input id="edit-train-number" value={editTrain.train_number} onChange={e=>setEditTrain({...editTrain,train_number:e.target.value})} maxLength="20" pattern="[A-Za-z0-9-]{1,20}" title="Use 1–20 letters, numbers, or hyphens." required /></div>
+            <div><label htmlFor="edit-train-name">Train name</label><input id="edit-train-name" value={editTrain.train_name} onChange={e=>setEditTrain({...editTrain,train_name:e.target.value})} maxLength="150" required /></div>
+            <div><label htmlFor="edit-train-status">Status</label><select id="edit-train-status" value={editTrain.train_status} onChange={e=>setEditTrain({...editTrain,train_status:e.target.value})}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></div>
+            <button type="submit" disabled={savingTrain}>{savingTrain?"Saving…":"Save changes"}</button>
+          </div>
+        </form>}<div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Train no.</th><th>Train name</th><th>Status</th><th>Action</th></tr></thead><tbody>{(data?.trains||[]).map(train=><tr key={train.train_id}><td>{train.train_number}</td><td>{train.train_name}</td><td><span className={`admin-status ${train.train_status.toLowerCase()}`}>{train.train_status}</span></td><td><button className="admin-small-button" onClick={()=>startEditTrain(train)}>Edit</button> <button className="admin-small-button" onClick={()=>changeTrainStatus(train)}>{train.train_status==="ACTIVE"?"Deactivate":"Activate"}</button></td></tr>)}</tbody></table>{!data?.trains?.length&&<p className="admin-empty">No trains found.</p>}</div></>}
       {tab==="routes" && <><p className="section-kicker">NETWORK</p><h2>Routes and stops</h2>{rows(data?.routes,[["route_name","Route"],["route_status","Status"],["stops","Station sequence"]])}</>}
       {tab==="schedules" && <><p className="section-kicker">TIMETABLE & INVENTORY</p><h2>Schedules and seat availability</h2>{rows(data?.schedules,[["train_number","Train no."],["train_name","Train"],["route_name","Route"],["departure_at","Departure"],["arrival_at","Arrival"],["schedule_status","Status"],["available_seats","Available seats"],["total_seats","Total seats"]])}</>}
       {tab==="bookings" && <><p className="section-kicker">RESERVATIONS</p><h2>Bookings</h2>{rows(data?.bookings,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["email","Email"],["booking_status","Status"],["passenger_count","Passengers"],["total_fare","Fare"],["created_at","Created"]])}</>}
