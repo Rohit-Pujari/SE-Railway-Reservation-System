@@ -433,3 +433,35 @@ def passenger_booking_cancel(request, booking_id):
     except Exception:
         return Response({"status": "error", "message": "Booking could not be cancelled."}, status=500)
     return Response({"status": "ok", **result})
+
+
+@endpoint(["GET"])
+@_admin_required
+def admin_dashboard_data(request):
+    """Return the administrator's operational dashboard data."""
+    from .admin_dashboard import get_admin_dashboard
+    try:
+        return Response({"status": "ok", **get_admin_dashboard()})
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Dashboard data is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Dashboard data could not be loaded."}, status=500)
+
+
+@endpoint(["PATCH"])
+@_admin_required
+def admin_train_update(request, train_id):
+    """Allow an administrator to activate or deactivate a train."""
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit a valid train status."}, status=400)
+    from .admin_dashboard import update_train_status
+    try:
+        result = update_train_status(train_id, payload.get("train_status"))
+    except ValueError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Train status could not be updated."}, status=503)
+    return Response({"status": "ok", **result})
