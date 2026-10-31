@@ -279,6 +279,29 @@ function BookingHistory({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("upcoming");
+  const [cancelConfirmId, setCancelConfirmId] = useState(null);
+  const [cancelingId, setCancelingId] = useState(null);
+  const [cancelMessage, setCancelMessage] = useState("");
+  const [cancelError, setCancelError] = useState(false);
+
+  async function cancelTicket(booking) {
+    setCancelingId(booking.booking_id);
+    setCancelMessage("");
+    setCancelError(false);
+    try {
+      const result = await api("/bookings/" + booking.booking_id + "/cancel", {
+        method: "POST", body: { reason: "Cancelled by passenger" },
+      });
+      setCancelMessage(result.message || "Your booking has been cancelled.");
+      setCancelConfirmId(null);
+      await loadHistory();
+    } catch (requestError) {
+      setCancelError(true);
+      setCancelMessage(messageText(requestError));
+    } finally {
+      setCancelingId(null);
+    }
+  }
 
   async function loadHistory() {
     setLoading(true);
@@ -314,6 +337,7 @@ function BookingHistory({ user }) {
       <div><p className="section-kicker">YOUR TRAVEL RECORD</p><h2 id="booking-history-title">My bookings</h2><p className="booking-history-intro">{history.count} booking{history.count === 1 ? "" : "s"} linked to your account</p></div>
       <button type="button" className="history-refresh" onClick={loadHistory} disabled={loading}>{loading ? "Loading…" : "Refresh ↻"}</button>
     </div>
+    {cancelMessage && <p className={cancelError ? "form-message is-error" : "form-message is-success"} role="status">{cancelMessage}</p>}
     <div className="history-tabs" role="tablist" aria-label="Booking history">
       <button type="button" role="tab" aria-selected={activeTab === "upcoming"} className={activeTab === "upcoming" ? "is-active" : ""} onClick={() => setActiveTab("upcoming")}>Upcoming ({history.upcoming.length})</button>
       <button type="button" role="tab" aria-selected={activeTab === "previous"} className={activeTab === "previous" ? "is-active" : ""} onClick={() => setActiveTab("previous")}>Previous ({history.previous.length})</button>
@@ -326,6 +350,9 @@ function BookingHistory({ user }) {
         <div className="history-route"><div><strong>{booking.source_station_name}</strong><span>{booking.source_station_code}</span></div><span className="history-route-arrow">→</span><div><strong>{booking.destination_station_name}</strong><span>{booking.destination_station_code}</span></div></div>
         <div className="history-meta"><div><span>Departure</span><strong>{formatDate(booking.departure_at)}</strong></div><div><span>Arrival</span><strong>{formatDate(booking.arrival_at)}</strong></div><div><span>Total fare</span><strong>{booking.currency_code} {Number(booking.total_fare).toFixed(2)}</strong></div></div>
         <div className="history-passengers"><strong>Passengers and seats</strong>{booking.passengers.map((passenger) => <span key={passenger.passenger_id}>{passenger.passenger_name} · {passenger.coach_number && passenger.seat_number ? `${passenger.coach_number} / ${passenger.seat_number}` : passenger.allocation_status || "Seat details unavailable"}</span>)}</div>
+        {["PENDING_PAYMENT", "CONFIRMED", "PARTIALLY_CANCELLED"].includes(booking.booking_status) && booking.trip_type === "UPCOMING" && <div className="history-cancel-actions">
+          {cancelConfirmId === booking.booking_id ? <><span>Cancel this entire booking and release its seats?</span><button type="button" className="cancel-confirm-button" onClick={() => cancelTicket(booking)} disabled={cancelingId === booking.booking_id}>{cancelingId === booking.booking_id ? "Cancelling…" : "Confirm cancellation"}</button><button type="button" className="cancel-dismiss-button" onClick={() => setCancelConfirmId(null)} disabled={cancelingId === booking.booking_id}>Keep booking</button></> : <button type="button" className="cancel-ticket-button" onClick={() => { setCancelMessage(""); setCancelConfirmId(booking.booking_id); }}>Cancel ticket</button>}
+        </div>}
       </article>)}</div>}
   </section>;
 }
