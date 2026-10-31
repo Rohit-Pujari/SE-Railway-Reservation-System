@@ -1,6 +1,5 @@
 """Administrator management for stations, routes, and train-route assignments."""
 
-import math
 import re
 from decimal import Decimal, InvalidOperation
 
@@ -277,6 +276,14 @@ def remove_train_route(train_id, route_id, connection_factory=None):
     cursor = None
     try:
         cursor = connection.cursor()
+        cursor.execute(
+            "SELECT schedule_id FROM train_schedules WHERE train_id=%s AND route_id=%s LIMIT 1",
+            (int(train_id), int(route_id)),
+        )
+        if cursor.fetchone() is not None:
+            raise StationRouteValidationError(
+                "This train-route pair is used by an existing schedule and cannot be unassigned."
+            )
         cursor.execute(
             "DELETE FROM train_routes WHERE train_id=%s AND route_id=%s",
             (int(train_id), int(route_id)),
