@@ -338,3 +338,15 @@ button { cursor: pointer; }
 .admin-management-wide{grid-column:span 2}
 @media(max-width:850px){.admin-management-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.admin-management-form{grid-template-columns:1fr}.admin-management-wide{grid-column:span 1}.admin-management-form>button{width:100%}}
+
+
+/* Train schedule administration — Issue #28 */
+.admin-schedule-form{display:grid;grid-template-columns:repeat(3,minmax(170px,1fr));align-items:end;gap:13px;background:#fff;border:1px solid #e1e5e0;border-radius:7px;padding:18px;margin:16px 0 12px}
+.admin-schedule-form>div{display:grid;gap:7px;min-width:0}
+.admin-schedule-form label{font-size:.82rem;font-weight:650;color:#52615a}
+.admin-schedule-form input,.admin-schedule-form select{width:100%;min-width:0;padding:11px 12px;border:1px solid #d7ded8;border-radius:4px;background:#fff;color:#202a28;font:inherit}
+.admin-schedule-form>button{border:0;background:#24483e;color:#fff;border-radius:5px;padding:12px 15px;font-weight:650;cursor:pointer;white-space:nowrap}
+.admin-schedule-form>button:disabled{opacity:.6;cursor:wait}
+.admin-form-note{color:#64716b;font-size:.86rem;line-height:1.5;margin:8px 0 18px}
+@media(max-width:850px){.admin-schedule-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.admin-schedule-form{grid-template-columns:1fr}.admin-schedule-form>button{width:100%}}
