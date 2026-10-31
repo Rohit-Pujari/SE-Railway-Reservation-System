@@ -465,3 +465,36 @@ def admin_train_update(request, train_id):
     except mysql.connector.Error:
         return Response({"status": "error", "message": "Train status could not be updated."}, status=503)
     return Response({"status": "ok", **result})
+
+
+@endpoint(["POST"])
+@_admin_required
+def admin_train_create(request):
+    """Create a train from validated details submitted by an administrator."""
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit train details as JSON."}, status=400)
+    from .train_management import (
+        DuplicateTrainNumberError,
+        TrainValidationError,
+        create_train,
+    )
+    try:
+        result = create_train(
+            payload.get("train_number"),
+            payload.get("train_name"),
+            payload.get("train_status", "ACTIVE"),
+        )
+    except TrainValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except DuplicateTrainNumberError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except IntegrityError as exc:
+        if getattr(exc, "errno", None) == 1062:
+            return Response({"status": "error", "message": "A train with this train number already exists."}, status=409)
+        return Response({"status": "error", "message": "Train could not be added."}, status=500)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Train management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Train could not be added."}, status=500)
+    return Response({"status": "ok", "message": "Train added successfully.", "train": result}, status=201)

@@ -24,6 +24,8 @@ export default function AdminApp() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [newTrain, setNewTrain] = useState({ train_number: "", train_name: "", train_status: "ACTIVE" });
+  const [creatingTrain, setCreatingTrain] = useState(false);
 
   async function loadDashboard() {
     setBusy(true); setError("");
@@ -47,6 +49,19 @@ export default function AdminApp() {
     try { await request("/admin/logout", { method: "POST" }); setAdmin(null); setData(null); setNotice("You have been logged out."); }
     catch (err) { setError(err.message); }
   }
+  async function addTrain(event) {
+    event.preventDefault();
+    setCreatingTrain(true); setError(""); setNotice("");
+    try {
+      const result = await request("/admin/trains", { method: "POST", body: newTrain });
+      setNotice(result.message || "Train added successfully.");
+      setNewTrain({ train_number: "", train_name: "", train_status: "ACTIVE" });
+      await loadDashboard();
+      setTab("trains");
+    } catch (err) { setError(err.message); }
+    finally { setCreatingTrain(false); }
+  }
+
   async function changeTrainStatus(train) {
     const next = train.train_status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
     setError(""); setNotice("");
@@ -68,7 +83,7 @@ export default function AdminApp() {
     {error && <p className="admin-error" role="alert">{error}</p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
     <div className="admin-content">
       {tab==="overview" && <><div className="admin-title-row"><div><p className="section-kicker">AT A GLANCE</p><h2>Railway operations</h2></div><button onClick={loadDashboard} disabled={busy}>{busy?"Refreshing…":"Refresh data ↻"}</button></div><div className="admin-metrics">{[["Trains",summary.total_trains],["Routes",summary.total_routes],["Schedules",summary.total_schedules],["Bookings",summary.total_bookings],["Active bookings",summary.active_bookings],["Cancellations",summary.total_cancellations]].map(([label,value])=><article key={label}><span>{label}</span><strong>{Number(value||0).toLocaleString()}</strong></article>)}</div><h3>Recent bookings</h3>{rows((data?.bookings||[]).slice(0,8),[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["booking_status","Status"],["total_fare","Fare"]])}</>}
-      {tab==="trains" && <><div className="admin-title-row"><div><p className="section-kicker">FLEET</p><h2>Train management</h2><p>Review trains and activate or deactivate services.</p></div><button onClick={loadDashboard} disabled={busy}>Refresh ↻</button></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Train no.</th><th>Train name</th><th>Status</th><th>Action</th></tr></thead><tbody>{(data?.trains||[]).map(train=><tr key={train.train_id}><td>{train.train_number}</td><td>{train.train_name}</td><td><span className={`admin-status ${train.train_status.toLowerCase()}`}>{train.train_status}</span></td><td><button className="admin-small-button" onClick={()=>changeTrainStatus(train)}>{train.train_status==="ACTIVE"?"Deactivate":"Activate"}</button></td></tr>)}</tbody></table>{!data?.trains?.length&&<p className="admin-empty">No trains found.</p>}</div></>}
+      {tab==="trains" && <><div className="admin-title-row"><div><p className="section-kicker">FLEET</p><h2>Train management</h2><p>Add a train or activate/deactivate an existing service.</p></div><button onClick={loadDashboard} disabled={busy}>Refresh ↻</button></div><form className="admin-add-train-form" onSubmit={addTrain}><div><label htmlFor="new-train-number">Train number</label><input id="new-train-number" value={newTrain.train_number} onChange={e=>setNewTrain({...newTrain,train_number:e.target.value})} maxLength="20" pattern="[A-Za-z0-9-]{1,20}" title="Use 1–20 letters, numbers, or hyphens." placeholder="e.g. 12627" required /></div><div><label htmlFor="new-train-name">Train name</label><input id="new-train-name" value={newTrain.train_name} onChange={e=>setNewTrain({...newTrain,train_name:e.target.value})} maxLength="150" placeholder="e.g. Karnataka Express" required /></div><div><label htmlFor="new-train-status">Initial status</label><select id="new-train-status" value={newTrain.train_status} onChange={e=>setNewTrain({...newTrain,train_status:e.target.value})}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></div><button type="submit" disabled={creatingTrain}>{creatingTrain?"Adding…":"Add train +"}</button></form><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Train no.</th><th>Train name</th><th>Status</th><th>Action</th></tr></thead><tbody>{(data?.trains||[]).map(train=><tr key={train.train_id}><td>{train.train_number}</td><td>{train.train_name}</td><td><span className={`admin-status ${train.train_status.toLowerCase()}`}>{train.train_status}</span></td><td><button className="admin-small-button" onClick={()=>changeTrainStatus(train)}>{train.train_status==="ACTIVE"?"Deactivate":"Activate"}</button></td></tr>)}</tbody></table>{!data?.trains?.length&&<p className="admin-empty">No trains found.</p>}</div></>}
       {tab==="routes" && <><p className="section-kicker">NETWORK</p><h2>Routes and stops</h2>{rows(data?.routes,[["route_name","Route"],["route_status","Status"],["stops","Station sequence"]])}</>}
       {tab==="schedules" && <><p className="section-kicker">TIMETABLE & INVENTORY</p><h2>Schedules and seat availability</h2>{rows(data?.schedules,[["train_number","Train no."],["train_name","Train"],["route_name","Route"],["departure_at","Departure"],["arrival_at","Arrival"],["schedule_status","Status"],["available_seats","Available seats"],["total_seats","Total seats"]])}</>}
       {tab==="bookings" && <><p className="section-kicker">RESERVATIONS</p><h2>Bookings</h2>{rows(data?.bookings,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["email","Email"],["booking_status","Status"],["passenger_count","Passengers"],["total_fare","Fare"],["created_at","Created"]])}</>}
