@@ -128,8 +128,16 @@ def cancel_booking(user_id, booking_id, reason=None, connection_factory=None):
         passenger_refunds = []
         total_charge = Decimal("0.00")
         total_refund = Decimal("0.00")
-        for passenger, passenger_fare in zip(passengers, passenger_fares):
-            paid_fare = (passenger_fare * paid_ratio).quantize(Decimal("0.01"))
+        remaining_paid = paid_amount
+        for index, (passenger, passenger_fare) in enumerate(zip(passengers, passenger_fares)):
+            if index == len(passengers) - 1:
+                paid_fare = min(passenger_fare, remaining_paid)
+            else:
+                paid_fare = min(
+                    passenger_fare,
+                    (passenger_fare * paid_ratio).quantize(Decimal("0.01")),
+                )
+            remaining_paid = max(Decimal("0.00"), remaining_paid - paid_fare)
             if paid_fare > 0:
                 breakdown = calculate_cancellation_refund(
                     paid_fare, booking["class_code_snapshot"], hours_until_departure
