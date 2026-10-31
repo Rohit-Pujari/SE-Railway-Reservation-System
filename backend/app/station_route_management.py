@@ -207,26 +207,36 @@ def update_route(route_id, payload, connection_factory=None):
         if "stops" in payload:
             _, stops = validate_route(name, payload["stops"])
             cursor.execute(
-                "SELECT (SELECT COUNT(*) FROM train_schedules WHERE route_id=%s) AS schedules, "
-                "(SELECT COUNT(*) FROM route_fares WHERE route_id=%s) AS fares",
-                (int(route_id), int(route_id)),
+                "SELECT station_id, stop_sequence, distance_from_origin_km "
+                "FROM route_stops WHERE route_id=%s ORDER BY stop_sequence",
+                (int(route_id),),
             )
-            dependencies = cursor.fetchone()
-            if int(dependencies["schedules"] or 0) or int(dependencies["fares"] or 0):
-                raise StationRouteValidationError("Route stops cannot be changed after schedules or fares reference this route.")
-            placeholders = ",".join(["%s"] * len(stops))
-            cursor.execute(
-                f"SELECT station_id FROM stations WHERE station_id IN ({placeholders}) AND station_status='ACTIVE'",
-                tuple(stop[0] for stop in stops),
-            )
-            active_ids = {int(row["station_id"]) for row in cursor.fetchall()}
-            if active_ids != {stop[0] for stop in stops}:
-                raise StationRouteValidationError("Every route stop must reference an existing active station.")
-            cursor.execute("DELETE FROM route_stops WHERE route_id=%s", (int(route_id),))
-            cursor.executemany(
-                "INSERT INTO route_stops (route_id, station_id, stop_sequence, distance_from_origin_km) VALUES (%s,%s,%s,%s)",
-                [(int(route_id), *stop) for stop in stops],
-            )
+            current_stops = [
+                (int(row["station_id"]), int(row["stop_sequence"]), Decimal(str(row["distance_from_origin_km"])))
+                for row in cursor.fetchall()
+            ]
+            if stops != current_stops:
+                cursor.execute(
+                    "SELECT (SELECT COUNT(*) FROM train_schedules WHERE route_id=%s) AS schedules, "
+                    "(SELECT COUNT(*) FROM route_fares WHERE route_id=%s) AS fares",
+                    (int(route_id), int(route_id)),
+                )
+                dependencies = cursor.fetchone()
+                if int(dependencies["schedules"] or 0) or int(dependencies["fares"] or 0):
+                    raise StationRouteValidationError("Route stops cannot be changed after schedules or fares reference this route.")
+                placeholders = ",".join(["%s"] * len(stops))
+                cursor.execute(
+                    f"SELECT station_id FROM stations WHERE station_id IN ({placeholders}) AND station_status='ACTIVE'",
+                    tuple(stop[0] for stop in stops),
+                )
+                active_ids = {int(row["station_id"]) for row in cursor.fetchall()}
+                if active_ids != {stop[0] for stop in stops}:
+                    raise StationRouteValidationError("Every route stop must reference an existing active station.")
+                cursor.execute("DELETE FROM route_stops WHERE route_id=%s", (int(route_id),))
+                cursor.executemany(
+                    "INSERT INTO route_stops (route_id, station_id, stop_sequence, distance_from_origin_km) VALUES (%s,%s,%s,%s)",
+                    [(int(route_id), *stop) for stop in stops],
+                )
         cursor.execute("UPDATE routes SET route_name=%s, route_status=%s WHERE route_id=%s", (name, status, int(route_id)))
         connection.commit()
         return {"route_id": int(route_id), "route_name": name, "route_status": status}
