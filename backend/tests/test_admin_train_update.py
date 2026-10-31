@@ -1,4 +1,4 @@
-"""Service and endpoint tests for editing existing train details."""
+"""Service and endpoint tests for editing and validating existing train details."""
 
 import unittest
 from unittest.mock import MagicMock, patch
