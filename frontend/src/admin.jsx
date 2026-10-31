@@ -30,6 +30,14 @@ export default function AdminApp() {
   const [editTrain, setEditTrain] = useState({ train_number: "", train_name: "", train_status: "ACTIVE" });
   const [savingTrain, setSavingTrain] = useState(false);
   const [removingTrainId, setRemovingTrainId] = useState(null);
+  const [stationForm, setStationForm] = useState({ station_code: "", station_name: "", city: "", state: "" });
+  const [editingStationId, setEditingStationId] = useState(null);
+  const [stationSaving, setStationSaving] = useState(false);
+  const [routeForm, setRouteForm] = useState({ route_name: "", route_status: "ACTIVE", stop_ids: "", distances: "" });
+  const [editingRouteId, setEditingRouteId] = useState(null);
+  const [routeSaving, setRouteSaving] = useState(false);
+  const [assignmentForm, setAssignmentForm] = useState({ train_id: "", route_id: "" });
+  const [assignmentSaving, setAssignmentSaving] = useState(false);
 
   async function loadDashboard() {
     setBusy(true); setError("");
@@ -92,7 +100,82 @@ export default function AdminApp() {
     } catch (err) { setError(err.message); }
     finally { setRemovingTrainId(null); }
   }
-  function startEditTrain(train) {
+
+  async function saveStation(event) {
+    event.preventDefault(); setStationSaving(true); setError(""); setNotice("");
+    try {
+      const result = await request(editingStationId ? `/admin/stations/${editingStationId}` : "/admin/stations", {
+        method: editingStationId ? "PATCH" : "POST", body: stationForm,
+      });
+      setNotice(result.message || "Station saved successfully.");
+      setStationForm({ station_code: "", station_name: "", city: "", state: "" });
+      setEditingStationId(null); await loadDashboard(); setTab("routes");
+    } catch (err) { setError(err.message); }
+    finally { setStationSaving(false); }
+  }
+
+  function startEditStation(station) {
+    setEditingStationId(station.station_id);
+    setStationForm({ station_code: station.station_code, station_name: station.station_name, city: station.city, state: station.state || "" });
+  }
+
+  async function saveRoute(event) {
+    event.preventDefault(); setRouteSaving(true); setError(""); setNotice("");
+    try {
+      const ids = routeForm.stop_ids.split(",").map(value => value.trim()).filter(Boolean);
+      const distances = routeForm.distances.trim() ? routeForm.distances.split(",").map(value => value.trim()) : [];
+      if (ids.length < 2) throw new Error("Enter at least two station IDs in route order.");
+      if (distances.length && distances.length !== ids.length) throw new Error("Enter one distance per station, or leave distances empty.");
+      const stops = ids.map((id, index) => ({
+        station_id: Number(id), sequence: index + 1,
+        distance_from_origin_km: distances.length ? Number(distances[index]) : (index === 0 ? 0 : index),
+      }));
+      if (stops.some(stop => !Number.isInteger(stop.station_id) || stop.station_id <= 0 || !Number.isFinite(stop.distance_from_origin_km))) {
+        throw new Error("Station IDs and distances must be valid numbers.");
+      }
+      const body = { route_name: routeForm.route_name, route_status: routeForm.route_status, stops };
+      const result = await request(editingRouteId ? `/admin/routes/${editingRouteId}` : "/admin/routes", {
+        method: editingRouteId ? "PATCH" : "POST", body,
+      });
+      setNotice(result.message || "Route saved successfully.");
+      setRouteForm({ route_name: "", route_status: "ACTIVE", stop_ids: "", distances: "" });
+      setEditingRouteId(null); await loadDashboard(); setTab("routes");
+    } catch (err) { setError(err.message); }
+    finally { setRouteSaving(false); }
+  }
+
+  function startEditRoute(route) {
+    setEditingRouteId(route.route_id);
+    setRouteForm({
+      route_name: route.route_name, route_status: route.route_status,
+      stop_ids: (route.stops || []).map(stop => stop.station_id).join(", "),
+      distances: (route.stops || []).map(stop => stop.distance_km).join(", "),
+    });
+  }
+
+  async function saveAssignment(event) {
+    event.preventDefault(); setAssignmentSaving(true); setError(""); setNotice("");
+    try {
+      const result = await request("/admin/train-routes", { method: "POST", body: {
+        train_id: Number(assignmentForm.train_id), route_id: Number(assignmentForm.route_id),
+      }});
+      setNotice(result.message || "Route assigned successfully.");
+      await loadDashboard(); setTab("routes");
+    } catch (err) { setError(err.message); }
+    finally { setAssignmentSaving(false); }
+  }
+
+  async function removeAssignment(assignment) {
+    if (!window.confirm(`Remove route ${assignment.route_name} from train ${assignment.train_number}?`)) return;
+    setError(""); setNotice("");
+    try {
+      const result = await request("/admin/train-routes", { method: "DELETE", body: {
+        train_id: assignment.train_id, route_id: assignment.route_id,
+      }});
+      setNotice(result.message || "Assignment removed."); await loadDashboard();
+    } catch (err) { setError(err.message); }
+  }
+\n  function startEditTrain(train) {
     setEditingTrainId(train.train_id);
     setEditTrain({
       train_number: train.train_number,
@@ -139,7 +222,37 @@ export default function AdminApp() {
             <button type="submit" disabled={savingTrain}>{savingTrain?"Saving…":"Save changes"}</button>
           </div>
         </form>}<div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Train no.</th><th>Train name</th><th>Status</th><th>Action</th></tr></thead><tbody>{(data?.trains||[]).map(train=><tr key={train.train_id}><td>{train.train_number}</td><td>{train.train_name}</td><td><span className={`admin-status ${train.train_status.toLowerCase()}`}>{train.train_status}</span></td><td><button className="admin-small-button" onClick={()=>startEditTrain(train)}>Edit</button> <button className="admin-small-button" onClick={()=>changeTrainStatus(train)}>{train.train_status==="ACTIVE"?"Deactivate":"Activate"}</button> <button className="admin-danger-button" onClick={()=>removeTrain(train)} disabled={removingTrainId===train.train_id}>{removingTrainId===train.train_id?"Removing…":"Remove"}</button></td></tr>)}</tbody></table>{!data?.trains?.length&&<p className="admin-empty">No trains found.</p>}</div></>}
-      {tab==="routes" && <><p className="section-kicker">NETWORK</p><h2>Routes and stops</h2>{rows(data?.routes,[["route_name","Route"],["route_status","Status"],["stops","Station sequence"]])}</>}
+      {tab==="routes" && <>
+        <p className="section-kicker">NETWORK MANAGEMENT</p><h2>Stations and routes</h2>
+        <h3>Station directory</h3>
+        <form className="admin-management-form" onSubmit={saveStation}>
+          <div><label htmlFor="station-code">Station code</label><input id="station-code" value={stationForm.station_code} onChange={e=>setStationForm({...stationForm,station_code:e.target.value})} maxLength="10" pattern="[A-Za-z0-9-]{1,10}" required /></div>
+          <div><label htmlFor="station-name">Station name</label><input id="station-name" value={stationForm.station_name} onChange={e=>setStationForm({...stationForm,station_name:e.target.value})} maxLength="120" required /></div>
+          <div><label htmlFor="station-city">City</label><input id="station-city" value={stationForm.city} onChange={e=>setStationForm({...stationForm,city:e.target.value})} maxLength="100" required /></div>
+          <div><label htmlFor="station-state">State (optional)</label><input id="station-state" value={stationForm.state} onChange={e=>setStationForm({...stationForm,state:e.target.value})} maxLength="100" /></div>
+          <button type="submit" disabled={stationSaving}>{stationSaving?"Saving…":editingStationId?"Update station":"Add station +"}</button>
+          {editingStationId && <button type="button" className="admin-small-button" onClick={()=>{setEditingStationId(null);setStationForm({station_code:"",station_name:"",city:"",state:""});}}>Cancel</button>}
+        </form>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Code</th><th>Station</th><th>City</th><th>State</th><th>Status</th><th>Action</th></tr></thead><tbody>{(data?.stations||[]).map(station=><tr key={station.station_id}><td>{station.station_id}</td><td>{station.station_code}</td><td>{station.station_name}</td><td>{station.city}</td><td>{station.state||"—"}</td><td>{station.station_status}</td><td><button className="admin-small-button" onClick={()=>startEditStation(station)}>Edit</button></td></tr>)}</tbody></table>{!data?.stations?.length&&<p className="admin-empty">No stations found.</p>}</div>
+        <h3>Route builder</h3>
+        <p>Enter station IDs in travel order. Find each ID in the station directory above. Distances are cumulative kilometres from the first station.</p>
+        <form className="admin-management-form" onSubmit={saveRoute}>
+          <div><label htmlFor="route-name">Route name</label><input id="route-name" value={routeForm.route_name} onChange={e=>setRouteForm({...routeForm,route_name:e.target.value})} maxLength="150" required /></div>
+          <div><label htmlFor="route-status">Status</label><select id="route-status" value={routeForm.route_status} onChange={e=>setRouteForm({...routeForm,route_status:e.target.value})}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></div>
+          <div className="admin-management-wide"><label htmlFor="route-stop-ids">Station IDs in order (comma-separated)</label><input id="route-stop-ids" value={routeForm.stop_ids} onChange={e=>setRouteForm({...routeForm,stop_ids:e.target.value})} placeholder="e.g. 1, 4, 7" required /></div>
+          <div className="admin-management-wide"><label htmlFor="route-distances">Cumulative distances in km (comma-separated)</label><input id="route-distances" value={routeForm.distances} onChange={e=>setRouteForm({...routeForm,distances:e.target.value})} placeholder="e.g. 0, 42.5, 118 (optional)" /></div>
+          <button type="submit" disabled={routeSaving}>{routeSaving?"Saving…":editingRouteId?"Update route":"Create route +"}</button>
+          {editingRouteId && <button type="button" className="admin-small-button" onClick={()=>{setEditingRouteId(null);setRouteForm({route_name:"",route_status:"ACTIVE",stop_ids:"",distances:""});}}>Cancel</button>}
+        </form>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Route</th><th>Status</th><th>Stops</th><th>Action</th></tr></thead><tbody>{(data?.routes||[]).map(route=><tr key={route.route_id}><td>{route.route_id}</td><td>{route.route_name}</td><td>{route.route_status}</td><td>{(route.stops||[]).map(stop=>stop.station_code).join(" → ")}</td><td><button className="admin-small-button" onClick={()=>startEditRoute(route)}>Edit</button></td></tr>)}</tbody></table>{!data?.routes?.length&&<p className="admin-empty">No routes found.</p>}</div>
+        <h3>Assign routes to trains</h3>
+        <form className="admin-management-form" onSubmit={saveAssignment}>
+          <div><label htmlFor="assignment-train">Active train</label><select id="assignment-train" value={assignmentForm.train_id} onChange={e=>setAssignmentForm({...assignmentForm,train_id:e.target.value})} required><option value="">Select train</option>{(data?.trains||[]).filter(train=>train.train_status==="ACTIVE").map(train=><option key={train.train_id} value={train.train_id}>{train.train_number} — {train.train_name}</option>)}</select></div>
+          <div><label htmlFor="assignment-route">Active route</label><select id="assignment-route" value={assignmentForm.route_id} onChange={e=>setAssignmentForm({...assignmentForm,route_id:e.target.value})} required><option value="">Select route</option>{(data?.routes||[]).filter(route=>route.route_status==="ACTIVE").map(route=><option key={route.route_id} value={route.route_id}>{route.route_name}</option>)}</select></div>
+          <button type="submit" disabled={assignmentSaving}>{assignmentSaving?"Assigning…":"Assign route +"}</button>
+        </form>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Train</th><th>Assigned route</th><th>Action</th></tr></thead><tbody>{(data?.train_routes||[]).map(item=><tr key={item.train_id+"-"+item.route_id}><td>{item.train_number} — {item.train_name}</td><td>{item.route_name}</td><td><button className="admin-danger-button" onClick={()=>removeAssignment(item)}>Remove assignment</button></td></tr>)}</tbody></table>{!data?.train_routes?.length&&<p className="admin-empty">No train-route assignments yet.</p>}</div>
+      </>}
       {tab==="schedules" && <><p className="section-kicker">TIMETABLE & INVENTORY</p><h2>Schedules and seat availability</h2>{rows(data?.schedules,[["train_number","Train no."],["train_name","Train"],["route_name","Route"],["departure_at","Departure"],["arrival_at","Arrival"],["schedule_status","Status"],["available_seats","Available seats"],["total_seats","Total seats"]])}</>}
       {tab==="bookings" && <><p className="section-kicker">RESERVATIONS</p><h2>Bookings</h2>{rows(data?.bookings,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["email","Email"],["booking_status","Status"],["passenger_count","Passengers"],["total_fare","Fare"],["created_at","Created"]])}</>}
       {tab==="cancellations" && <><p className="section-kicker">SERVICE RECORDS</p><h2>Cancellation records</h2>{rows(data?.cancellations,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Requested by"],["cancellation_status","Status"],["passenger_items","Passengers"],["cancellation_charge","Charge"],["refund_amount","Refund"],["requested_at","Requested"]])}</>}
