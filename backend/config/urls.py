@@ -13,6 +13,7 @@ urlpatterns = [
     path("api/admin/login", django_views.admin_login, name="admin-login"),
     path("api/admin/logout", django_views.admin_logout, name="admin-logout"),
     path("api/admin/dashboard", django_views.admin_dashboard_data, name="admin-dashboard"),
+    path("api/admin/trains", django_views.admin_train_create, name="admin-train-create"),
     path("api/admin/trains/<int:train_id>", django_views.admin_train_update, name="admin-train-update"),
     path("api/travel-classes", django_views.travel_classes, name="travel-classes"),
     path("api/seats/availability", django_views.seat_availability, name="seat-availability"),
