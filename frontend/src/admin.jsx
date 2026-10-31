@@ -38,6 +38,11 @@ export default function AdminApp() {
   const [routeSaving, setRouteSaving] = useState(false);
   const [assignmentForm, setAssignmentForm] = useState({ train_id: "", route_id: "" });
   const [assignmentSaving, setAssignmentSaving] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({
+    train_id: "", route_id: "", departure_at: "", arrival_at: "", schedule_status: "SCHEDULED",
+  });
+  const [editingScheduleId, setEditingScheduleId] = useState(null);
+  const [scheduleSaving, setScheduleSaving] = useState(false);
 
   async function loadDashboard() {
     setBusy(true); setError("");
@@ -176,6 +181,34 @@ export default function AdminApp() {
     } catch (err) { setError(err.message); }
   }
 
+  async function saveSchedule(event) {
+    event.preventDefault(); setScheduleSaving(true); setError(""); setNotice("");
+    try {
+      const result = await request(
+        editingScheduleId ? "/admin/schedules/" + editingScheduleId : "/admin/schedules",
+        { method: editingScheduleId ? "PATCH" : "POST", body: {
+          train_id: Number(scheduleForm.train_id), route_id: Number(scheduleForm.route_id),
+          departure_at: scheduleForm.departure_at, arrival_at: scheduleForm.arrival_at,
+          schedule_status: scheduleForm.schedule_status,
+        }}
+      );
+      setNotice(result.message || "Train schedule saved successfully.");
+      setScheduleForm({ train_id: "", route_id: "", departure_at: "", arrival_at: "", schedule_status: "SCHEDULED" });
+      setEditingScheduleId(null); await loadDashboard(); setTab("schedules");
+    } catch (err) { setError(err.message); }
+    finally { setScheduleSaving(false); }
+  }
+
+  function startEditSchedule(schedule) {
+    const localValue = value => value ? String(value).replace(" ", "T").slice(0, 16) : "";
+    setEditingScheduleId(schedule.schedule_id);
+    setScheduleForm({
+      train_id: String(schedule.train_id), route_id: String(schedule.route_id),
+      departure_at: localValue(schedule.departure_at), arrival_at: localValue(schedule.arrival_at),
+      schedule_status: schedule.schedule_status,
+    });
+    setError(""); setNotice("");
+  }
   function startEditTrain(train) {
     setEditingTrainId(train.train_id);
     setEditTrain({
@@ -254,7 +287,20 @@ export default function AdminApp() {
         </form>
         <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Train</th><th>Assigned route</th><th>Action</th></tr></thead><tbody>{(data?.train_routes||[]).map(item=><tr key={item.train_id+"-"+item.route_id}><td>{item.train_number} — {item.train_name}</td><td>{item.route_name}</td><td><button className="admin-danger-button" onClick={()=>removeAssignment(item)}>Remove assignment</button></td></tr>)}</tbody></table>{!data?.train_routes?.length&&<p className="admin-empty">No train-route assignments yet.</p>}</div>
       </>}
-      {tab==="schedules" && <><p className="section-kicker">TIMETABLE & INVENTORY</p><h2>Schedules and seat availability</h2>{rows(data?.schedules,[["train_number","Train no."],["train_name","Train"],["route_name","Route"],["departure_at","Departure"],["arrival_at","Arrival"],["schedule_status","Status"],["available_seats","Available seats"],["total_seats","Total seats"]])}</>}
+      {tab==="schedules" && <>
+        <div className="admin-title-row"><div><p className="section-kicker">TIMETABLE & INVENTORY</p><h2>Train schedule management</h2><p>Create schedules for assigned train and route pairs, or update an existing timetable.</p></div><button onClick={loadDashboard} disabled={busy}>Refresh ↻</button></div>
+        <form className="admin-schedule-form" onSubmit={saveSchedule}>
+          <div><label htmlFor="schedule-train">Train</label><select id="schedule-train" value={scheduleForm.train_id} onChange={e=>setScheduleForm({...scheduleForm,train_id:e.target.value})} required><option value="">Select train</option>{(data?.trains||[]).map(train=><option key={train.train_id} value={train.train_id}>{train.train_number} — {train.train_name} ({train.train_status.toLowerCase()})</option>)}</select></div>
+          <div><label htmlFor="schedule-route">Assigned route</label><select id="schedule-route" value={scheduleForm.route_id} onChange={e=>setScheduleForm({...scheduleForm,route_id:e.target.value})} required><option value="">Select route</option>{(data?.routes||[]).map(route=><option key={route.route_id} value={route.route_id}>{route.route_name} ({route.route_status.toLowerCase()})</option>)}</select></div>
+          <div><label htmlFor="schedule-departure">Departure date & time</label><input id="schedule-departure" type="datetime-local" value={scheduleForm.departure_at} onChange={e=>setScheduleForm({...scheduleForm,departure_at:e.target.value})} required /></div>
+          <div><label htmlFor="schedule-arrival">Arrival date & time</label><input id="schedule-arrival" type="datetime-local" value={scheduleForm.arrival_at} onChange={e=>setScheduleForm({...scheduleForm,arrival_at:e.target.value})} required /></div>
+          <div><label htmlFor="schedule-status">Schedule status</label><select id="schedule-status" value={scheduleForm.schedule_status} onChange={e=>setScheduleForm({...scheduleForm,schedule_status:e.target.value})}><option value="SCHEDULED">Scheduled</option><option value="CANCELLED">Cancelled</option><option value="COMPLETED">Completed</option></select></div>
+          <button type="submit" disabled={scheduleSaving}>{scheduleSaving?"Saving…":editingScheduleId?"Update schedule":"Create schedule +"}</button>
+          {editingScheduleId && <button type="button" className="admin-small-button" onClick={()=>{setEditingScheduleId(null);setScheduleForm({train_id:"",route_id:"",departure_at:"",arrival_at:"",schedule_status:"SCHEDULED"});}}>Cancel edit</button>}
+        </form>
+        <p className="admin-form-note">Intermediate station times are estimated from route distances. Schedules with bookings can have their status updated, but their train, route and timetable are locked to protect existing tickets.</p>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Train</th><th>Route</th><th>Departure</th><th>Arrival</th><th>Status</th><th>Seats</th><th>Action</th></tr></thead><tbody>{(data?.schedules||[]).map(schedule=><tr key={schedule.schedule_id}><td>{schedule.schedule_id}</td><td>{schedule.train_number} — {schedule.train_name}</td><td>{schedule.route_name}</td><td>{date(schedule.departure_at)}</td><td>{date(schedule.arrival_at)}</td><td>{schedule.schedule_status}</td><td>{schedule.available_seats}/{schedule.total_seats}</td><td><button className="admin-small-button" onClick={()=>startEditSchedule(schedule)}>Edit</button></td></tr>)}</tbody></table>{!data?.schedules?.length&&<p className="admin-empty">No train schedules found.</p>}</div>
+      </>}
       {tab==="bookings" && <><p className="section-kicker">RESERVATIONS</p><h2>Bookings</h2>{rows(data?.bookings,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["email","Email"],["booking_status","Status"],["passenger_count","Passengers"],["total_fare","Fare"],["created_at","Created"]])}</>}
       {tab==="cancellations" && <><p className="section-kicker">SERVICE RECORDS</p><h2>Cancellation records</h2>{rows(data?.cancellations,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Requested by"],["cancellation_status","Status"],["passenger_items","Passengers"],["cancellation_charge","Charge"],["refund_amount","Refund"],["requested_at","Requested"]])}</>}
     </div>
