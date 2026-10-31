@@ -38,3 +38,28 @@
 .confirmation-fare > div:last-child strong { font-size: 1.15rem; }
 .confirmation-note { margin: 14px 0 0; color: #52665b; font-size: .82rem; line-height: 1.55; }
 @media (max-width: 600px) { .ticket-confirmation { padding: 16px; } .confirmation-grid { grid-template-columns: 1fr; } .confirmation-heading, .confirmation-passenger { align-items: flex-start; flex-direction: column; } .confirmation-passenger > strong { text-align: left; } .confirmation-fare { flex-direction: column; } }
+
+.booking-history { margin: 28px 0 46px; padding: 28px; border: 1px solid var(--line, #30343b); border-radius: 18px; background: var(--surface, #fff); }
+.booking-history-intro { margin: 7px 0 0; color: var(--muted, #8f969e); font-size: .9rem; }
+.history-refresh { border: 1px solid var(--line, #d9ded9); border-radius: 999px; padding: 9px 15px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.history-tabs { display: flex; gap: 8px; margin: 22px 0 16px; border-bottom: 1px solid var(--line, #30343b); }
+.history-tabs button { padding: 11px 15px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted, #8f969e); font: inherit; cursor: pointer; }
+.history-tabs button.is-active { border-bottom-color: var(--accent, #db7944); color: inherit; font-weight: 700; }
+.history-empty { display: grid; gap: 6px; padding: 26px 10px; color: var(--muted, #8f969e); text-align: center; }
+.history-list { display: grid; gap: 14px; }
+.history-card { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--line, #e4e8e3); border-radius: 14px; }
+.history-card-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.history-card-top > div { display: grid; gap: 4px; }
+.history-pnr-label, .history-meta span, .history-route span, .history-train span { color: var(--muted, #8f969e); font-size: .78rem; }
+.history-pnr { font-size: 1.15rem; letter-spacing: .1em; }
+.history-status { padding: 6px 10px; border-radius: 999px; background: #edf3ee; color: #3b6850; font-size: .7rem; font-weight: 700; }
+.history-train { display: grid; gap: 4px; }
+.history-route { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; padding: 14px; border-radius: 10px; background: var(--surface-muted, #f7f8f6); }
+.history-route > div { display: grid; gap: 4px; }
+.history-route > div:last-child { text-align: right; }
+.history-route-arrow { color: var(--accent, #db7944); font-size: 1.3rem; }
+.history-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.history-meta > div { display: grid; gap: 5px; }
+.history-meta strong { font-size: .88rem; }
+.history-passengers { display: grid; gap: 7px; padding-top: 12px; border-top: 1px solid var(--line, #e4e8e3); font-size: .86rem; }
+@media (max-width: 640px) { .booking-history { padding: 18px; } .history-meta { grid-template-columns: 1fr; } .history-card-top { align-items: flex-start; flex-direction: column; } }

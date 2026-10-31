@@ -16,6 +16,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .booking import BookingRequestError, BookingUnavailableError, create_booking
+from .booking_history import get_booking_history
 from .db import get_db_connection
 from .fare_calculation import FareCalculationError, calculate_booking_fare
 from .passenger_details import PassengerDetailsValidationError, save_passenger_details
@@ -319,6 +320,20 @@ def booking_create(request):
     except Exception:
         return Response({"status": "error", "message": "Booking could not be created."}, status=500)
     return Response({"status": "ok", **result}, status=200 if result.get("replayed") else 201)
+
+
+@endpoint(["GET"])
+def passenger_booking_history(request):
+    user_id = _user_id(request)
+    if user_id is None:
+        return Response({"status": "error", "message": "Please log in to view your booking history."}, status=401)
+    try:
+        result = get_booking_history(user_id)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Booking history is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Booking history could not be loaded."}, status=500)
+    return Response({"status": "ok", **result})
 
 
 @endpoint(["POST"])
