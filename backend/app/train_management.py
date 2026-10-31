@@ -65,3 +65,55 @@ def create_train(train_number, train_name, train_status="ACTIVE", connection_fac
         if cursor is not None:
             cursor.close()
         connection.close()
+
+
+
+def update_train(train_id, train_number=None, train_name=None, train_status=None, connection_factory=None):
+    """Update editable train details while preserving fields omitted by the caller."""
+    if isinstance(train_id, bool) or not str(train_id).isdigit() or int(train_id) <= 0:
+        raise ValueError("Enter a valid train ID.")
+
+    connection = (connection_factory or get_db_connection)()
+    cursor = None
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT train_id, train_number, train_name, train_status "
+            "FROM trains WHERE train_id = %s FOR UPDATE",
+            (int(train_id),),
+        )
+        existing = cursor.fetchone()
+        if existing is None:
+            raise LookupError("Train not found.")
+
+        number, name, status = validate_train_details(
+            existing["train_number"] if train_number is None else train_number,
+            existing["train_name"] if train_name is None else train_name,
+            existing["train_status"] if train_status is None else train_status,
+        )
+        cursor.execute(
+            "SELECT train_id FROM trains WHERE train_number = %s AND train_id <> %s LIMIT 1",
+            (number, int(train_id)),
+        )
+        if cursor.fetchone() is not None:
+            raise DuplicateTrainNumberError("A train with this train number already exists.")
+
+        cursor.execute(
+            "UPDATE trains SET train_number = %s, train_name = %s, train_status = %s "
+            "WHERE train_id = %s",
+            (number, name, status, int(train_id)),
+        )
+        connection.commit()
+        return {
+            "train_id": int(train_id),
+            "train_number": number,
+            "train_name": name,
+            "train_status": status,
+        }
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        if cursor is not None:
+            cursor.close()
+        connection.close()

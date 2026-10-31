@@ -451,20 +451,37 @@ def admin_dashboard_data(request):
 @endpoint(["PATCH"])
 @_admin_required
 def admin_train_update(request, train_id):
-    """Allow an administrator to activate or deactivate a train."""
+    """Update train number, name, and/or operating status for an administrator."""
     payload = _payload(request)
-    if payload is None:
-        return Response({"status": "error", "message": "Submit a valid train status."}, status=400)
-    from .admin_dashboard import update_train_status
+    if payload is None or not any(key in payload for key in ("train_number", "train_name", "train_status")):
+        return Response({"status": "error", "message": "Submit at least one valid train detail."}, status=400)
+    from .train_management import (
+        DuplicateTrainNumberError,
+        TrainValidationError,
+        update_train,
+    )
     try:
-        result = update_train_status(train_id, payload.get("train_status"))
-    except ValueError as exc:
+        result = update_train(
+            train_id,
+            payload.get("train_number"),
+            payload.get("train_name"),
+            payload.get("train_status"),
+        )
+    except DuplicateTrainNumberError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except (TrainValidationError, ValueError) as exc:
         return Response({"status": "error", "message": str(exc)}, status=400)
     except LookupError as exc:
         return Response({"status": "error", "message": str(exc)}, status=404)
+    except IntegrityError as exc:
+        if getattr(exc, "errno", None) == 1062:
+            return Response({"status": "error", "message": "A train with this train number already exists."}, status=409)
+        return Response({"status": "error", "message": "Train details could not be updated."}, status=500)
     except mysql.connector.Error:
-        return Response({"status": "error", "message": "Train status could not be updated."}, status=503)
-    return Response({"status": "ok", **result})
+        return Response({"status": "error", "message": "Train management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Train details could not be updated."}, status=500)
+    return Response({"status": "ok", "message": "Train details updated successfully.", "train": result})
 
 
 @endpoint(["POST"])
