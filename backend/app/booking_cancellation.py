@@ -1,4 +1,7 @@
-"""Cancel a passenger-owned booking atomically and release its seat holds."""
+"""Cancel a passenger-owned booking atomically and calculate its refund."""
+from decimal import Decimal
+
+from .booking_refunds import calculate_cancellation_refund
 from .db import get_db_connection
 
 
@@ -23,10 +26,10 @@ def _positive_id(value, field):
 
 
 def cancel_booking(user_id, booking_id, reason=None, connection_factory=None):
-    """Cancel all remaining passengers on a booking owned by user_id.
+    """Cancel all remaining passengers and persist calculated refund records.
 
-    Booking, cancellation audit rows, passenger cancellation items, and seat
-    releases are committed in one transaction. Refund processing is separate.
+    Cancellation items, pending refund records, seat releases, and booking
+    status are committed atomically. No payment provider is called here.
     """
     owner_id = _positive_id(user_id, "passenger account")
     target_id = _positive_id(booking_id, "booking")
@@ -41,7 +44,8 @@ def cancel_booking(user_id, booking_id, reason=None, connection_factory=None):
         cursor = connection.cursor(dictionary=True)
 
         cursor.execute(
-            """SELECT booking_id, pnr, booking_status, departure_at_snapshot
+            """SELECT booking_id, pnr, booking_status, departure_at_snapshot,
+                      class_code_snapshot, currency_code
                FROM bookings
                WHERE booking_id = %s AND user_id = %s
                FOR UPDATE""",
@@ -57,24 +61,27 @@ def cancel_booking(user_id, booking_id, reason=None, connection_factory=None):
             raise BookingCancellationError("This booking is no longer active and cannot be cancelled.")
         if status not in ("PENDING_PAYMENT", "CONFIRMED", "PARTIALLY_CANCELLED"):
             raise BookingCancellationError("This booking cannot be cancelled.")
-        cursor.execute(
-            "SELECT CURRENT_TIMESTAMP AS current_time"
-        )
+        cursor.execute("SELECT CURRENT_TIMESTAMP AS current_time")
         current = cursor.fetchone()["current_time"]
         if booking["departure_at_snapshot"] <= current:
             raise BookingCancellationError("A booking cannot be cancelled after its journey has started.")
 
         cursor.execute(
-            """SELECT booking_passenger_id
-               FROM booking_passengers
-               WHERE booking_id = %s
-               ORDER BY booking_passenger_id
+            """SELECT passenger.booking_passenger_id, passenger.passenger_fare
+               FROM booking_passengers AS passenger
+               WHERE passenger.booking_id = %s
+                 AND NOT EXISTS (
+                     SELECT 1 FROM cancellation_items AS prior_item
+                     WHERE prior_item.booking_passenger_id = passenger.booking_passenger_id
+                       AND prior_item.item_status = 'COMPLETED'
+                 )
+               ORDER BY passenger.booking_passenger_id
                FOR UPDATE""",
             (target_id,),
         )
         passengers = cursor.fetchall() or []
         if not passengers:
-            raise BookingCancellationError("This booking has no passengers to cancel.")
+            raise BookingCancellationError("This booking has no passengers left to cancel.")
 
         cursor.execute(
             """SELECT allocation_id
@@ -84,7 +91,30 @@ def cancel_booking(user_id, booking_id, reason=None, connection_factory=None):
                FOR UPDATE""",
             (target_id,),
         )
-        allocations = cursor.fetchall() or []
+        cursor.fetchall()
+
+        cursor.execute(
+            """SELECT amount, currency_code
+               FROM payments
+               WHERE booking_id = %s AND payment_status = 'SUCCEEDED'
+               ORDER BY completed_at DESC, payment_id DESC
+               LIMIT 1
+               FOR UPDATE""",
+            (target_id,),
+        )
+        successful_payment = cursor.fetchone()
+        paid_amount = (
+            Decimal(str(successful_payment["amount"]))
+            if successful_payment
+            and successful_payment["currency_code"] == booking["currency_code"]
+            else Decimal("0.00")
+        )
+        passenger_fares = [Decimal(str(item["passenger_fare"] or 0)) for item in passengers]
+        fare_total = sum(passenger_fares, Decimal("0.00"))
+        paid_ratio = min(Decimal("1"), paid_amount / fare_total) if fare_total > 0 else Decimal("0")
+        hours_until_departure = (
+            booking["departure_at_snapshot"] - current
+        ).total_seconds() / 3600
 
         cursor.execute(
             """INSERT INTO cancellations
@@ -95,14 +125,52 @@ def cancel_booking(user_id, booking_id, reason=None, connection_factory=None):
         )
         cancellation_id = cursor.lastrowid
 
-        for passenger in passengers:
+        passenger_refunds = []
+        total_charge = Decimal("0.00")
+        total_refund = Decimal("0.00")
+        for passenger, passenger_fare in zip(passengers, passenger_fares):
+            paid_fare = (passenger_fare * paid_ratio).quantize(Decimal("0.01"))
+            if paid_fare > 0:
+                breakdown = calculate_cancellation_refund(
+                    paid_fare, booking["class_code_snapshot"], hours_until_departure
+                )
+            else:
+                breakdown = {
+                    "cancellation_charge": Decimal("0.00"),
+                    "refund_amount": Decimal("0.00"),
+                    "policy_band": "NO_SUCCESSFUL_PAYMENT",
+                }
+            charge = breakdown["cancellation_charge"]
+            refund = breakdown["refund_amount"]
+            total_charge += charge
+            total_refund += refund
+
             cursor.execute(
                 """INSERT INTO cancellation_items
                        (cancellation_id, booking_id, booking_passenger_id, item_status,
                         cancellation_charge, refund_amount, completed_at)
-                   VALUES (%s, %s, %s, 'COMPLETED', 0.00, 0.00, CURRENT_TIMESTAMP)""",
-                (cancellation_id, target_id, passenger["booking_passenger_id"]),
+                   VALUES (%s, %s, %s, 'COMPLETED', %s, %s, CURRENT_TIMESTAMP)""",
+                (cancellation_id, target_id, passenger["booking_passenger_id"], charge, refund),
             )
+            cancellation_item_id = cursor.lastrowid
+            if refund > 0:
+                cursor.execute(
+                    """INSERT INTO refunds
+                           (cancellation_item_id, refund_provider, amount, currency_code,
+                            refund_status, idempotency_key)
+                       VALUES (%s, 'SIMULATED', %s, %s, 'PENDING', %s)""",
+                    (
+                        cancellation_item_id, refund, booking["currency_code"],
+                        f"cancellation-item-{cancellation_item_id}",
+                    ),
+                )
+            passenger_refunds.append({
+                "booking_passenger_id": int(passenger["booking_passenger_id"]),
+                "cancellation_charge": float(charge),
+                "refund_amount": float(refund),
+                "policy_band": breakdown["policy_band"],
+                "refund_status": "PENDING" if refund > 0 else "NOT_APPLICABLE",
+            })
 
         cursor.execute(
             """UPDATE seat_allocations
@@ -124,13 +192,27 @@ def cancel_booking(user_id, booking_id, reason=None, connection_factory=None):
             raise BookingCancellationError("The booking changed while it was being cancelled. Please retry.")
 
         connection.commit()
+        currency = booking["currency_code"]
+        message = (
+            f"Booking cancelled. Cancellation charges: {currency} {total_charge:.2f}. "
+            f"Refund due: {currency} {total_refund:.2f}."
+        )
+        if total_refund > 0:
+            message += " Refund records are pending; no payment provider has been contacted."
+        elif not successful_payment:
+            message += " No successful payment was found, so no refund is due."
         return {
             "booking_id": target_id,
             "pnr": booking["pnr"],
             "booking_status": "CANCELLED",
             "cancelled_passengers": len(passengers),
             "released_seats": released_seats,
-            "message": "Booking cancelled successfully. Any applicable refund is handled separately.",
+            "currency_code": currency,
+            "cancellation_charge": float(total_charge),
+            "refund_amount": float(total_refund),
+            "refund_status": "PENDING" if total_refund > 0 else "NOT_APPLICABLE",
+            "passenger_refunds": passenger_refunds,
+            "message": message,
         }
     except Exception:
         if connection is not None:
