@@ -17,6 +17,11 @@ from rest_framework.response import Response
 
 from .booking import BookingRequestError, BookingUnavailableError, create_booking
 from .booking_history import get_booking_history
+from .booking_cancellation import (
+    BookingCancellationError,
+    BookingCancellationNotFound,
+    cancel_booking,
+)
 from .booking_status import get_booking_status
 from .db import get_db_connection
 from .fare_calculation import FareCalculationError, calculate_booking_fare
@@ -405,4 +410,26 @@ def passenger_booking_status(request):
         return Response({"status": "error", "message": "Booking status could not be loaded."}, status=500)
     if result is None:
         return Response({"status": "error", "message": "No booking with that PNR was found in your account."}, status=404)
+    return Response({"status": "ok", **result})
+
+
+
+@endpoint(["POST"])
+def passenger_booking_cancel(request, booking_id):
+    user_id = _user_id(request)
+    if user_id is None:
+        return Response({"status": "error", "message": "Please log in to cancel a booking."}, status=401)
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit valid cancellation details."}, status=400)
+    try:
+        result = cancel_booking(user_id, booking_id, payload.get("reason"))
+    except BookingCancellationNotFound as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except BookingCancellationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Cancellation is temporarily unavailable. Please try again."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Booking could not be cancelled."}, status=500)
     return Response({"status": "ok", **result})
