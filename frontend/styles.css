@@ -362,3 +362,19 @@ button { cursor: pointer; }
 .admin-seat-inventory .admin-title-row p:not(.section-kicker){color:#64716b;font-size:.9rem;line-height:1.5}
 .admin-seat-inventory .admin-table td{vertical-align:middle}
 @media(max-width:520px){.admin-seat-selector{grid-template-columns:1fr}.admin-seat-selector label{grid-column:auto}.admin-seat-selector button{width:100%}}
+
+
+/* Passenger booking detail workspace — Issue #30 */
+.admin-booking-search{display:grid;gap:7px;max-width:680px;margin:18px 0}
+.admin-booking-search label{font-size:.82rem;font-weight:650;color:#52615a}
+.admin-booking-search input{width:100%;padding:11px 12px;border:1px solid #d7ded8;border-radius:5px;font:inherit;background:#fff;color:#202a28}
+.admin-muted{font-size:.8rem;color:#6a7771}
+.admin-booking-detail{margin-top:28px;padding:22px;border:1px solid #dfe5df;border-radius:8px;background:#fff}
+.admin-booking-detail h4{margin:24px 0 10px;font-size:1rem}
+.admin-booking-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:16px 0 22px}
+.admin-booking-facts>div{display:grid;gap:5px;padding:12px;background:#f6f8f6;border-radius:5px;min-width:0}
+.admin-booking-facts span{font-size:.76rem;color:#65736c}
+.admin-booking-facts strong{font-size:.9rem;font-weight:650;overflow-wrap:anywhere}
+.admin-booking-facts small{font-size:.8rem;color:#65736c;overflow-wrap:anywhere}
+.admin-booking-detail .admin-table-wrap{margin-bottom:14px}
+@media(max-width:520px){.admin-booking-detail{padding:14px}.admin-booking-facts{grid-template-columns:1fr}}

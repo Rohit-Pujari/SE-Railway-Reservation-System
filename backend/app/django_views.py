@@ -449,6 +449,24 @@ def admin_dashboard_data(request):
 
 
 
+@endpoint(["GET"])
+@_admin_required
+def admin_booking_detail(request, booking_id):
+    """Expose full passenger reservation details to administrators only."""
+    from .admin_booking_details import get_admin_booking_details
+    try:
+        result = get_admin_booking_details(booking_id)
+    except ValueError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Booking details are temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Booking details could not be loaded."}, status=500)
+    if result is None:
+        return Response({"status": "error", "message": "Booking not found."}, status=404)
+    return Response({"status": "ok", **result})
+
+
 @endpoint(["POST"])
 @_admin_required
 def admin_station_create(request):
