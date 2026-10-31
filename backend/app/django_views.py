@@ -559,6 +559,51 @@ def admin_train_route_manage(request):
 
 
 
+@endpoint(["GET"])
+@_admin_required
+def admin_schedule_seats(request, schedule_id):
+    from .seat_management import get_schedule_seats
+    try:
+        result = get_schedule_seats(schedule_id)
+    except ValueError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Seat inventory is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Seat inventory could not be loaded."}, status=500)
+    return Response({"status": "ok", **result})
+
+
+@endpoint(["PATCH"])
+@_admin_required
+def admin_schedule_seat_update(request, schedule_id, schedule_seat_id):
+    from .seat_management import (
+        SeatManagementConflictError,
+        SeatManagementValidationError,
+        update_schedule_seat_status,
+    )
+    payload = _payload(request)
+    if payload is None or set(payload) != {"operational_status"}:
+        return Response({"status": "error", "message": "Submit a valid seat operational status."}, status=400)
+    try:
+        result = update_schedule_seat_status(
+            schedule_id, schedule_seat_id, payload.get("operational_status")
+        )
+    except SeatManagementConflictError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except SeatManagementValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Seat inventory is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Seat status could not be updated."}, status=500)
+    return Response({"status": "ok", "message": "Seat status updated successfully.", "seat": result})
+
+
 @endpoint(["POST"])
 @_admin_required
 def admin_schedule_create(request):
