@@ -72,16 +72,18 @@ def validate_route(route_name, stops):
         if station_id in seen:
             raise StationRouteValidationError("A station can appear only once in a route.")
         seen.add(station_id)
+        if "distance_from_origin_km" not in stop:
+            raise StationRouteValidationError("Enter a cumulative distance for every route stop.")
         try:
-            distance = Decimal(str(stop.get("distance_from_origin_km", 0)))
+            distance = Decimal(str(stop["distance_from_origin_km"]))
         except (InvalidOperation, TypeError):
             raise StationRouteValidationError("Stop distances must be valid non-negative numbers.") from None
         if not distance.is_finite() or distance < 0 or distance > Decimal("999999.99"):
             raise StationRouteValidationError("Stop distances must be between 0 and 999999.99 km.")
-        if distance < previous_distance:
-            raise StationRouteValidationError("Stop distances must not decrease along the route.")
         if index == 1 and distance != 0:
             raise StationRouteValidationError("The first stop must have a distance of 0 km.")
+        if index > 1 and distance <= previous_distance:
+            raise StationRouteValidationError("Cumulative stop distances must increase along the route.")
         normalized.append((station_id, index, distance))
         previous_distance = distance
     return name, normalized
