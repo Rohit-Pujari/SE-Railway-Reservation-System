@@ -350,3 +350,15 @@ button { cursor: pointer; }
 .admin-form-note{color:#64716b;font-size:.86rem;line-height:1.5;margin:8px 0 18px}
 @media(max-width:850px){.admin-schedule-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.admin-schedule-form{grid-template-columns:1fr}.admin-schedule-form>button{width:100%}}
+
+
+/* Per-schedule seat inventory administration — Issue #29 */
+.admin-seat-inventory{margin-top:28px;padding-top:22px;border-top:1px solid #e1e5e0}
+.admin-seat-selector{display:grid;grid-template-columns:minmax(240px,1fr) auto;gap:10px;align-items:end;max-width:760px;margin:16px 0}
+.admin-seat-selector label{grid-column:1/-1;font-size:.82rem;font-weight:650;color:#52615a}
+.admin-seat-selector select{width:100%;min-width:0;padding:11px 12px;border:1px solid #d7ded8;border-radius:4px;background:#fff;color:#202a28;font:inherit}
+.admin-seat-selector button{border:0;background:#24483e;color:#fff;border-radius:5px;padding:12px 15px;font-weight:650;cursor:pointer;white-space:nowrap}
+.admin-seat-selector button:disabled{opacity:.6;cursor:wait}
+.admin-seat-inventory .admin-title-row p:not(.section-kicker){color:#64716b;font-size:.9rem;line-height:1.5}
+.admin-seat-inventory .admin-table td{vertical-align:middle}
+@media(max-width:520px){.admin-seat-selector{grid-template-columns:1fr}.admin-seat-selector label{grid-column:auto}.admin-seat-selector button{width:100%}}

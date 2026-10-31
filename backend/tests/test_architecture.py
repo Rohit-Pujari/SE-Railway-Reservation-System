@@ -42,6 +42,8 @@ class DjangoReactArchitectureTests(unittest.TestCase):
             "api/admin/train-routes",
             "api/admin/schedules",
             "api/admin/schedules/1",
+            "api/admin/schedules/1/seats",
+            "api/admin/schedules/1/seats/2",
             "api/travel-classes",
             "api/seats/availability",
             "api/stations",
@@ -63,7 +65,7 @@ class DjangoReactArchitectureTests(unittest.TestCase):
         self.assertEqual(settings.DATABASES["default"]["ENGINE"], "mysql.connector.django")
         self.assertEqual(settings.SESSION_ENGINE, "django.contrib.sessions.backends.signed_cookies")
         self.assertNotIn("django.contrib.sessions", settings.INSTALLED_APPS)
-        self.assertEqual(len(urlpatterns), 31)
+        self.assertEqual(len(urlpatterns), 33)
 
     def test_react_frontend_has_locked_build_and_runtime_entry(self):
         package = json.loads((ROOT / "frontend" / "package.json").read_text())
