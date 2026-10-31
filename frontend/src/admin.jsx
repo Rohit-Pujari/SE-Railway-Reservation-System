@@ -175,7 +175,8 @@ export default function AdminApp() {
       setNotice(result.message || "Assignment removed."); await loadDashboard();
     } catch (err) { setError(err.message); }
   }
-\n  function startEditTrain(train) {
+
+  function startEditTrain(train) {
     setEditingTrainId(train.train_id);
     setEditTrain({
       train_number: train.train_number,
