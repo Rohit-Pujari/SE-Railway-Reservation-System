@@ -448,6 +448,116 @@ def admin_dashboard_data(request):
         return Response({"status": "error", "message": "Dashboard data could not be loaded."}, status=500)
 
 
+
+@endpoint(["POST"])
+@_admin_required
+def admin_station_create(request):
+    from .station_route_management import DuplicateStationCodeError, StationRouteValidationError, create_station
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit station details as JSON."}, status=400)
+    try:
+        station = create_station(payload)
+    except DuplicateStationCodeError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except StationRouteValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except IntegrityError:
+        return Response({"status": "error", "message": "A station with this code already exists."}, status=409)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Station management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Station could not be added."}, status=500)
+    return Response({"status": "ok", "message": "Station added successfully.", "station": station}, status=201)
+
+
+@endpoint(["PATCH"])
+@_admin_required
+def admin_station_update(request, station_id):
+    from .station_route_management import DuplicateStationCodeError, StationRouteValidationError, update_station
+    payload = _payload(request)
+    if payload is None or not payload:
+        return Response({"status": "error", "message": "Submit station details as JSON."}, status=400)
+    try:
+        station = update_station(station_id, payload)
+    except DuplicateStationCodeError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except StationRouteValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Station management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Station could not be updated."}, status=500)
+    return Response({"status": "ok", "message": "Station updated successfully.", "station": station})
+
+
+@endpoint(["POST"])
+@_admin_required
+def admin_route_create(request):
+    from .station_route_management import StationRouteValidationError, create_route
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit route details as JSON."}, status=400)
+    try:
+        route = create_route(payload)
+    except StationRouteValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Route management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Route could not be created."}, status=500)
+    return Response({"status": "ok", "message": "Route created successfully.", "route": route}, status=201)
+
+
+@endpoint(["PATCH"])
+@_admin_required
+def admin_route_update(request, route_id):
+    from .station_route_management import StationRouteValidationError, update_route
+    payload = _payload(request)
+    if payload is None or not payload:
+        return Response({"status": "error", "message": "Submit route details as JSON."}, status=400)
+    try:
+        route = update_route(route_id, payload)
+    except StationRouteValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Route management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Route could not be updated."}, status=500)
+    return Response({"status": "ok", "message": "Route updated successfully.", "route": route})
+
+
+@endpoint(["POST", "DELETE"])
+@_admin_required
+def admin_train_route_manage(request):
+    from .station_route_management import StationRouteValidationError, assign_route_to_train, remove_train_route
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit a train and route ID."}, status=400)
+    try:
+        if request.method == "DELETE":
+            result = remove_train_route(payload.get("train_id"), payload.get("route_id"))
+            message = "Train-route assignment removed."
+        else:
+            result = assign_route_to_train(payload.get("train_id"), payload.get("route_id"))
+            message = "Route assigned to train successfully."
+    except StationRouteValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except IntegrityError:
+        return Response({"status": "error", "message": "This train is already assigned to the selected route."}, status=409)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Train-route management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Train-route assignment could not be changed."}, status=500)
+    return Response({"status": "ok", "message": message, "assignment": result})
+
+
 @endpoint(["PATCH", "DELETE"])
 @_admin_required
 def admin_train_update(request, train_id):
