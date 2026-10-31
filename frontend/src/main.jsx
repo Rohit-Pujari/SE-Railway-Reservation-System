@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import AdminApp from "./admin.jsx";
 import { createRoot } from "react-dom/client";
 import "../styles.css";
 import "./react.css";
@@ -224,7 +225,7 @@ function App() {
   return <>
     <header className="site-header">
       <a className="brand" href="#top" aria-label="Trackline home"><span className="brand-mark" aria-hidden="true">🚆</span><span className="brand-name">trackline<span>RAILWAY RESERVATIONS</span></span></a>
-      <nav className="top-nav" aria-label="Main navigation"><a href="#plan">Plan a journey</a>{user && <><a href="#booking-history">My bookings</a><a href="#booking-status">Check status</a></>}<a href="#account">{user ? "Your account" : "Create account"}</a><div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
+      <nav className="top-nav" aria-label="Main navigation"><a href="/?admin=1">Admin</a><a href="#plan">Plan a journey</a>{user && <><a href="#booking-history">My bookings</a><a href="#booking-status">Check status</a></>}<a href="#account">{user ? "Your account" : "Create account"}</a><div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
     </header>
     <main id="top" className="page-shell">
       <section className="hero" aria-labelledby="hero-title">
@@ -459,4 +460,5 @@ function TrainCard({ train, classId, selectedClass, sourceId, destinationId, jou
   return <article className="train-result"><div className="train-result-heading"><h3>{train.train_name}</h3><span className="train-number">{train.train_number}</span></div><div className="train-route"><div><strong>{train.source_station_name}</strong><span>{train.source_station_code} · {train.departure_at}</span></div><span className="route-arrow" aria-hidden="true">→</span><div><strong>{train.destination_station_name}</strong><span>{train.destination_station_code} · {train.arrival_at}</span></div></div><div className="train-result-details"><div className="train-result-detail"><span>Fare per passenger · {selectedClass?.class_name || "selected class"}</span><strong>{train.currency_code || "INR"} {Number(train.starting_fare || 0).toFixed(2)}</strong></div><div className="train-result-detail"><span>Estimated total · {passengerCount} passenger{passengerCount === 1 ? "" : "s"}</span><strong>{train.currency_code || "INR"} {total.toFixed(2)}</strong></div><div className="train-result-detail"><span>Seats available</span><strong>{availability}</strong></div></div><button className="book-train-button" type="button" onClick={() => onBook(train)}>Book ticket</button></article>;
 }
 
-createRoot(document.getElementById("root")).render(<React.StrictMode><App /></React.StrictMode>);
+const RootApp = new URLSearchParams(window.location.search).get("admin") === "1" ? AdminApp : App;
+createRoot(document.getElementById("root")).render(<React.StrictMode><RootApp /></React.StrictMode>);

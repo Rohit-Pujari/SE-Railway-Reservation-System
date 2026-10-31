@@ -1,0 +1,79 @@
+import React, { useEffect, useState } from "react";
+
+const API = "/api";
+const csrf = () => document.cookie.split(";").map((part) => part.trim()).find((part) => part.startsWith("csrftoken="))?.slice(10) || "";
+
+async function request(path, options = {}) {
+  const method = (options.method || "GET").toUpperCase();
+  const headers = { Accept: "application/json", ...options.headers };
+  if (options.body) { headers["Content-Type"] = "application/json"; options.body = JSON.stringify(options.body); }
+  if (!["GET", "HEAD", "OPTIONS"].includes(method)) headers["X-CSRFToken"] = csrf();
+  const response = await fetch(API + path, { ...options, method, headers, credentials: "same-origin" });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || "Request failed.");
+  return data;
+}
+const date = (value) => value ? new Date(value).toLocaleString() : "—";
+const money = (value, currency = "INR") => `${currency} ${Number(value || 0).toFixed(2)}`;
+
+export default function AdminApp() {
+  const [admin, setAdmin] = useState(null);
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [data, setData] = useState(null);
+  const [tab, setTab] = useState("overview");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  async function loadDashboard() {
+    setBusy(true); setError("");
+    try { const result = await request("/admin/dashboard"); setData(result); }
+    catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  }
+  useEffect(() => { request("/csrf").catch(() => {}); }, []);
+
+  async function login(event) {
+    event.preventDefault(); setBusy(true); setError("");
+    try {
+      await request("/csrf");
+      const result = await request("/admin/login", { method: "POST", body: form });
+      setAdmin(result.admin); setNotice("Administrator session started.");
+      await loadDashboard();
+    } catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  }
+  async function logout() {
+    try { await request("/admin/logout", { method: "POST" }); setAdmin(null); setData(null); setNotice("You have been logged out."); }
+    catch (err) { setError(err.message); }
+  }
+  async function changeTrainStatus(train) {
+    const next = train.train_status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    setError(""); setNotice("");
+    try {
+      await request(`/admin/trains/${train.train_id}`, { method: "PATCH", body: { train_status: next } });
+      setNotice(`${train.train_name} is now ${next.toLowerCase()}.`);
+      await loadDashboard();
+    } catch (err) { setError(err.message); }
+  }
+
+  const nav = [["overview","Overview"],["trains","Trains"],["routes","Routes"],["schedules","Schedules & seats"],["bookings","Bookings"],["cancellations","Cancellations"]];
+  if (!admin) return <main className="admin-shell"><a className="admin-back" href="/">← Back to Trackline</a><section className="admin-login-card"><p className="section-kicker">TRACKLINE · ADMINISTRATION</p><h1>Administrator sign in</h1><p>Use an active administrator account to access railway operations.</p><form onSubmit={login}><label htmlFor="admin-email">Email</label><input id="admin-email" type="email" autoComplete="username" required value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/><label htmlFor="admin-password">Password</label><input id="admin-password" type="password" autoComplete="current-password" required value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/><button disabled={busy}>{busy ? "Signing in…" : "Sign in to dashboard ↗"}</button></form>{error && <p className="admin-error" role="alert">{error}</p>}{notice && <p className="admin-notice">{notice}</p>}</section></main>;
+
+  const summary = data?.summary || {};
+  const rows = (items, columns) => <div className="admin-table-wrap"><table className="admin-table"><thead><tr>{columns.map(([key,label])=><th key={key}>{label}</th>)}</tr></thead><tbody>{(items||[]).map((item,i)=><tr key={item.booking_id || item.schedule_id || item.route_id || item.train_id || item.cancellation_id || i}>{columns.map(([key])=><td key={key}>{key==="departure_at"||key==="arrival_at"||key==="requested_at"||key==="created_at" ? date(item[key]) : key==="total_fare" ? money(item[key],item.currency_code) : key==="stops" ? (item.stops||[]).map(s=>s.station_code).join(" → ") : String(item[key] ?? "—")}</td>)}</tr>)}</tbody></table>{!items?.length && <p className="admin-empty">No records found.</p>}</div>;
+  return <main className="admin-shell">
+    <header className="admin-header"><div><a className="admin-back" href="/">← Trackline</a><p className="section-kicker">OPERATIONS CONTROL</p><h1>Admin dashboard</h1><span>Signed in as {admin.email}</span></div><button className="admin-logout" onClick={logout}>Log out</button></header>
+    <nav className="admin-tabs" aria-label="Admin sections">{nav.map(([id,label])=><button key={id} className={tab===id?"active":""} onClick={()=>setTab(id)}>{label}</button>)}</nav>
+    {error && <p className="admin-error" role="alert">{error}</p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
+    <div className="admin-content">
+      {tab==="overview" && <><div className="admin-title-row"><div><p className="section-kicker">AT A GLANCE</p><h2>Railway operations</h2></div><button onClick={loadDashboard} disabled={busy}>{busy?"Refreshing…":"Refresh data ↻"}</button></div><div className="admin-metrics">{[["Trains",summary.total_trains],["Routes",summary.total_routes],["Schedules",summary.total_schedules],["Bookings",summary.total_bookings],["Active bookings",summary.active_bookings],["Cancellations",summary.total_cancellations]].map(([label,value])=><article key={label}><span>{label}</span><strong>{Number(value||0).toLocaleString()}</strong></article>)}</div><h3>Recent bookings</h3>{rows((data?.bookings||[]).slice(0,8),[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["booking_status","Status"],["total_fare","Fare"]])}</>}
+      {tab==="trains" && <><div className="admin-title-row"><div><p className="section-kicker">FLEET</p><h2>Train management</h2><p>Review trains and activate or deactivate services.</p></div><button onClick={loadDashboard} disabled={busy}>Refresh ↻</button></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Train no.</th><th>Train name</th><th>Status</th><th>Action</th></tr></thead><tbody>{(data?.trains||[]).map(train=><tr key={train.train_id}><td>{train.train_number}</td><td>{train.train_name}</td><td><span className={`admin-status ${train.train_status.toLowerCase()}`}>{train.train_status}</span></td><td><button className="admin-small-button" onClick={()=>changeTrainStatus(train)}>{train.train_status==="ACTIVE"?"Deactivate":"Activate"}</button></td></tr>)}</tbody></table>{!data?.trains?.length&&<p className="admin-empty">No trains found.</p>}</div></>}
+      {tab==="routes" && <><p className="section-kicker">NETWORK</p><h2>Routes and stops</h2>{rows(data?.routes,[["route_name","Route"],["route_status","Status"],["stops","Station sequence"]])}</>}
+      {tab==="schedules" && <><p className="section-kicker">TIMETABLE & INVENTORY</p><h2>Schedules and seat availability</h2>{rows(data?.schedules,[["train_number","Train no."],["train_name","Train"],["route_name","Route"],["departure_at","Departure"],["arrival_at","Arrival"],["schedule_status","Status"],["available_seats","Available seats"],["total_seats","Total seats"]])}</>}
+      {tab==="bookings" && <><p className="section-kicker">RESERVATIONS</p><h2>Bookings</h2>{rows(data?.bookings,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["email","Email"],["booking_status","Status"],["passenger_count","Passengers"],["total_fare","Fare"],["created_at","Created"]])}</>}
+      {tab==="cancellations" && <><p className="section-kicker">SERVICE RECORDS</p><h2>Cancellation records</h2>{rows(data?.cancellations,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Requested by"],["cancellation_status","Status"],["passenger_items","Passengers"],["cancellation_charge","Charge"],["refund_amount","Refund"],["requested_at","Requested"]])}</>}
+    </div>
+    <footer className="admin-footer">Trackline Railway Reservations · Administrator workspace</footer>
+  </main>;
+}
