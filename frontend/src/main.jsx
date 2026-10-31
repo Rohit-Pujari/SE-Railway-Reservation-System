@@ -225,7 +225,7 @@ function App() {
   return <>
     <header className="site-header">
       <a className="brand" href="#top" aria-label="Trackline home"><span className="brand-mark" aria-hidden="true">🚆</span><span className="brand-name">trackline<span>RAILWAY RESERVATIONS</span></span></a>
-      <nav className="top-nav" aria-label="Main navigation"><a href="#plan">Plan a journey</a>{user && <><a href="#booking-history">My bookings</a><a href="#booking-status">Check status</a></>}<a href="#account">{user ? "Your account" : "Create account"}</a><div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
+      <nav className="top-nav" aria-label="Main navigation"><a href="/?admin=1">Admin</a><a href="#plan">Plan a journey</a>{user && <><a href="#booking-history">My bookings</a><a href="#booking-status">Check status</a></>}<a href="#account">{user ? "Your account" : "Create account"}</a><div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
     </header>
     <main id="top" className="page-shell">
       <section className="hero" aria-labelledby="hero-title">
