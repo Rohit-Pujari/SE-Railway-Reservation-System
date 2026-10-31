@@ -7,7 +7,7 @@ from backend.app.booking_refunds import calculate_cancellation_refund
 
 class CancellationRefundPolicyTests(unittest.TestCase):
     def test_flat_charge_more_than_48_hours_before_departure(self):
-        result = calculate_cancellation_refund("1000.00", "SL", 48)
+        result = calculate_cancellation_refund("1000.00", "SL", 72)
         self.assertEqual(result["cancellation_charge"], Decimal("120.00"))
         self.assertEqual(result["refund_amount"], Decimal("880.00"))
         self.assertEqual(result["policy_band"], "FLAT_OVER_48_HOURS")
@@ -16,6 +16,11 @@ class CancellationRefundPolicyTests(unittest.TestCase):
         result = calculate_cancellation_refund("1000.00", "SL", 24)
         self.assertEqual(result["cancellation_charge"], Decimal("250.00"))
         self.assertEqual(result["refund_amount"], Decimal("750.00"))
+
+    def test_exactly_48_hours_uses_the_percentage_band(self):
+        result = calculate_cancellation_refund("1000.00", "SL", 48)
+        self.assertEqual(result["cancellation_charge"], Decimal("250.00"))
+        self.assertEqual(result["policy_band"], "25_PERCENT_12_TO_48_HOURS")
 
     def test_50_percent_charge_between_4_and_12_hours(self):
         result = calculate_cancellation_refund("1000.00", "SL", 6)
