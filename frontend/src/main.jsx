@@ -224,14 +224,14 @@ function App() {
   return <>
     <header className="site-header">
       <a className="brand" href="#top" aria-label="Trackline home"><span className="brand-mark" aria-hidden="true">🚆</span><span className="brand-name">trackline<span>RAILWAY RESERVATIONS</span></span></a>
-      <nav className="top-nav" aria-label="Main navigation"><a href="#plan">Plan a journey</a>{user && <a href="#booking-history">My bookings</a>}<a href="#account">{user ? "Your account" : "Create account"}</a><div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
+      <nav className="top-nav" aria-label="Main navigation"><a href="#plan">Plan a journey</a>{user && <><a href="#booking-history">My bookings</a><a href="#booking-status">Check status</a></>}<a href="#account">{user ? "Your account" : "Create account"}</a><div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
     </header>
     <main id="top" className="page-shell">
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-copy"><p className="eyebrow"><span className="eyebrow-line" /> YOUR NEXT JOURNEY, MADE SIMPLE</p><h1 id="hero-title">There’s a better<br />way to <em>get there.</em></h1><p className="hero-intro">Find the right train for your plans. Pick your stations, choose a date, and explore the routes ahead.</p><a className="hero-link" href="#plan">Find your train <span aria-hidden="true">↓</span></a></div>
         <div className="hero-visual" aria-hidden="true"><div className="visual-orbit orbit-one" /><div className="visual-orbit orbit-two" /><div className="visual-caption"><span className="caption-star">✳</span> Every great trip begins with a plan.</div></div><div className="hero-index" aria-hidden="true">01 <span /> EXPLORE</div>
       </section>
-      {user && <BookingHistory user={user} />}
+      {user && <><BookingHistory user={user} /><BookingStatusLookup /></>}
       <section id="plan" className="search-panel" aria-labelledby="search-title">
         <div className="section-heading"><div><p className="section-kicker">LET’S GET MOVING</p><h2 id="search-title">Where would you like to go?</h2></div><span className="step-label"><span>01</span> SEARCH TRAINS</span></div>
         <form className="search-form" onSubmit={submitSearch}>
@@ -327,6 +327,52 @@ function BookingHistory({ user }) {
         <div className="history-meta"><div><span>Departure</span><strong>{formatDate(booking.departure_at)}</strong></div><div><span>Arrival</span><strong>{formatDate(booking.arrival_at)}</strong></div><div><span>Total fare</span><strong>{booking.currency_code} {Number(booking.total_fare).toFixed(2)}</strong></div></div>
         <div className="history-passengers"><strong>Passengers and seats</strong>{booking.passengers.map((passenger) => <span key={passenger.passenger_id}>{passenger.passenger_name} · {passenger.coach_number && passenger.seat_number ? `${passenger.coach_number} / ${passenger.seat_number}` : passenger.allocation_status || "Seat details unavailable"}</span>)}</div>
       </article>)}</div>}
+  </section>;
+}
+
+
+
+function BookingStatusLookup() {
+  const [pnr, setPnr] = useState("");
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function checkStatus(event) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    setResult(null);
+    try {
+      const data = await api(`/bookings/status?pnr=${encodeURIComponent(pnr.trim())}`);
+      setResult(data);
+    } catch (requestError) {
+      setError(messageText(requestError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const booking = result?.booking;
+  return <section id="booking-status" className="booking-status" aria-labelledby="booking-status-title">
+    <div className="section-heading"><div><p className="section-kicker">TRACK YOUR RESERVATION</p><h2 id="booking-status-title">Check booking status</h2><p className="booking-history-intro">Enter the PNR from a booking in your account.</p></div></div>
+    <form className="status-lookup-form" onSubmit={checkStatus}>
+      <label htmlFor="status-pnr">PNR number</label>
+      <div><input id="status-pnr" value={pnr} onChange={(event) => setPnr(event.target.value.toUpperCase())} maxLength="20" autoComplete="off" placeholder="Enter your PNR" required /><button type="submit" disabled={loading}>{loading ? "Checking…" : "Check status ↗"}</button></div>
+    </form>
+    {error && <p className="form-message is-error" role="alert">{error}</p>}
+    {booking && <article className="status-result" aria-live="polite">
+      <div className="history-card-top"><div><span className="history-pnr-label">PNR</span><strong className="history-pnr">{booking.pnr}</strong></div><span className="history-status">{booking.booking_status.replaceAll("_", " ")}</span></div>
+      <div className="history-train"><strong>{booking.train_name_snapshot}</strong><span>Train {booking.train_number_snapshot} · Class {booking.class_code_snapshot}</span></div>
+      <div className="history-route"><div><strong>{booking.boarding_station_name_snapshot}</strong><span>{booking.boarding_station_code_snapshot}</span></div><span className="history-route-arrow">→</span><div><strong>{booking.alighting_station_name_snapshot}</strong><span>{booking.alighting_station_code_snapshot}</span></div></div>
+      <div className="status-lifecycle">
+        <div><span>Booking status</span><strong>{booking.booking_status.replaceAll("_", " ")}</strong></div>
+        <div><span>Payment status</span><strong>{result.payment_status.replaceAll("_", " ")}</strong></div>
+        <div><span>Total fare</span><strong>{booking.currency_code} {Number(booking.total_fare).toFixed(2)}</strong></div>
+      </div>
+      {result.payments.length > 0 && <div className="status-section"><h3>Payment details</h3>{result.payments.map((payment, index) => <p key={index}><strong>{payment.payment_status.replaceAll("_", " ")}</strong> · {payment.payment_method} · {payment.currency_code} {Number(payment.amount).toFixed(2)}{payment.failure_code ? ` · ${payment.failure_code}` : ""}</p>)}</div>}
+      {result.cancellations.length > 0 && <div className="status-section"><h3>Cancellation and refund</h3>{result.cancellations.map((item, index) => <p key={index}><strong>Cancellation: {item.cancellation_status.replaceAll("_", " ")}</strong>{item.item_status ? ` · Passenger item: ${item.item_status}` : ""}{item.refund_status ? ` · Refund: ${item.refund_status}` : " · Refund not recorded"}{item.refund_amount != null ? ` · Refund due: ${booking.currency_code} ${Number(item.refund_amount).toFixed(2)}` : ""}{item.refunded_amount != null ? ` · Refunded: ${item.refund_currency} ${Number(item.refunded_amount).toFixed(2)}` : ""}</p>)}</div>}
+    </article>}
   </section>;
 }
 

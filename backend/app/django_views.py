@@ -17,6 +17,7 @@ from rest_framework.response import Response
 
 from .booking import BookingRequestError, BookingUnavailableError, create_booking
 from .booking_history import get_booking_history
+from .booking_status import get_booking_status
 from .db import get_db_connection
 from .fare_calculation import FareCalculationError, calculate_booking_fare
 from .passenger_details import PassengerDetailsValidationError, save_passenger_details
@@ -385,3 +386,23 @@ def frontend_asset(request, asset_path):
     if root not in asset.parents or not asset.is_file():
         raise Http404
     return HttpResponse(asset.read_bytes(), content_type=mimetypes.guess_type(asset.name)[0] or "application/octet-stream")
+
+
+
+@endpoint(["GET"])
+def passenger_booking_status(request):
+    user_id = _user_id(request)
+    if user_id is None:
+        return Response({"status": "error", "message": "Please log in to check a booking."}, status=401)
+    pnr = request.query_params.get("pnr")
+    try:
+        result = get_booking_status(user_id, pnr)
+    except ValueError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Booking status is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Booking status could not be loaded."}, status=500)
+    if result is None:
+        return Response({"status": "error", "message": "No booking with that PNR was found in your account."}, status=404)
+    return Response({"status": "ok", **result})
