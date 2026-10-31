@@ -451,6 +451,19 @@ def admin_dashboard_data(request):
 
 @endpoint(["GET"])
 @_admin_required
+def admin_cancellation_records(request):
+    """Return cancellation items and their refund attempts to administrators."""
+    from .admin_cancellation_records import get_admin_cancellation_records
+    try:
+        return Response({"status": "ok", "cancellations": get_admin_cancellation_records()})
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Cancellation records are temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Cancellation records could not be loaded."}, status=500)
+
+
+@endpoint(["GET"])
+@_admin_required
 def admin_booking_detail(request, booking_id):
     """Expose full passenger reservation details to administrators only."""
     from .admin_booking_details import get_admin_booking_details
