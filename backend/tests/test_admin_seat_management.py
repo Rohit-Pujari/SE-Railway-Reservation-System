@@ -117,5 +117,90 @@ class AdminSeatInventoryEndpointTests(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
 
+
+class _FakeCursor:
+    def __init__(self, rows):
+        self.rows = list(rows)
+        self.statements = []
+        self.closed = False
+
+    def execute(self, statement, params=None):
+        self.statements.append((statement, params))
+
+    def fetchone(self):
+        return self.rows.pop(0) if self.rows else None
+
+    def close(self):
+        self.closed = True
+
+
+class _FakeConnection:
+    def __init__(self, rows):
+        self.fake_cursor = _FakeCursor(rows)
+        self.committed = False
+        self.rolled_back = False
+        self.closed = False
+
+    def start_transaction(self):
+        pass
+
+    def cursor(self, dictionary=False):
+        return self.fake_cursor
+
+    def commit(self):
+        self.committed = True
+
+    def rollback(self):
+        self.rolled_back = True
+
+    def close(self):
+        self.closed = True
+
+
+class SeatInventoryTransactionTests(unittest.TestCase):
+    def test_unreserved_seat_can_be_taken_out_of_service(self):
+        from backend.app.seat_management import update_schedule_seat_status
+
+        connection = _FakeConnection([
+            {"schedule_seat_id": 31, "operational_status": "IN_SERVICE"},
+            None,
+        ])
+        result = update_schedule_seat_status(
+            19, 31, "OUT_OF_SERVICE", connection_factory=lambda: connection
+        )
+        self.assertEqual(result["operational_status"], "OUT_OF_SERVICE")
+        self.assertTrue(connection.committed)
+        self.assertFalse(connection.rolled_back)
+        self.assertTrue(any("UPDATE schedule_seats" in sql for sql, _ in connection.fake_cursor.statements))
+        self.assertTrue(connection.closed)
+        self.assertTrue(connection.fake_cursor.closed)
+
+    def test_active_reservation_prevents_seat_from_leaving_service(self):
+        from backend.app.seat_management import update_schedule_seat_status
+
+        connection = _FakeConnection([
+            {"schedule_seat_id": 31, "operational_status": "IN_SERVICE"},
+            {"allocation_id": 88},
+        ])
+        with self.assertRaises(SeatManagementConflictError):
+            update_schedule_seat_status(
+                19, 31, "OUT_OF_SERVICE", connection_factory=lambda: connection
+            )
+        self.assertFalse(connection.committed)
+        self.assertTrue(connection.rolled_back)
+        self.assertFalse(any("UPDATE schedule_seats" in sql for sql, _ in connection.fake_cursor.statements))
+
+    def test_missing_schedule_seat_is_not_updated(self):
+        from backend.app.seat_management import update_schedule_seat_status
+
+        connection = _FakeConnection([None])
+        with self.assertRaises(LookupError):
+            update_schedule_seat_status(
+                19, 31, "OUT_OF_SERVICE", connection_factory=lambda: connection
+            )
+        self.assertTrue(connection.rolled_back)
+        self.assertFalse(any("UPDATE schedule_seats" in sql for sql, _ in connection.fake_cursor.statements))
+
+
 if __name__ == "__main__":
     unittest.main()
