@@ -52,7 +52,7 @@ def calculate_cancellation_refund(fare, class_code, hours_until_departure):
     elif hours < Decimal("12"):
         charge = max(amount * Decimal("0.50"), flat)
         band = "50_PERCENT_4_TO_12_HOURS"
-    elif hours < Decimal("48"):
+    elif hours <= Decimal("48"):
         charge = max(amount * Decimal("0.25"), flat)
         band = "25_PERCENT_12_TO_48_HOURS"
     else:
