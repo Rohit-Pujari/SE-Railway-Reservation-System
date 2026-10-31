@@ -558,6 +558,51 @@ def admin_train_route_manage(request):
     return Response({"status": "ok", "message": message, "assignment": result})
 
 
+
+@endpoint(["POST"])
+@_admin_required
+def admin_schedule_create(request):
+    from .schedule_management import ScheduleValidationError, create_schedule
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit schedule details as JSON."}, status=400)
+    try:
+        schedule = create_schedule(payload)
+    except ScheduleValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except IntegrityError:
+        return Response({"status": "error", "message": "A schedule already exists for this train at the selected departure time."}, status=409)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Schedule management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Schedule could not be created."}, status=500)
+    return Response({"status": "ok", "message": "Train schedule created successfully.", "schedule": schedule}, status=201)
+
+
+@endpoint(["PATCH"])
+@_admin_required
+def admin_schedule_update(request, schedule_id):
+    from .schedule_management import ScheduleConflictError, ScheduleValidationError, update_schedule
+    payload = _payload(request)
+    if payload is None or not payload:
+        return Response({"status": "error", "message": "Submit at least one schedule detail."}, status=400)
+    try:
+        schedule = update_schedule(schedule_id, payload)
+    except ScheduleConflictError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except ScheduleValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except IntegrityError:
+        return Response({"status": "error", "message": "A schedule already exists for this train at the selected departure time."}, status=409)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Schedule management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Schedule could not be updated."}, status=500)
+    return Response({"status": "ok", "message": "Train schedule updated successfully.", "schedule": schedule})
+
+
 @endpoint(["PATCH", "DELETE"])
 @_admin_required
 def admin_train_update(request, train_id):
