@@ -43,6 +43,10 @@ export default function AdminApp() {
   });
   const [editingScheduleId, setEditingScheduleId] = useState(null);
   const [scheduleSaving, setScheduleSaving] = useState(false);
+  const [seatScheduleId, setSeatScheduleId] = useState("");
+  const [seatInventory, setSeatInventory] = useState(null);
+  const [seatLoading, setSeatLoading] = useState(false);
+  const [seatSavingId, setSeatSavingId] = useState(null);
 
   async function loadDashboard() {
     setBusy(true); setError("");
@@ -209,6 +213,33 @@ export default function AdminApp() {
     });
     setError(""); setNotice("");
   }
+  async function loadScheduleSeats(scheduleId = seatScheduleId) {
+    if (!scheduleId) { setSeatInventory(null); return; }
+    setSeatLoading(true); setError("");
+    try {
+      const result = await request(`/admin/schedules/${scheduleId}/seats`);
+      setSeatInventory(result);
+      setSeatScheduleId(String(scheduleId));
+    } catch (err) { setSeatInventory(null); setError(err.message); }
+    finally { setSeatLoading(false); }
+  }
+
+  async function changeScheduleSeatStatus(seat) {
+    if (!seatScheduleId) return;
+    const next = seat.operational_status === "IN_SERVICE" ? "OUT_OF_SERVICE" : "IN_SERVICE";
+    setSeatSavingId(seat.schedule_seat_id); setError(""); setNotice("");
+    try {
+      const result = await request(
+        `/admin/schedules/${seatScheduleId}/seats/${seat.schedule_seat_id}`,
+        { method: "PATCH", body: { operational_status: next } }
+      );
+      setNotice(result.message || "Seat status updated successfully.");
+      await loadScheduleSeats(seatScheduleId);
+      await loadDashboard();
+    } catch (err) { setError(err.message); }
+    finally { setSeatSavingId(null); }
+  }
+
   function startEditTrain(train) {
     setEditingTrainId(train.train_id);
     setEditTrain({
@@ -301,6 +332,74 @@ export default function AdminApp() {
         <p className="admin-form-note">Intermediate station times are estimated from route distances. Schedules with bookings can have their status updated, but their train, route and timetable are locked to protect existing tickets.</p>
         <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Train</th><th>Route</th><th>Departure</th><th>Arrival</th><th>Status</th><th>Seats</th><th>Action</th></tr></thead><tbody>{(data?.schedules||[]).map(schedule=><tr key={schedule.schedule_id}><td>{schedule.schedule_id}</td><td>{schedule.train_number} — {schedule.train_name}</td><td>{schedule.route_name}</td><td>{date(schedule.departure_at)}</td><td>{date(schedule.arrival_at)}</td><td>{schedule.schedule_status}</td><td>{schedule.available_seats}/{schedule.total_seats}</td><td><button className="admin-small-button" onClick={()=>startEditSchedule(schedule)}>Edit</button></td></tr>)}</tbody></table>{!data?.schedules?.length&&<p className="admin-empty">No train schedules found.</p>}</div>
       </>}
+        <section className="admin-seat-inventory">
+          <div className="admin-title-row">
+            <div>
+              <p className="section-kicker">JOURNEY INVENTORY</p>
+              <h3>Manage individual seats</h3>
+              <p>Choose a scheduled train and journey date to inspect seats and change their service status.</p>
+            </div>
+            <button type="button" onClick={() => loadScheduleSeats()} disabled={!seatScheduleId || seatLoading}>
+              {seatLoading ? "Loading…" : "Refresh seats ↻"}
+            </button>
+          </div>
+          <div className="admin-seat-selector">
+            <label htmlFor="seat-schedule-select">Train schedule / journey date</label>
+            <select
+              id="seat-schedule-select"
+              value={seatScheduleId}
+              onChange={event => { setSeatScheduleId(event.target.value); setSeatInventory(null); }}
+            >
+              <option value="">Select a scheduled journey</option>
+              {(data?.schedules || []).map(schedule => (
+                <option key={schedule.schedule_id} value={schedule.schedule_id}>
+                  {schedule.train_number} — {schedule.train_name} · {schedule.route_name} · {date(schedule.departure_at)}
+                </option>
+              ))}
+            </select>
+            <button type="button" onClick={() => loadScheduleSeats()} disabled={!seatScheduleId || seatLoading}>
+              View inventory
+            </button>
+          </div>
+          {seatInventory?.schedule && (
+            <p className="admin-form-note">
+              {seatInventory.schedule.train_number} — {seatInventory.schedule.train_name} ·
+              {" "}{seatInventory.schedule.route_name} · {date(seatInventory.schedule.departure_at)}
+              {" "}· {seatInventory.seats.length} scheduled seats
+            </p>
+          )}
+          {seatInventory && (
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead><tr><th>Coach</th><th>Seat</th><th>Class</th><th>Service status</th><th>Reservation</th><th>Action</th></tr></thead>
+                <tbody>
+                  {seatInventory.seats.map(seat => (
+                    <tr key={seat.schedule_seat_id}>
+                      <td>{seat.coach_number}</td>
+                      <td>{seat.seat_number}</td>
+                      <td>{seat.class_code} — {seat.class_name}</td>
+                      <td><span className={`admin-status ${seat.operational_status === "IN_SERVICE" ? "active" : "inactive"}`}>{seat.operational_status.replaceAll("_", " ")}</span></td>
+                      <td>{seat.has_active_allocation ? `Reserved · ${seat.active_pnrs || "active hold"}` : "No active reservation"}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="admin-small-button"
+                          disabled={seatSavingId === seat.schedule_seat_id || (seat.has_active_allocation && seat.operational_status === "IN_SERVICE")}
+                          title={seat.has_active_allocation ? "Seats with active bookings or holds cannot be taken out of service." : ""}
+                          onClick={() => changeScheduleSeatStatus(seat)}
+                        >
+                          {seatSavingId === seat.schedule_seat_id ? "Saving…" : seat.operational_status === "IN_SERVICE" ? "Take out of service" : "Return to service"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!seatInventory.seats.length && <p className="admin-empty">No seat inventory exists for this schedule.</p>}
+            </div>
+          )}
+          <p className="admin-form-note">Seats with confirmed bookings or unexpired reservation holds are protected and cannot be taken out of service. Returning an out-of-service seat to service makes it eligible for future availability checks.</p>
+        </section>
       {tab==="bookings" && <><p className="section-kicker">RESERVATIONS</p><h2>Bookings</h2>{rows(data?.bookings,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Passenger"],["email","Email"],["booking_status","Status"],["passenger_count","Passengers"],["total_fare","Fare"],["created_at","Created"]])}</>}
       {tab==="cancellations" && <><p className="section-kicker">SERVICE RECORDS</p><h2>Cancellation records</h2>{rows(data?.cancellations,[["pnr","PNR"],["train_name_snapshot","Train"],["full_name","Requested by"],["cancellation_status","Status"],["passenger_items","Passengers"],["cancellation_charge","Charge"],["refund_amount","Refund"],["requested_at","Requested"]])}</>}
     </div>
