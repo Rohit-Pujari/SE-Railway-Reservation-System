@@ -42,8 +42,6 @@ def _parse_datetime(value, label):
         raise ScheduleValidationError(f"{label} must be a valid date and time.")
     if parsed.tzinfo is not None:
         raise ScheduleValidationError(f"{label} must not include a timezone offset.")
-    if parsed.second or parsed.microsecond:
-        parsed = parsed.replace(second=0, microsecond=0)
     return parsed
 
 
