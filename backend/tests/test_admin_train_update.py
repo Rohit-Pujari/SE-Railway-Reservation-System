@@ -59,6 +59,7 @@ class UpdateTrainServiceTests(unittest.TestCase):
         self.connection.rollback.assert_called_once_with()
 
     def test_missing_train_is_not_found(self):
+        self.cursor.fetchone.side_effect = None
         self.cursor.fetchone.return_value = None
         with self.assertRaises(LookupError):
             update_train(42, train_name="New Name", connection_factory=lambda: self.connection)
