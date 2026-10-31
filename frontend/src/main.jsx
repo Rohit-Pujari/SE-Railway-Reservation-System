@@ -224,13 +224,14 @@ function App() {
   return <>
     <header className="site-header">
       <a className="brand" href="#top" aria-label="Trackline home"><span className="brand-mark" aria-hidden="true">🚆</span><span className="brand-name">trackline<span>RAILWAY RESERVATIONS</span></span></a>
-      <nav className="top-nav" aria-label="Main navigation"><a href="#plan">Plan a journey</a><a href="#account">{user ? "Your account" : "Create account"}</a><div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
+      <nav className="top-nav" aria-label="Main navigation"><a href="#plan">Plan a journey</a>{user && <a href="#booking-history">My bookings</a>}<a href="#account">{user ? "Your account" : "Create account"}</a><div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
     </header>
     <main id="top" className="page-shell">
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-copy"><p className="eyebrow"><span className="eyebrow-line" /> YOUR NEXT JOURNEY, MADE SIMPLE</p><h1 id="hero-title">There’s a better<br />way to <em>get there.</em></h1><p className="hero-intro">Find the right train for your plans. Pick your stations, choose a date, and explore the routes ahead.</p><a className="hero-link" href="#plan">Find your train <span aria-hidden="true">↓</span></a></div>
         <div className="hero-visual" aria-hidden="true"><div className="visual-orbit orbit-one" /><div className="visual-orbit orbit-two" /><div className="visual-caption"><span className="caption-star">✳</span> Every great trip begins with a plan.</div></div><div className="hero-index" aria-hidden="true">01 <span /> EXPLORE</div>
       </section>
+      {user && <BookingHistory user={user} />}
       <section id="plan" className="search-panel" aria-labelledby="search-title">
         <div className="section-heading"><div><p className="section-kicker">LET’S GET MOVING</p><h2 id="search-title">Where would you like to go?</h2></div><span className="step-label"><span>01</span> SEARCH TRAINS</span></div>
         <form className="search-form" onSubmit={submitSearch}>
@@ -271,6 +272,63 @@ function App() {
   </>;
 }
 
+
+
+function BookingHistory({ user }) {
+  const [history, setHistory] = useState({ upcoming: [], previous: [], count: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("upcoming");
+
+  async function loadHistory() {
+    setLoading(true);
+    setError("");
+    try {
+      const result = await api("/bookings/history");
+      setHistory({ upcoming: result.upcoming || [], previous: result.previous || [], count: result.count || 0 });
+    } catch (requestError) {
+      setError(messageText(requestError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    api("/bookings/history").then((result) => {
+      if (active) setHistory({ upcoming: result.upcoming || [], previous: result.previous || [], count: result.count || 0 });
+    }).catch((requestError) => {
+      if (active) setError(messageText(requestError));
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [user.user_id]);
+
+  const bookings = history[activeTab] || [];
+  const formatDate = (value) => value ? new Date(value).toLocaleString(undefined, {
+    weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+  }) : "Not available";
+
+  return <section id="booking-history" className="booking-history" aria-labelledby="booking-history-title">
+    <div className="section-heading">
+      <div><p className="section-kicker">YOUR TRAVEL RECORD</p><h2 id="booking-history-title">My bookings</h2><p className="booking-history-intro">{history.count} booking{history.count === 1 ? "" : "s"} linked to your account</p></div>
+      <button type="button" className="history-refresh" onClick={loadHistory} disabled={loading}>{loading ? "Loading…" : "Refresh ↻"}</button>
+    </div>
+    <div className="history-tabs" role="tablist" aria-label="Booking history">
+      <button type="button" role="tab" aria-selected={activeTab === "upcoming"} className={activeTab === "upcoming" ? "is-active" : ""} onClick={() => setActiveTab("upcoming")}>Upcoming ({history.upcoming.length})</button>
+      <button type="button" role="tab" aria-selected={activeTab === "previous"} className={activeTab === "previous" ? "is-active" : ""} onClick={() => setActiveTab("previous")}>Previous ({history.previous.length})</button>
+    </div>
+    {error && <p className="form-message is-error" role="alert">{error}</p>}
+    {loading ? <p className="history-empty">Loading your bookings…</p> : bookings.length === 0 ? <div className="history-empty"><strong>No {activeTab} bookings yet.</strong><span>{activeTab === "upcoming" ? "Your next journey will appear here after you reserve a ticket." : "Completed journeys will appear here."}</span></div> :
+      <div className="history-list">{bookings.map((booking) => <article className="history-card" key={booking.booking_id}>
+        <div className="history-card-top"><div><span className="history-pnr-label">PNR</span><strong className="history-pnr">{booking.pnr}</strong></div><span className="history-status">{String(booking.booking_status).replaceAll("_", " ")}</span></div>
+        <div className="history-train"><strong>{booking.train_name}</strong><span>Train {booking.train_number} · Class {booking.class_code}</span></div>
+        <div className="history-route"><div><strong>{booking.source_station_name}</strong><span>{booking.source_station_code}</span></div><span className="history-route-arrow">→</span><div><strong>{booking.destination_station_name}</strong><span>{booking.destination_station_code}</span></div></div>
+        <div className="history-meta"><div><span>Departure</span><strong>{formatDate(booking.departure_at)}</strong></div><div><span>Arrival</span><strong>{formatDate(booking.arrival_at)}</strong></div><div><span>Total fare</span><strong>{booking.currency_code} {Number(booking.total_fare).toFixed(2)}</strong></div></div>
+        <div className="history-passengers"><strong>Passengers and seats</strong>{booking.passengers.map((passenger) => <span key={passenger.passenger_id}>{passenger.passenger_name} · {passenger.coach_number && passenger.seat_number ? `${passenger.coach_number} / ${passenger.seat_number}` : passenger.allocation_status || "Seat details unavailable"}</span>)}</div>
+      </article>)}</div>}
+  </section>;
+}
 
 function TicketConfirmation({ confirmation }) {
   const { booking, train, passengers, journeyDate, className, classCode, passengerCount } = confirmation;
