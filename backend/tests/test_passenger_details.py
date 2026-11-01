@@ -113,6 +113,27 @@ class PassengerDetailsEndpointTests(unittest.TestCase):
         response = self.client.post("/api/bookings/41/passengers", json=["not", "an object"])
         self.assertEqual(response.status_code, 400)
 
+    def test_validation_and_database_errors_return_safe_messages(self):
+        from unittest.mock import patch
+        set_session(self.client, user_id=7, role="PASSENGER")
+        with patch(
+            "backend.app.django_views.save_passenger_details",
+            side_effect=PassengerDetailsValidationError("Select a valid booking."),
+        ):
+            invalid = self.client.post("/api/bookings/41/passengers", json={"passengers": []})
+        self.assertEqual(invalid.status_code, 400)
+        self.assertIn("Select a valid booking.", invalid.json()["message"])
+
+        with patch(
+            "backend.app.django_views.save_passenger_details",
+            side_effect=mysql.connector.Error("private database connection details"),
+        ):
+            unavailable = self.client.post("/api/bookings/41/passengers", json={
+                "passengers": [{"passenger_name": "A", "age": 20}]
+            })
+        self.assertEqual(unavailable.status_code, 503)
+        self.assertNotIn("private database connection details", unavailable.content.decode())
+
     def test_saves_passengers_for_authenticated_user(self):
         from unittest.mock import patch
         set_session(self.client, user_id=7, role="PASSENGER")
