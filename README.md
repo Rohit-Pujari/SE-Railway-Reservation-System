@@ -47,6 +47,29 @@ curl -i -b cookies.txt -H 'X-CSRFToken: <token>' -X POST http://127.0.0.1:8000/a
 ## Tests
 Run `cd frontend && npm ci && npm run build && cd ..`, then `uv run --active python -m unittest discover -s backend/tests -v` from the repository root. Tests exercise Django/DRF endpoints, CSRF/session behavior, the React build entry and lockfile, and the one-command launcher; database access is mocked, so no development MySQL database is changed by the test suite.
 
+## Availability and recovery (Issue #39)
+
+The coursework project's **proposed availability objective is 99.5% per calendar month**, excluding announced maintenance. This is a planning target, not a measured uptime result or a production SLA. The current local-development deployment is a single Django process, a Vite development server, and one MySQL instance; it does not provide automatic failover or high availability.
+
+### Health checks
+
+- `GET /api/health` checks whether the Django API is responding. It does not require MySQL.
+- `GET /api/health/db` checks the MySQL connection. It returns HTTP 200 when connected and HTTP 503 when the database is unavailable.
+- Database-dependent API endpoints return a controlled error response (normally HTTP 503) for database outages instead of exposing database exception details.
+
+### Restart and recovery procedure
+
+1. Start or restart MySQL and confirm the `railway_reservation` schema is available.
+2. From the repository root, start both application services with `./run-dev.sh`. If they are already running, stop them with Ctrl+C and run the command again.
+3. Check `http://127.0.0.1:8000/api/health`; expect HTTP 200 and `{"status":"ok"}`.
+4. Check `http://127.0.0.1:8000/api/health/db`; expect HTTP 200 and `{"status":"ok","database":"connected"}`.
+5. Open `http://127.0.0.1:5173` and verify the frontend loads and can make API requests.
+6. If the API health check fails, inspect the Django terminal output. If only the database check fails, verify MySQL is running and that the local `.env` credentials and database name are correct, then retry the database health check.
+
+The application uses Django signed-cookie sessions, so session data is self-contained and can be verified by a fresh application worker after a restart as long as the same `SECRET_KEY` and cookie settings are retained. Users may still need to sign in again if cookies expire, are cleared, or the signing key changes.
+
+Automated regression tests cover API health during a database outage, safe 503 responses, database recovery, and signed-session restoration by a fresh client. These tests validate application behavior with mocked database connections; they do not measure real-world uptime or replace deployment-level monitoring and failover testing.
+
 ## Current scope
 The implemented scope includes project setup and database schema; passenger registration and login/logout; administrator login and a protected administrator dashboard; train search, fares, and seat availability; passenger details and fare calculation; ticket booking with duplicate-request protection and a unique PNR; passenger booking history and cancellation/refund records. The administrator dashboard is available from the **Admin** link in the navigation (or `/?admin=1`) after the frontend starts. It provides operational summaries, train activation/deactivation, route stops, schedules and seat inventory, bookings, and cancellation records. Dashboard APIs require an active administrator session. Create an admin account only through a trusted local database administration process. Ticket bookings reserve seats for 15 minutes and remain pending payment; the dashboard does not initiate payments or refunds.
 
