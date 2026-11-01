@@ -97,6 +97,12 @@ class BookingCancellationServiceTests(unittest.TestCase):
             cancel_booking(7, 41, connection_factory=lambda: connection)
         connection.rollback.assert_called_once_with()
 
+    def test_rejects_oversized_cancellation_reason_before_database_access(self):
+        factory = MagicMock()
+        with self.assertRaisesRegex(BookingCancellationError, "255 characters or fewer"):
+            cancel_booking(7, 41, "x" * 256, connection_factory=factory)
+        factory.assert_not_called()
+
     def test_invalid_booking_id_does_not_open_database(self):
         factory = MagicMock()
         with self.assertRaises(BookingCancellationError):
