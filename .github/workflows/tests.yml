@@ -42,6 +42,16 @@ jobs:
           npm ci
           npm run build
 
+      - name: Install Playwright and browser engines
+        working-directory: frontend
+        run: |
+          npm install --no-save --package-lock=false @playwright/test
+          npx playwright install --with-deps chromium firefox webkit msedge
+
+      - name: Run cross-browser compatibility tests
+        working-directory: frontend
+        run: npx playwright test
+
       - name: Compile Python files
         run: python -m compileall -q backend
 
