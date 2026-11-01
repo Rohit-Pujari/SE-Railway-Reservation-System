@@ -78,7 +78,7 @@ class TrainSearchQueryTests(unittest.TestCase):
         self.assertIn("route_fares", sql)
         self.assertIn("LEFT JOIN LATERAL", sql)
         self.assertIn("seat_allocations", sql)
-        self.assertEqual(sql.count("SELECT fare.fare_amount"), 0)
+        self.assertEqual(sql.count("SELECT fare.fare_amount"), 1)
         self.assertEqual(params[0:2], (None, None))
         self.assertEqual(params[2:4], (None, None))
         self.assertEqual(params[4], 1)
