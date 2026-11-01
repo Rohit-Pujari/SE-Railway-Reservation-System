@@ -25,7 +25,9 @@ def cancel_booking(user_id, booking_id, reason=None, connection_factory=None):
     target_id = positive_int(booking_id, "booking", BookingCancellationError)
     if reason is not None and not isinstance(reason, str):
         raise BookingCancellationError("Enter a valid cancellation reason.")
-    reason = reason.strip()[:255] if reason else None
+    if isinstance(reason, str) and len(reason.strip()) > 255:
+        raise BookingCancellationError("Cancellation reason must be 255 characters or fewer.")
+    reason = reason.strip() or None if reason else None
 
     connection = cursor = None
     try:
