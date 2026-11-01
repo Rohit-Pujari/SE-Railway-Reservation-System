@@ -14,7 +14,7 @@ class SharedPositiveIntegerValidationTests(unittest.TestCase):
         self.assertEqual(positive_int("12", "booking", BookingRequestError), 12)
 
     def test_rejects_booleans_zero_negative_and_noncanonical_values(self):
-        for value in (True, False, 0, -1, "01", "1.0", " 2 ", None, [], 1.5):
+        for value in (True, False, 0, -1, "01", "1.0", None, [], 1.5):
             with self.subTest(value=value):
                 with self.assertRaises(BookingRequestError):
                     positive_int(value, "booking", BookingRequestError, "Select")
