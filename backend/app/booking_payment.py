@@ -39,6 +39,7 @@ def confirm_booking_payment(user_id, booking_id, connection_factory=None):
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
             """SELECT booking.booking_id, booking.pnr, booking.booking_status,
+                      booking.schedule_id, booking.class_id,
                       booking.total_fare, booking.currency_code,
                       user.email, user.phone_number
                FROM bookings AS booking
@@ -84,14 +85,29 @@ def confirm_booking_payment(user_id, booking_id, connection_factory=None):
         if booking["booking_status"] != "PENDING_PAYMENT":
             raise PaymentConfirmationError("Only a pending booking can be paid.")
 
-        cursor.execute("SELECT CURRENT_TIMESTAMP AS current_time")
-        current_time = cursor.fetchone()["current_time"]
+        # Match create_booking's inventory-lock protocol exactly: lock every
+        # in-service seat for this schedule/class in deterministic ID order.
+        # A competing booking may have reclaimed an expired hold while we
+        # waited, so do not validate hold expiry until after these locks.
+        cursor.execute(
+            """SELECT schedule_seat_id
+               FROM schedule_seats
+               WHERE schedule_id = %s AND class_id = %s
+                 AND operational_status = 'IN_SERVICE'
+               ORDER BY schedule_seat_id
+               FOR UPDATE""",
+            (booking["schedule_id"], booking["class_id"]),
+        )
+        cursor.fetchall()
+
         cursor.execute(
             """SELECT COUNT(*) AS passenger_count
                FROM booking_passengers WHERE booking_id = %s""",
             (target_id,),
         )
         passenger_count = int(cursor.fetchone()["passenger_count"])
+        cursor.execute("SELECT CURRENT_TIMESTAMP AS current_time")
+        current_time = cursor.fetchone()["current_time"]
         cursor.execute(
             """SELECT allocation_id, allocation_status, hold_expires_at
                FROM seat_allocations
