@@ -43,7 +43,7 @@ class BookingPaymentTests(unittest.TestCase):
         self.assertEqual([item["channel"] for item in result["notifications"]], ["EMAIL", "SMS"])
         self.assertTrue(any("INSERT INTO payments" in call.args[0] for call in cursor.execute.call_args_list))
         self.assertTrue(any("UPDATE bookings" in call.args[0] for call in cursor.execute.call_args_list))
-        self.assertEqual(cursor.execute.call_count, 7)
+        self.assertEqual(cursor.execute.call_count, 9)
         connection.commit.assert_called_once()
 
     def test_email_only_when_phone_number_is_not_available(self):
