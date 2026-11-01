@@ -8,6 +8,7 @@ import mysql.connector
 
 from backend.tests.drf_client import RailwayAPIClient, set_session
 from backend.app.train_search import (
+    MAX_SEARCH_RESULTS,
     TrainSearchValidationError,
     search_trains,
     validate_search,
@@ -88,6 +89,45 @@ class TrainSearchQueryTests(unittest.TestCase):
         self.assertEqual(params[8], 100)
         connection.close.assert_called_once()
         cursor.close.assert_called_once()
+
+    def test_large_train_result_set_is_bounded_and_uses_one_database_query(self):
+        connection = MagicMock()
+        cursor = connection.cursor.return_value
+        cursor.fetchall.return_value = [
+            {
+                "schedule_id": index,
+                "train_number": f"{12000 + index}",
+                "train_name": f"Express {index}",
+                "source_station_id": 1,
+                "source_station_code": "AAA",
+                "source_station_name": "Alpha",
+                "source_city": "Alpha City",
+                "destination_station_id": 2,
+                "destination_station_code": "BBB",
+                "destination_station_name": "Beta",
+                "destination_city": "Beta City",
+                "departure_at": datetime(2026, 11, 15, 8, 0),
+                "arrival_at": datetime(2026, 11, 15, 12, 0),
+                "starting_fare": 450.00,
+                "currency_code": "INR",
+                "available_seats": 40,
+            }
+            for index in range(1, MAX_SEARCH_RESULTS + 1)
+        ]
+
+        results = search_trains(
+            "1", "2", "2026-11-15",
+            connection_factory=lambda: connection,
+        )
+
+        self.assertEqual(len(results), MAX_SEARCH_RESULTS)
+        self.assertEqual(cursor.execute.call_count, 1)
+        self.assertEqual(cursor.fetchall.call_count, 1)
+        sql, params = cursor.execute.call_args.args
+        self.assertIn("LIMIT %s", sql)
+        self.assertEqual(params[-1], MAX_SEARCH_RESULTS)
+        connection.close.assert_called_once_with()
+        cursor.close.assert_called_once_with()
 
     def test_selected_class_filters_fare_and_seat_availability(self):
         connection = MagicMock()
