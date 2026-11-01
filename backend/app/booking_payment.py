@@ -1,5 +1,7 @@
 """Confirm a pending passenger booking with the project's simulated payment provider.
 
+from .validation import positive_int
+
 No real card, UPI, bank, email, or SMS provider is configured in this repository.
 Successful simulated payments are recorded, held seats are confirmed, and
 notification delivery requests are queued in the existing notifications table.
@@ -16,22 +18,10 @@ class PaymentBookingNotFound(LookupError):
     """The booking does not belong to the signed-in passenger."""
 
 
-def _positive_id(value, field):
-    if isinstance(value, bool):
-        raise PaymentConfirmationError(f"Enter a valid {field}.")
-    try:
-        parsed = int(value)
-    except (TypeError, ValueError):
-        raise PaymentConfirmationError(f"Enter a valid {field}.") from None
-    if parsed <= 0 or str(value).strip() != str(parsed):
-        raise PaymentConfirmationError(f"Enter a valid {field}.")
-    return parsed
-
-
 def confirm_booking_payment(user_id, booking_id, connection_factory=None):
     """Record one idempotent simulated payment and confirm its held seats."""
-    owner_id = _positive_id(user_id, "passenger account")
-    target_id = _positive_id(booking_id, "booking")
+    owner_id = positive_int(user_id, "passenger account", PaymentConfirmationError)
+    target_id = positive_int(booking_id, "booking", PaymentConfirmationError)
     connection = cursor = None
     try:
         connection = (connection_factory or get_db_connection)()
