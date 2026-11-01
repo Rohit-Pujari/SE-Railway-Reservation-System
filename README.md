@@ -44,6 +44,20 @@ curl -i -b cookies.txt -H 'X-CSRFToken: <token>' -X POST http://127.0.0.1:8000/a
 - `GET /api/session`: restores the current passenger session.
 - `POST /api/logout`: clears the passenger session.
 
+## Train-search performance (Issue #38)
+
+Train search uses a single lateral fare lookup per matching schedule instead of running separate correlated subqueries for fare amount and currency. The query remains parameterized, limits the result set to 100 schedules, and uses the existing indexes on schedule-stop station/date lookup, route-fare segment/class lookup, schedule-seat lookup, and seat-allocation conflicts. The lateral derived table requires MySQL 8.0.16+, which matches the database version required by this project.
+
+### Measure response time against the live database
+
+After configuring `.env`, starting MySQL, and installing backend dependencies, run this from the repository root with valid station IDs and a journey date:
+
+```bash
+uv run python scripts/benchmark_train_search.py --source 1 --destination 2 --date 2026-11-15
+```
+
+Optional arguments: `--class-id 3`, `--warmup 2`, `--iterations 10`, and `--target-seconds 3`. The script performs warm-up requests, measures actual database-backed searches, and reports median, P95, and maximum latency. It exits with status 0 when measured P95 meets the configured target, or status 2 when it does not. Use representative production-like data and repeat under expected concurrent load before making an availability or performance claim. No benchmark result is assumed or fabricated in this repository.
+
 ## Tests
 Run `cd frontend && npm ci && npm run build && cd ..`, then `uv run --active python -m unittest discover -s backend/tests -v` from the repository root. Tests exercise Django/DRF endpoints, CSRF/session behavior, the React build entry and lockfile, and the one-command launcher; database access is mocked, so no development MySQL database is changed by the test suite.
 
