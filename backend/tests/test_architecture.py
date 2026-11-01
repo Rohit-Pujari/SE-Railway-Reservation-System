@@ -14,6 +14,7 @@ django.setup()
 
 from django.conf import settings
 from django.urls import resolve
+from rest_framework.test import APIClient
 
 from backend.config.urls import urlpatterns
 
@@ -68,7 +69,21 @@ class DjangoReactArchitectureTests(unittest.TestCase):
         self.assertEqual(settings.DATABASES["default"]["ENGINE"], "mysql.connector.django")
         self.assertEqual(settings.SESSION_ENGINE, "django.contrib.sessions.backends.signed_cookies")
         self.assertNotIn("django.contrib.sessions", settings.INSTALLED_APPS)
+        self.assertTrue(settings.SESSION_COOKIE_HTTPONLY)
+        self.assertEqual(settings.SESSION_COOKIE_SAMESITE, "Lax")
+        self.assertEqual(settings.SESSION_COOKIE_SECURE, not settings.DEBUG)
+        self.assertTrue(settings.CSRF_COOKIE_SECURE)
+        self.assertTrue(settings.SECURE_CONTENT_TYPE_NOSNIFF)
+        self.assertEqual(settings.SECURE_REFERRER_POLICY, "same-origin")
+        self.assertEqual(settings.X_FRAME_OPTIONS, "DENY")
+        self.assertIn("django.middleware.clickjacking.XFrameOptionsMiddleware", settings.MIDDLEWARE)
         self.assertEqual(len(urlpatterns), 36)
+
+    def test_security_headers_are_added_to_api_responses(self):
+        response = APIClient().get("/api/health")
+        self.assertEqual(response["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(response["Referrer-Policy"], "same-origin")
+        self.assertEqual(response["X-Frame-Options"], "DENY")
 
     def test_react_frontend_has_locked_build_and_runtime_entry(self):
         package = json.loads((ROOT / "frontend" / "package.json").read_text())
