@@ -34,6 +34,19 @@ class TrainSearchValidationTests(unittest.TestCase):
                 with self.assertRaises(TrainSearchValidationError):
                     validate_search(source, destination, "2026-11-15")
 
+    def test_station_and_class_ids_reject_non_canonical_values(self):
+        invalid_ids = (True, False, 1.5, "01", "+1", " 1 ", "1.0", "")
+        for value in invalid_ids:
+            with self.subTest(value=value, field="source"):
+                with self.assertRaises(TrainSearchValidationError):
+                    validate_search(value, "2", "2026-11-15")
+            with self.subTest(value=value, field="destination"):
+                with self.assertRaises(TrainSearchValidationError):
+                    validate_search("1", value, "2026-11-15")
+            with self.subTest(value=value, field="class"):
+                with self.assertRaises(TrainSearchValidationError):
+                    validate_search("1", "2", "2026-11-15", class_id=value)
+
     def test_same_station_is_rejected(self):
         with self.assertRaises(TrainSearchValidationError):
             validate_search("3", "3", "2026-11-15")
