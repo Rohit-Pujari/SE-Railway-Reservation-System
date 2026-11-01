@@ -4,6 +4,8 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
+import mysql.connector
+
 from backend.app.booking_payment import (
     PaymentBookingNotFound,
     PaymentConfirmationError,
@@ -88,6 +90,56 @@ class BookingPaymentTests(unittest.TestCase):
         self.assertLess(seat_lock_index, expiry_check_index)
         self.assertFalse(any("INSERT INTO payments" in sql for sql in statements))
         connection.rollback.assert_called_once()
+
+    def test_interrupted_confirmation_rolls_back_payment_and_booking_changes(self):
+        connection, cursor = payment_connection()
+
+        def interrupt_before_booking_confirmation(sql, params=None):
+            if "UPDATE bookings" in sql:
+                raise mysql.connector.Error("simulated connection interruption")
+
+        cursor.execute.side_effect = interrupt_before_booking_confirmation
+        with self.assertRaises(mysql.connector.Error):
+            confirm_booking_payment(7, 42, lambda: connection)
+
+        statements = [call.args[0] for call in cursor.execute.call_args_list]
+        self.assertTrue(any("INSERT INTO payments" in sql for sql in statements))
+        self.assertTrue(any("UPDATE seat_allocations" in sql for sql in statements))
+        self.assertTrue(any("UPDATE bookings" in sql for sql in statements))
+        connection.rollback.assert_called_once_with()
+        connection.commit.assert_not_called()
+        connection.close.assert_called_once_with()
+
+    def test_retry_after_successful_commit_returns_existing_confirmation(self):
+        connection = MagicMock()
+        cursor = connection.cursor.return_value
+        cursor.fetchone.side_effect = [
+            {
+                "booking_id": 42, "pnr": "AB23456789CD",
+                "booking_status": "CONFIRMED", "schedule_id": 12, "class_id": 3,
+                "total_fare": 850.00, "currency_code": "INR",
+                "email": "passenger@example.com", "phone_number": "9876543210",
+            },
+            {
+                "payment_id": 99, "amount": 850.00,
+                "currency_code": "INR", "payment_status": "SUCCEEDED",
+            },
+        ]
+        cursor.fetchall.return_value = [
+            {"channel": "EMAIL", "delivery_status": "QUEUED"},
+            {"channel": "SMS", "delivery_status": "QUEUED"},
+        ]
+
+        result = confirm_booking_payment(7, 42, lambda: connection)
+
+        self.assertTrue(result["replayed"])
+        self.assertEqual(result["booking_status"], "CONFIRMED")
+        self.assertEqual(result["payment_status"], "SUCCEEDED")
+        self.assertEqual(result["amount"], 850.00)
+        self.assertFalse(any("INSERT INTO payments" in call.args[0] for call in cursor.execute.call_args_list))
+        self.assertFalse(any("UPDATE bookings" in call.args[0] for call in cursor.execute.call_args_list))
+        connection.commit.assert_called_once_with()
+        connection.rollback.assert_not_called()
 
     def test_invalid_booking_id_is_rejected_before_database_access(self):
         with self.assertRaises(PaymentConfirmationError):
