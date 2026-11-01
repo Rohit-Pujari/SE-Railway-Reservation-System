@@ -126,7 +126,7 @@ flowchart TD
     Views --> React
 ```
 
-The project is organized by feature services, including registration, train search, seat availability, booking, payment, booking history, cancellation/refunds, and administrator operations. The database schema is defined in `database/schema.sql`; design and transaction rules are described in `database/SCHEMA_REVIEW.md`.
+The project is organized by feature services, including registration, train search, seat availability, booking, payment, booking history, cancellation/refunds, and administrator operations. Shared domain-neutral validation lives in `backend/app/validation.py`; for example, booking creation, payment confirmation, and cancellation reuse the same strict positive-ID parser while retaining feature-specific exceptions. The database schema is defined in `database/schema.sql`; design and transaction rules are described in `database/SCHEMA_REVIEW.md`. See [ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md) for module ownership, dependency rules, and the rationale behind shared validation.
 
 ## 6. Database schema
 
