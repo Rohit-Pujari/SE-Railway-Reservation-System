@@ -54,6 +54,9 @@ function App() {
   const [passengers, setPassengers] = useState([]);
   const [bookingKey, setBookingKey] = useState("");
   const [bookingConfirmation, setBookingConfirmation] = useState(null);
+  const [paymentBusy, setPaymentBusy] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState("");
+  const [paymentError, setPaymentError] = useState(false);
 
   async function initialize(isActive = () => true) {
     setLoadingSearchData(true);
@@ -146,6 +149,8 @@ function App() {
     setBookingMessage("");
     setBookingError(false);
     setBookingConfirmation(null);
+    setPaymentMessage("");
+    setPaymentError(false);
   }
 
   function changePassenger(index, field, value) {
@@ -180,6 +185,27 @@ function App() {
       setBookingMessage(messageText(error));
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function submitSimulatedPayment() {
+    if (!bookingConfirmation?.booking?.booking_id || paymentBusy) return;
+    setPaymentBusy(true);
+    setPaymentMessage("");
+    setPaymentError(false);
+    try {
+      const result = await api(`/bookings/${bookingConfirmation.booking.booking_id}/pay`, { method: "POST", body: {} });
+      setBookingConfirmation((current) => current ? {
+        ...current,
+        booking: { ...current.booking, status: result.booking_status },
+        payment: result,
+      } : current);
+      setPaymentMessage(result.message || "Ticket confirmed.");
+    } catch (error) {
+      setPaymentError(true);
+      setPaymentMessage(messageText(error));
+    } finally {
+      setPaymentBusy(false);
     }
   }
 
@@ -251,7 +277,7 @@ function App() {
             <form className="booking-form" onSubmit={submitBooking}><div className="booking-passenger-fields">{passengers.map((passenger, index) => <fieldset className="booking-passenger-entry" key={index}><legend>Passenger {index + 1}</legend><div className="field-group"><label htmlFor={`passenger-${index}-name`}>Full name</label><input id={`passenger-${index}-name`} maxLength="120" required value={passenger.passenger_name} onChange={(event) => changePassenger(index, "passenger_name", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-age`}>Age</label><input id={`passenger-${index}-age`} type="number" min="0" max="120" required value={passenger.age} onChange={(event) => changePassenger(index, "age", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-gender`}>Gender (optional)</label><input id={`passenger-${index}-gender`} maxLength="30" value={passenger.gender} onChange={(event) => changePassenger(index, "gender", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-berth`}>Berth preference</label><select id={`passenger-${index}-berth`} value={passenger.berth_preference} onChange={(event) => changePassenger(index, "berth_preference", event.target.value)}>{[["NO_PREFERENCE", "No preference"], ["LOWER", "Lower"], ["MIDDLE", "Middle"], ["UPPER", "Upper"], ["SIDE_LOWER", "Side lower"], ["SIDE_UPPER", "Side upper"]].map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></div></fieldset>)}</div><button type="submit" className="account-submit" disabled={submitting}>{submitting ? "Checking seats…" : "Book and reserve seats"}</button></form>
           </section>}
           {bookingMessage && <p className={`form-message ${bookingError ? "is-error" : "is-success"}`} role="status">{bookingMessage}</p>}
-          {bookingConfirmation && <TicketConfirmation confirmation={bookingConfirmation} />}
+          {bookingConfirmation && <TicketConfirmation confirmation={bookingConfirmation} onPay={submitSimulatedPayment} paymentBusy={paymentBusy} paymentMessage={paymentMessage} paymentError={paymentError} />}
         </section>}
       </section>
       <section id="account" className="account-section" aria-labelledby="registration-title"><div className="account-copy"><p className="section-kicker">A LITTLE MORE CONVENIENT</p><h2>Make the next trip<br /><em>yours.</em></h2><p>Create an account to get started with railway reservations. Your details stay yours.</p><div className="account-note"><span className="note-mark" aria-hidden="true">✳</span><span><strong>One less thing to do at the station.</strong><br />Set up your account before your next journey.</span></div><div className="account-decoration" aria-hidden="true"><span /><span /><span /><span /><span /><span /><span /></div></div>
@@ -404,7 +430,7 @@ function BookingStatusLookup() {
   </section>;
 }
 
-function TicketConfirmation({ confirmation }) {
+function TicketConfirmation({ confirmation, onPay, paymentBusy, paymentMessage, paymentError }) {
   const { booking, train, passengers, journeyDate, className, classCode, passengerCount } = confirmation;
   const currency = booking.currency_code || train.currency_code || "INR";
   const farePerPassenger = Number(booking.fare_per_passenger ?? train.starting_fare ?? 0);
@@ -441,8 +467,15 @@ function TicketConfirmation({ confirmation }) {
       <div><span>Fare per passenger</span><strong>{currency} {farePerPassenger.toFixed(2)}</strong></div>
       <div><span>Total fare</span><strong>{currency} {totalFare.toFixed(2)}</strong></div>
     </div>
-    {booking.hold_expires_at && <p className="confirmation-note">Seat hold expires: {new Date(booking.hold_expires_at).toLocaleString()}. Complete payment before expiry to retain these seats.</p>}
-    <p className="confirmation-note">Booking status: {String(booking.status || "PENDING_PAYMENT").replaceAll("_", " ")}. Your seats are reserved; payment is not yet confirmed.</p>
+    {booking.status === "PENDING_PAYMENT" ? <>
+      {booking.hold_expires_at && <p className="confirmation-note">Seat hold expires: {new Date(booking.hold_expires_at).toLocaleString()}.</p>}
+      <p className="confirmation-note">This project uses a simulated payment only. No real money will be charged.</p>
+      <button type="button" className="account-submit" onClick={onPay} disabled={paymentBusy}>{paymentBusy ? "Processing simulated payment…" : `Pay ${currency} ${totalFare.toFixed(2)} and confirm ticket`}</button>
+    </> : <>
+      <p className="confirmation-note">Payment successful · SIMULATED. Your ticket is confirmed.</p>
+      <p className="confirmation-note">Email/SMS confirmation requests are queued where contact details are available. Actual delivery is not configured.</p>
+    </>}
+    {paymentMessage && <p className={`form-message ${paymentError ? "is-error" : "is-success"}`} role="status">{paymentMessage}</p>}
   </section>;
 }
 
