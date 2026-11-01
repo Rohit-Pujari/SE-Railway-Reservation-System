@@ -1,6 +1,6 @@
 # Railway Reservation System
 
-Coursework project using Django REST Framework, React, and MySQL. Project requirements and test references are in [Documents](Documents/).
+Coursework project using Django REST Framework, React, and MySQL. Project requirements and test references are in [Documents](Documents/).\n\n**[Read the complete project documentation](docs/PROJECT_DOCUMENTATION.md)** for setup instructions, architecture, database schema, API reference, security notes, testing, and troubleshooting.
 
 ## Architecture
 
