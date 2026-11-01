@@ -1,5 +1,7 @@
 """Atomically reserve seats and create a pending train booking."""
 
+from .validation import positive_int
+
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 import secrets
@@ -24,25 +26,13 @@ class BookingUnavailableError(BookingRequestError):
     """The selected train, class, or seat count is unavailable."""
 
 
-def _positive_int(value, label):
-    if isinstance(value, bool):
-        raise BookingRequestError(f"Select a valid {label}.")
-    try:
-        parsed = int(value)
-    except (TypeError, ValueError):
-        raise BookingRequestError(f"Select a valid {label}.") from None
-    if parsed <= 0 or str(value).strip() != str(parsed):
-        raise BookingRequestError(f"Select a valid {label}.")
-    return parsed
-
-
 def _validate_request(user_id, schedule_id, source_station_id, destination_station_id,
                       journey_date, class_id, idempotency_key):
-    user = _positive_int(user_id, "passenger")
-    schedule = _positive_int(schedule_id, "train")
-    source = _positive_int(source_station_id, "source station")
-    destination = _positive_int(destination_station_id, "destination station")
-    travel_class = _positive_int(class_id, "travel class")
+    user = positive_int(user_id, "passenger", BookingRequestError, "Select")
+    schedule = positive_int(schedule_id, "train", BookingRequestError, "Select")
+    source = positive_int(source_station_id, "source station", BookingRequestError, "Select")
+    destination = positive_int(destination_station_id, "destination station", BookingRequestError, "Select")
+    travel_class = positive_int(class_id, "travel class", BookingRequestError, "Select")
     if source == destination:
         raise BookingRequestError("Source and destination stations must be different.")
     if not isinstance(journey_date, str):
