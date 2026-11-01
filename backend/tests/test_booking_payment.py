@@ -11,17 +11,18 @@ from backend.app.booking_payment import (
 )
 
 
-def payment_connection(*, allocation_expiry=None, email="passenger@example.com", phone="9876543210"):
+def payment_connection(*, allocation_expiry=None, current_time=None, email="passenger@example.com", phone="9876543210"):
     connection = MagicMock()
     cursor = connection.cursor.return_value
     cursor.fetchone.side_effect = [
         {
             "booking_id": 42, "pnr": "AB23456789CD",
-            "booking_status": "PENDING_PAYMENT", "total_fare": 850.00,
+            "booking_status": "PENDING_PAYMENT", "schedule_id": 12, "class_id": 3,
+            "total_fare": 850.00,
             "currency_code": "INR", "email": email, "phone_number": phone,
         },
-        {"current_time": datetime(2026, 11, 1, 10, 0)},
         {"passenger_count": 1},
+        {"current_time": current_time or datetime(2026, 11, 1, 10, 0)},
     ]
     cursor.fetchall.return_value = [{
         "allocation_id": 5, "allocation_status": "HELD",
@@ -43,7 +44,13 @@ class BookingPaymentTests(unittest.TestCase):
         self.assertEqual([item["channel"] for item in result["notifications"]], ["EMAIL", "SMS"])
         self.assertTrue(any("INSERT INTO payments" in call.args[0] for call in cursor.execute.call_args_list))
         self.assertTrue(any("UPDATE bookings" in call.args[0] for call in cursor.execute.call_args_list))
-        self.assertEqual(cursor.execute.call_count, 9)
+        self.assertEqual(cursor.execute.call_count, 10)
+        statements = [call.args[0] for call in cursor.execute.call_args_list]
+        seat_lock_index = next(i for i, sql in enumerate(statements) if "FROM schedule_seats" in sql)
+        expiry_check_index = next(i for i, sql in enumerate(statements) if "CURRENT_TIMESTAMP AS current_time" in sql)
+        allocation_lock_index = next(i for i, sql in enumerate(statements) if "FROM seat_allocations" in sql)
+        self.assertLess(seat_lock_index, expiry_check_index)
+        self.assertLess(expiry_check_index, allocation_lock_index)
         connection.commit.assert_called_once()
 
     def test_email_only_when_phone_number_is_not_available(self):
@@ -63,6 +70,23 @@ class BookingPaymentTests(unittest.TestCase):
         connection, _ = payment_connection(allocation_expiry=datetime(2026, 11, 1, 9, 59))
         with self.assertRaises(PaymentConfirmationError):
             confirm_booking_payment(7, 42, lambda: connection)
+        connection.rollback.assert_called_once()
+
+    def test_payment_rechecks_hold_after_waiting_for_schedule_seat_lock(self):
+        # Simulate waiting for the inventory lock until the original hold expires.
+        connection, cursor = payment_connection(
+            allocation_expiry=datetime(2026, 11, 1, 10, 15),
+            current_time=datetime(2026, 11, 1, 10, 16),
+        )
+
+        with self.assertRaises(PaymentConfirmationError):
+            confirm_booking_payment(7, 42, lambda: connection)
+
+        statements = [call.args[0] for call in cursor.execute.call_args_list]
+        seat_lock_index = next(i for i, sql in enumerate(statements) if "FROM schedule_seats" in sql)
+        expiry_check_index = next(i for i, sql in enumerate(statements) if "CURRENT_TIMESTAMP AS current_time" in sql)
+        self.assertLess(seat_lock_index, expiry_check_index)
+        self.assertFalse(any("INSERT INTO payments" in sql for sql in statements))
         connection.rollback.assert_called_once()
 
     def test_invalid_booking_id_is_rejected_before_database_access(self):
