@@ -1,4 +1,6 @@
 """Cancel a passenger-owned booking atomically and calculate its refund."""
+
+from .validation import positive_int
 from decimal import Decimal
 
 from .booking_refunds import calculate_cancellation_refund
@@ -13,26 +15,14 @@ class BookingCancellationNotFound(LookupError):
     """No booking with this ID belongs to the signed-in passenger."""
 
 
-def _positive_id(value, field):
-    if isinstance(value, bool):
-        raise BookingCancellationError(f"Enter a valid {field}.")
-    try:
-        number = int(value)
-    except (TypeError, ValueError):
-        raise BookingCancellationError(f"Enter a valid {field}.") from None
-    if number <= 0 or str(value).strip() != str(number):
-        raise BookingCancellationError(f"Enter a valid {field}.")
-    return number
-
-
 def cancel_booking(user_id, booking_id, reason=None, connection_factory=None):
     """Cancel all remaining passengers and persist calculated refund records.
 
     Cancellation items, pending refund records, seat releases, and booking
     status are committed atomically. No payment provider is called here.
     """
-    owner_id = _positive_id(user_id, "passenger account")
-    target_id = _positive_id(booking_id, "booking")
+    owner_id = positive_int(user_id, "passenger account", BookingCancellationError)
+    target_id = positive_int(booking_id, "booking", BookingCancellationError)
     if reason is not None and not isinstance(reason, str):
         raise BookingCancellationError("Enter a valid cancellation reason.")
     reason = reason.strip()[:255] if reason else None
