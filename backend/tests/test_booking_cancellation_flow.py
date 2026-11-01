@@ -1,7 +1,6 @@
 """End-to-end API regression tests for the passenger ticket cancellation journey."""
 
 import unittest
-from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from backend.tests.drf_client import RailwayAPIClient
@@ -47,8 +46,10 @@ class PassengerCancellationFlowTests(unittest.TestCase):
     def login(self):
         connection = MagicMock()
         connection.cursor.return_value.fetchone.return_value = self.user
-        with patch("backend.app.django_views.get_db_connection", return_value=connection), \\
-             patch("backend.app.django_views.check_password_hash", return_value=True):
+        with (
+            patch("backend.app.django_views.get_db_connection", return_value=connection),
+            patch("backend.app.django_views.check_password_hash", return_value=True),
+        ):
             response = self.client.post("/api/login", json={
                 "email": "PASSENGER@example.com",
                 "password": "correct-password",
