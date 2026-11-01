@@ -207,6 +207,44 @@ class BookingTransactionTests(unittest.TestCase):
         connection.commit.assert_not_called()
         connection.close.assert_called_once_with()
 
+    def test_uncertain_commit_can_be_recovered_by_replaying_same_request_key(self):
+        # A connection can be lost while COMMIT acknowledgement is in flight.
+        # The client must retry with the same idempotency key, not create a new booking.
+        interrupted = configured_connection()
+        interrupted.commit.side_effect = mysql.connector.Error("connection lost during commit")
+
+        with self.assertRaises(mysql.connector.Error):
+            self.create(interrupted)
+
+        interrupted.rollback.assert_called_once_with()
+        interrupted.close.assert_called_once_with()
+
+        replay = MagicMock()
+        cursor = replay.cursor.return_value
+        cursor.fetchone.side_effect = [
+            {"user_id": 7},
+            {
+                "booking_id": 88, "pnr": "AB23456789CD",
+                "schedule_id": 9, "class_id": 2,
+                "booking_status": "PENDING_PAYMENT",
+                "total_fare": Decimal("251.00"), "currency_code": "INR",
+                "source_station_id": 1, "destination_station_id": 3,
+                "passenger_count": 2,
+                "hold_expires_at": datetime(2026, 11, 15, 9, 15),
+            },
+        ]
+        cursor.fetchall.return_value = [
+            {"coach_number": "S1", "seat_number": "1"},
+            {"coach_number": "S1", "seat_number": "2"},
+        ]
+
+        result = self.create(replay)
+
+        self.assertTrue(result["replayed"])
+        self.assertEqual(result["booking_id"], 88)
+        replay.commit.assert_called_once_with()
+        self.assertFalse(any("INSERT INTO" in call.args[0] for call in cursor.execute.call_args_list))
+
     def test_database_retries_return_existing_booking_and_seats(self):
         connection = MagicMock()
         cursor = connection.cursor.return_value
