@@ -40,6 +40,7 @@ function App() {
   const [authError, setAuthError] = useState(false);
   const [searchMessage, setSearchMessage] = useState("");
   const [searchError, setSearchError] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [sourceId, setSourceId] = useState("");
   const [destinationId, setDestinationId] = useState("");
   const [journeyDate, setJourneyDate] = useState(new Date().toLocaleDateString("en-CA"));
@@ -122,6 +123,7 @@ function App() {
       return;
     }
     const params = new URLSearchParams({ source_station_id: sourceId, destination_station_id: destinationId, journey_date: journeyDate, class_id: classId });
+    setSearching(true);
     try {
       const result = await api(`/trains/search?${params}`);
       setTrains(result.trains || []);
@@ -130,6 +132,8 @@ function App() {
     } catch (error) {
       setSearchError(true);
       setSearchMessage(messageText(error));
+    } finally {
+      setSearching(false);
     }
   }
 
@@ -160,6 +164,15 @@ function App() {
   async function submitBooking(event) {
     event.preventDefault();
     if (!selectedTrain) return;
+    const invalidPassenger = passengers.findIndex((passenger) =>
+      !passenger.passenger_name.trim() || !Number.isInteger(Number(passenger.age)) ||
+      Number(passenger.age) < 0 || Number(passenger.age) > 120
+    );
+    if (invalidPassenger !== -1) {
+      setBookingError(true);
+      setBookingMessage("Check passenger " + (invalidPassenger + 1) + ": enter a name and a whole-number age between 0 and 120.");
+      return;
+    }
     setSubmitting(true);
     setBookingMessage("");
     try {
@@ -259,6 +272,7 @@ function App() {
         <div className="hero-visual" aria-hidden="true"><div className="visual-orbit orbit-one" /><div className="visual-orbit orbit-two" /><div className="visual-caption"><span className="caption-star">✳</span> Every great trip begins with a plan.</div></div><div className="hero-index" aria-hidden="true">01 <span /> EXPLORE</div>
       </section>
       {user && <><BookingHistory user={user} /><BookingStatusLookup /></>}
+      <nav className="journey-steps" aria-label="Booking steps"><a href="#plan" aria-current={!selectedTrain && !bookingConfirmation ? "step" : undefined} className={!selectedTrain && !bookingConfirmation ? "is-current" : "is-complete"}><span>1</span><span><strong>Search</strong><small>Choose your train</small></span></a><span className="journey-step-connector" aria-hidden="true">→</span><a href={selectedTrain ? "#booking-title" : "#plan"} aria-current={selectedTrain ? "step" : undefined} className={selectedTrain ? "is-current" : bookingConfirmation ? "is-complete" : ""}><span>2</span><span><strong>Passenger details</strong><small>Enter traveller information</small></span></a><span className="journey-step-connector" aria-hidden="true">→</span><a href={bookingConfirmation ? "#confirmation-title" : "#plan"} aria-current={bookingConfirmation ? "step" : undefined} className={bookingConfirmation ? "is-current" : ""}><span>3</span><span><strong>Confirm</strong><small>Pay and check your PNR</small></span></a></nav>
       <section id="plan" className="search-panel" aria-labelledby="search-title">
         <div className="section-heading"><div><p className="section-kicker">LET’S GET MOVING</p><h2 id="search-title">Where would you like to go?</h2></div><span className="step-label"><span>01</span> SEARCH TRAINS</span></div>
         <form className="search-form" onSubmit={submitSearch}>
@@ -267,16 +281,16 @@ function App() {
           <div className="field-group date-field"><label htmlFor="journey-date">Journey date</label><input id="journey-date" type="date" min={new Date().toLocaleDateString("en-CA")} value={journeyDate} onChange={(event) => setJourneyDate(event.target.value)} required /></div>
           <div className="field-group"><label htmlFor="travel-class">Travel class</label><select id="travel-class" value={classId} onChange={(event) => setClassId(event.target.value)} required disabled={loadingSearchData}><option value="">{loadingSearchData ? "Loading travel classes…" : "Select a travel class"}</option>{classes.map((item) => <option key={item.class_id} value={item.class_id}>{item.class_name} ({item.class_code})</option>)}</select></div>
           <div className="field-group"><label htmlFor="passenger-count">Passengers</label><select id="passenger-count" value={passengerCount} onChange={(event) => setPassengerCount(Number(event.target.value))}>{[1, 2, 3, 4, 5, 6].map((count) => <option key={count} value={count}>{count} passenger{count === 1 ? "" : "s"}</option>)}</select></div>
-          <button type="submit" id="search-button" disabled={loadingSearchData || !apiOnline || !stations.length || !classes.length}><span>{loadingSearchData ? "Loading search options…" : "Search trains"}</span><span className="button-arrow" aria-hidden="true">↗</span></button>
+          <button type="submit" id="search-button" disabled={loadingSearchData || searching || !apiOnline || !stations.length || !classes.length}><span>{loadingSearchData ? "Loading search options…" : searching ? "Searching…" : "Search trains"}</span><span className="button-arrow" aria-hidden="true">↗</span></button>
         </form>
         {searchDataError && <p className="form-message is-error" role="alert">{searchDataError} <button type="button" className="retry-button" onClick={() => initialize()} disabled={loadingSearchData}>{loadingSearchData ? "Retrying…" : "Retry"}</button></p>}
-        <p className={`form-message ${searchError ? "is-error" : ""}`} role="status">{searchMessage}</p>
+        <p className={`form-message ${searchError ? "is-error" : ""}`} role={searchError ? "alert" : "status"} aria-live="polite">{searchMessage}</p>
         {trains.length > 0 && <section className="search-results" aria-labelledby="results-title"><div className="results-heading"><div><p className="section-kicker">YOUR OPTIONS</p><h2 id="results-title">Matching trains</h2></div><p className="results-summary">{trains.length} scheduled service{trains.length === 1 ? "" : "s"}</p></div>
           <div className="train-results-list">{trains.map((train) => <TrainCard key={train.schedule_id} train={train} classId={classId} selectedClass={selectedClass} sourceId={sourceId} destinationId={destinationId} journeyDate={journeyDate} passengerCount={passengerCount} onBook={beginBooking} />)}</div>
-          {selectedTrain && <section className="booking-panel" aria-labelledby="booking-title"><div className="results-heading"><div><p className="section-kicker">COMPLETE YOUR JOURNEY</p><h2 id="booking-title">Traveler details</h2></div><span className="step-label">BOOK TICKET</span></div><p className="booking-summary">{selectedTrain.train_name} ({selectedTrain.train_number}) · {selectedTrain.source_station_name} to {selectedTrain.destination_station_name} · {passengerCount} passenger{passengerCount === 1 ? "" : "s"}</p>
+          {selectedTrain && <section className="booking-panel" aria-labelledby="booking-title"><div className="results-heading"><div><p className="section-kicker">COMPLETE YOUR JOURNEY</p><h2 id="booking-title">Traveler details</h2></div><button type="button" className="cancel-dismiss-button" onClick={() => { setSelectedTrain(null); setBookingMessage(""); }}>← Back to train results</button></div><p className="booking-summary">{selectedTrain.train_name} ({selectedTrain.train_number}) · {selectedTrain.source_station_name} to {selectedTrain.destination_station_name} · {passengerCount} passenger{passengerCount === 1 ? "" : "s"}</p>
             <form className="booking-form" onSubmit={submitBooking}><div className="booking-passenger-fields">{passengers.map((passenger, index) => <fieldset className="booking-passenger-entry" key={index}><legend>Passenger {index + 1}</legend><div className="field-group"><label htmlFor={`passenger-${index}-name`}>Full name</label><input id={`passenger-${index}-name`} maxLength="120" required value={passenger.passenger_name} onChange={(event) => changePassenger(index, "passenger_name", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-age`}>Age</label><input id={`passenger-${index}-age`} type="number" min="0" max="120" required value={passenger.age} onChange={(event) => changePassenger(index, "age", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-gender`}>Gender (optional)</label><input id={`passenger-${index}-gender`} maxLength="30" value={passenger.gender} onChange={(event) => changePassenger(index, "gender", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-berth`}>Berth preference</label><select id={`passenger-${index}-berth`} value={passenger.berth_preference} onChange={(event) => changePassenger(index, "berth_preference", event.target.value)}>{[["NO_PREFERENCE", "No preference"], ["LOWER", "Lower"], ["MIDDLE", "Middle"], ["UPPER", "Upper"], ["SIDE_LOWER", "Side lower"], ["SIDE_UPPER", "Side upper"]].map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></div></fieldset>)}</div><button type="submit" className="account-submit" disabled={submitting}>{submitting ? "Checking seats…" : "Book and reserve seats"}</button></form>
           </section>}
-          {bookingMessage && <p className={`form-message ${bookingError ? "is-error" : "is-success"}`} role="status">{bookingMessage}</p>}
+          {bookingMessage && <p className={`form-message ${bookingError ? "is-error" : "is-success"}`} role={bookingError ? "alert" : "status"} aria-live="polite">{bookingMessage}</p>}
           {bookingConfirmation && <TicketConfirmation confirmation={bookingConfirmation} onPay={submitSimulatedPayment} paymentBusy={paymentBusy} paymentMessage={paymentMessage} paymentError={paymentError} />}
         </section>}
       </section>
@@ -370,7 +384,7 @@ function BookingHistory({ user }) {
       <button type="button" role="tab" aria-selected={activeTab === "previous"} className={activeTab === "previous" ? "is-active" : ""} onClick={() => setActiveTab("previous")}>Previous ({history.previous.length})</button>
     </div>
     {error && <p className="form-message is-error" role="alert">{error}</p>}
-    {loading ? <p className="history-empty">Loading your bookings…</p> : bookings.length === 0 ? <div className="history-empty"><strong>No {activeTab} bookings yet.</strong><span>{activeTab === "upcoming" ? "Your next journey will appear here after you reserve a ticket." : "Completed journeys will appear here."}</span></div> :
+    {loading ? <p className="history-empty">Loading your bookings…</p> : bookings.length === 0 ? <div className="history-empty"><strong>No {activeTab} bookings yet.</strong><span>{activeTab === "upcoming" ? "Your next journey will appear here after you reserve a ticket." : "Completed journeys will appear here."}</span>{activeTab === "upcoming" && <a className="history-find-train" href="#plan">Find a train ↗</a>}</div> :
       <div className="history-list">{bookings.map((booking) => <article className="history-card" key={booking.booking_id}>
         <div className="history-card-top"><div><span className="history-pnr-label">PNR</span><strong className="history-pnr">{booking.pnr}</strong></div><span className="history-status">{String(booking.booking_status).replaceAll("_", " ")}</span></div>
         <div className="history-train"><strong>{booking.train_name}</strong><span>Train {booking.train_number} · Class {booking.class_code}</span></div>
@@ -378,7 +392,7 @@ function BookingHistory({ user }) {
         <div className="history-meta"><div><span>Departure</span><strong>{formatDate(booking.departure_at)}</strong></div><div><span>Arrival</span><strong>{formatDate(booking.arrival_at)}</strong></div><div><span>Total fare</span><strong>{booking.currency_code} {Number(booking.total_fare).toFixed(2)}</strong></div></div>
         <div className="history-passengers"><strong>Passengers and seats</strong>{booking.passengers.map((passenger) => <span key={passenger.passenger_id}>{passenger.passenger_name} · {passenger.coach_number && passenger.seat_number ? `${passenger.coach_number} / ${passenger.seat_number}` : passenger.allocation_status || "Seat details unavailable"}</span>)}</div>
         {["PENDING_PAYMENT", "CONFIRMED", "PARTIALLY_CANCELLED"].includes(booking.booking_status) && booking.trip_type === "UPCOMING" && <div className="history-cancel-actions">
-          {cancelConfirmId === booking.booking_id ? <><span>Cancel this entire booking and release its seats?</span><button type="button" className="cancel-confirm-button" onClick={() => cancelTicket(booking)} disabled={cancelingId === booking.booking_id}>{cancelingId === booking.booking_id ? "Cancelling…" : "Confirm cancellation"}</button><button type="button" className="cancel-dismiss-button" onClick={() => setCancelConfirmId(null)} disabled={cancelingId === booking.booking_id}>Keep booking</button></> : <button type="button" className="cancel-ticket-button" onClick={() => { setCancelMessage(""); setCancelConfirmId(booking.booking_id); }}>Cancel ticket</button>}
+          {cancelConfirmId === booking.booking_id ? <><span>Cancel this entire booking and release its seats? This action cannot be undone. Check the booking status and refund details after cancellation.</span><button type="button" className="cancel-confirm-button" onClick={() => cancelTicket(booking)} disabled={cancelingId === booking.booking_id}>{cancelingId === booking.booking_id ? "Cancelling…" : "Confirm cancellation"}</button><button type="button" className="cancel-dismiss-button" onClick={() => setCancelConfirmId(null)} disabled={cancelingId === booking.booking_id}>Keep booking</button></> : <button type="button" className="cancel-ticket-button" onClick={() => { setCancelMessage(""); setCancelConfirmId(booking.booking_id); }}>Cancel ticket</button>}
         </div>}
       </article>)}</div>}
   </section>;

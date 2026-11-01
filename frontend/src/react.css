@@ -90,3 +90,18 @@
 .cancel-confirm-button{border:1px solid #a94339;background:#a94339;color:#fff}
 .cancel-dismiss-button{border:1px solid var(--line,#d9ded9);background:transparent;color:inherit}
 .cancel-confirm-button:disabled,.cancel-dismiss-button:disabled{opacity:.6;cursor:wait}
+
+/* Issue #40: make the passenger journey and recovery actions easier to follow. */
+.journey-steps{display:flex;align-items:center;justify-content:center;gap:clamp(10px,2vw,26px);margin:0 auto 28px;padding:18px 22px;max-width:900px;border:1px solid var(--line,#e4e8e3);border-radius:14px;background:var(--surface,#fff)}
+.journey-steps>a{display:flex;align-items:center;gap:10px;min-width:0;color:var(--muted,#68717d);text-decoration:none}
+.journey-steps>a>span:first-child{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border:1px solid var(--line,#d9ded9);border-radius:50%;font-weight:750}
+.journey-steps>a>span:last-child{display:grid;gap:2px}
+.journey-steps strong{font-size:.88rem}
+.journey-steps small{font-size:.72rem}
+.journey-steps>a.is-current{color:var(--ink,#17212b)}
+.journey-steps>a.is-current>span:first-child{border-color:var(--accent,#db7944);background:var(--accent,#db7944);color:#fff}
+.journey-steps>a.is-complete>span:first-child{border-color:#43845f;color:#43845f}
+.journey-step-connector{color:var(--muted,#9aa19b)}
+.history-find-train{justify-self:center;margin-top:8px;color:var(--accent,#db7944);font-weight:700;text-decoration:none}
+.history-find-train:hover{text-decoration:underline}
+@media(max-width:600px){.journey-steps{align-items:stretch;gap:7px;padding:12px 9px}.journey-steps>a{flex:1;flex-direction:column;justify-content:flex-start;text-align:center;gap:5px}.journey-steps>a>span:last-child{gap:2px}.journey-steps strong{font-size:.72rem}.journey-steps small{font-size:.62rem}.journey-step-connector{align-self:center;font-size:.75rem}}
