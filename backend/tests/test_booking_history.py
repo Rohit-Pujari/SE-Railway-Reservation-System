@@ -68,6 +68,38 @@ class BookingHistoryServiceTests(unittest.TestCase):
         connection.close.assert_called_once_with()
         cursor.close.assert_called_once_with()
 
+    def test_history_groups_one_thousand_bookings_without_n_plus_one_queries(self):
+        connection = MagicMock()
+        cursor = connection.cursor.return_value
+        rows = []
+        booking_total = 1000
+        for index in range(booking_total):
+            booking_id = 1000 + index
+            trip_type = "UPCOMING" if index % 2 == 0 else "PREVIOUS"
+            for passenger_number in range(2):
+                rows.append(
+                    history_row(
+                        booking_id,
+                        trip_type,
+                        booking_id * 10 + passenger_number,
+                    )
+                )
+        cursor.fetchall.return_value = rows
+
+        result = get_booking_history(7, connection_factory=lambda: connection)
+
+        self.assertEqual(len(rows), 2000)
+        self.assertEqual(result["count"], booking_total)
+        self.assertEqual(len(result["upcoming"]), 500)
+        self.assertEqual(len(result["previous"]), 500)
+        self.assertTrue(all(len(item["passengers"]) == 2 for item in result["upcoming"]))
+        self.assertTrue(all(len(item["passengers"]) == 2 for item in result["previous"]))
+        self.assertEqual(cursor.execute.call_count, 1)
+        self.assertEqual(cursor.fetchall.call_count, 1)
+        self.assertEqual(cursor.execute.call_args.args[1], (7,))
+        connection.close.assert_called_once_with()
+        cursor.close.assert_called_once_with()
+
     def test_empty_history_returns_empty_sections(self):
         connection = MagicMock()
         connection.cursor.return_value.fetchall.return_value = []
