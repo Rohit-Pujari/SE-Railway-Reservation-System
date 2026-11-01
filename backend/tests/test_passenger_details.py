@@ -24,6 +24,18 @@ def configured_connection(existing_count=0, booking=None):
 
 
 class PassengerDetailsServiceTests(unittest.TestCase):
+    def test_rejects_malformed_booking_and_user_ids_before_database_access(self):
+        factory = MagicMock()
+        for booking_id, user_id in ((True, 7), (41.5, 7), ("041", 7), (41, False), (41, "7.0")):
+            with self.subTest(booking_id=booking_id, user_id=user_id):
+                with self.assertRaises(PassengerDetailsValidationError):
+                    save_passenger_details(
+                        booking_id, user_id,
+                        [{"passenger_name": "A", "age": 20}],
+                        connection_factory=factory,
+                    )
+        factory.assert_not_called()
+
     def test_saves_valid_passenger_details_to_pending_booking(self):
         connection = configured_connection()
         result = save_passenger_details(
