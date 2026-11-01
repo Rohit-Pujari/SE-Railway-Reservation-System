@@ -58,9 +58,11 @@ def validate_registration(data):
 
 
 def register_user(data, connection_factory=None):
-    """Create a passenger account, storing only a Werkzeug password hash."""
+    """Create a passenger account using a memory-hard scrypt password hash."""
     values = validate_registration(data)
-    password_hash = generate_password_hash(values["password"])
+    # Select the algorithm explicitly rather than inheriting a library default.
+    # Werkzeug's encoded hash remains verifiable by check_password_hash at login.
+    password_hash = generate_password_hash(values["password"], method="scrypt")
     factory = connection_factory or get_db_connection
     connection = None
     cursor = None
