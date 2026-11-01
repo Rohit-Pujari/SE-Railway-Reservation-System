@@ -23,6 +23,11 @@ from .booking_cancellation import (
     cancel_booking,
 )
 from .booking_status import get_booking_status
+from .booking_payment import (
+    PaymentBookingNotFound,
+    PaymentConfirmationError,
+    confirm_booking_payment,
+)
 from .db import get_db_connection
 from .fare_calculation import FareCalculationError, calculate_booking_fare
 from .passenger_details import PassengerDetailsValidationError, save_passenger_details
@@ -325,6 +330,25 @@ def booking_create(request):
         return Response({"status": "error", "message": "Booking is temporarily unavailable."}, status=503)
     except Exception:
         return Response({"status": "error", "message": "Booking could not be created."}, status=500)
+    return Response({"status": "ok", **result}, status=200 if result.get("replayed") else 201)
+
+
+@endpoint(["POST"])
+def passenger_booking_pay(request, booking_id):
+    """Confirm a passenger-owned booking using the explicitly simulated provider."""
+    user_id = _user_id(request)
+    if user_id is None:
+        return Response({"status": "error", "message": "Please log in to pay for a booking."}, status=401)
+    try:
+        result = confirm_booking_payment(user_id, booking_id)
+    except PaymentBookingNotFound as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except PaymentConfirmationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Payment is temporarily unavailable. Please try again."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Payment could not be completed."}, status=500)
     return Response({"status": "ok", **result}, status=200 if result.get("replayed") else 201)
 
 
