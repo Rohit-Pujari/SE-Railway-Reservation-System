@@ -5,6 +5,7 @@ from datetime import date, datetime, time, timedelta
 import mysql.connector
 
 from .db import get_db_connection
+from .validation import positive_int
 
 
 MAX_SEARCH_RESULTS = 100
@@ -16,14 +17,12 @@ class TrainSearchValidationError(ValueError):
 
 def validate_search(source_station_id, destination_station_id, journey_date, class_id=None):
     """Normalize search inputs before any database query is made."""
-    try:
-        source_id = int(source_station_id)
-        destination_id = int(destination_station_id)
-    except (TypeError, ValueError):
-        raise TrainSearchValidationError("Select a source and destination station.") from None
-
-    if source_id <= 0 or destination_id <= 0:
-        raise TrainSearchValidationError("Select a valid source and destination station.")
+    source_id = positive_int(
+        source_station_id, "source station", TrainSearchValidationError, "Select"
+    )
+    destination_id = positive_int(
+        destination_station_id, "destination station", TrainSearchValidationError, "Select"
+    )
     if source_id == destination_id:
         raise TrainSearchValidationError("Source and destination stations must be different.")
 
@@ -37,12 +36,9 @@ def validate_search(source_station_id, destination_station_id, journey_date, cla
         raise TrainSearchValidationError("Journey date must use YYYY-MM-DD format.")
 
     if class_id is not None:
-        try:
-            class_id = int(class_id)
-        except (TypeError, ValueError):
-            raise TrainSearchValidationError("Select a valid travel class.") from None
-        if class_id <= 0:
-            raise TrainSearchValidationError("Select a valid travel class.")
+        class_id = positive_int(
+            class_id, "travel class", TrainSearchValidationError, "Select"
+        )
 
     return source_id, destination_id, parsed_date, class_id
 

@@ -3,6 +3,7 @@
 import mysql.connector
 
 from .db import get_db_connection
+from .validation import positive_int
 
 MAX_PASSENGERS_PER_REQUEST = 6
 NAME_MAX_LENGTH = 120
@@ -62,12 +63,12 @@ def validate_passengers(passengers):
 
 def save_passenger_details(booking_id, user_id, passengers, connection_factory=None):
     """Attach validated passenger details to an owned, pending booking atomically."""
-    try:
-        booking_id, user_id = int(booking_id), int(user_id)
-    except (TypeError, ValueError):
-        raise PassengerDetailsValidationError("Select a valid booking.") from None
-    if booking_id <= 0 or user_id <= 0:
-        raise PassengerDetailsValidationError("Select a valid booking.")
+    booking_id = positive_int(
+        booking_id, "booking", PassengerDetailsValidationError, "Select"
+    )
+    user_id = positive_int(
+        user_id, "passenger account", PassengerDetailsValidationError, "Select"
+    )
     validated = validate_passengers(passengers)
 
     factory = connection_factory or get_db_connection

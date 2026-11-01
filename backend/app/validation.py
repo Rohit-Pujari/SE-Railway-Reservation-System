@@ -14,6 +14,6 @@ def positive_int(value, field, error_type, verb="Enter"):
         parsed = int(value)
     except (TypeError, ValueError):
         raise error_type(message) from None
-    if parsed <= 0 or str(value).strip() != str(parsed):
+    if parsed <= 0 or str(value) != str(parsed):
         raise error_type(message)
     return parsed

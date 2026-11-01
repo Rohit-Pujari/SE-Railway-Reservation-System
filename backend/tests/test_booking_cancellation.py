@@ -97,6 +97,12 @@ class BookingCancellationServiceTests(unittest.TestCase):
             cancel_booking(7, 41, connection_factory=lambda: connection)
         connection.rollback.assert_called_once_with()
 
+    def test_rejects_oversized_cancellation_reason_before_database_access(self):
+        factory = MagicMock()
+        with self.assertRaisesRegex(BookingCancellationError, "255 characters or fewer"):
+            cancel_booking(7, 41, "x" * 256, connection_factory=factory)
+        factory.assert_not_called()
+
     def test_invalid_booking_id_does_not_open_database(self):
         factory = MagicMock()
         with self.assertRaises(BookingCancellationError):
@@ -123,6 +129,27 @@ class BookingCancellationEndpointTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["refund_amount"], 850.0)
         cancel.assert_called_once_with(7, 41, "Change of plans")
+
+    @patch("backend.app.django_views.cancel_booking")
+    def test_invalid_cancellation_request_returns_clear_client_error(self, cancel):
+        cancel.side_effect = BookingCancellationError(
+            "Cancellation reason must be 255 characters or fewer."
+        )
+        set_session(self.client, user_id=7, role="PASSENGER")
+        response = self.client.post("/api/bookings/41/cancel", {
+            "reason": "x" * 256
+        }, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("255 characters or fewer", response.json()["message"])
+
+    @patch("backend.app.django_views.cancel_booking")
+    def test_cancellation_database_error_does_not_leak_details(self, cancel):
+        import mysql.connector
+        cancel.side_effect = mysql.connector.Error("private database connection details")
+        set_session(self.client, user_id=7, role="PASSENGER")
+        response = self.client.post("/api/bookings/41/cancel", {}, format="json")
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn("private database connection details", response.content.decode())
 
     @patch("backend.app.django_views.cancel_booking")
     def test_non_owned_booking_returns_not_found(self, cancel):
