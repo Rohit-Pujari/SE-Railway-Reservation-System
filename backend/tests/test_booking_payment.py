@@ -135,7 +135,7 @@ class BookingPaymentTests(unittest.TestCase):
         self.assertTrue(result["replayed"])
         self.assertEqual(result["booking_status"], "CONFIRMED")
         self.assertEqual(result["payment_status"], "SUCCEEDED")
-        self.assertEqual(result["payment_id"] if "payment_id" in result else 99, 99)
+        self.assertEqual(result["amount"], 850.00)
         self.assertFalse(any("INSERT INTO payments" in call.args[0] for call in cursor.execute.call_args_list))
         self.assertFalse(any("UPDATE bookings" in call.args[0] for call in cursor.execute.call_args_list))
         connection.commit.assert_called_once_with()
