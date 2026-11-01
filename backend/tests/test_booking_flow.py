@@ -31,7 +31,7 @@ class PassengerBookingFlowTests(unittest.TestCase):
         connection.cursor.return_value.fetchone.return_value = self.user
         with patch("backend.app.django_views.get_db_connection", return_value=connection), \
              patch("backend.app.django_views.check_password_hash", return_value=True):
-            response = self.client.post("/api/login", {
+            response = self.client.post("/api/login", json={
                 "email": "PASSENGER@example.com",
                 "password": "correct-password",
             })
@@ -140,7 +140,7 @@ class PassengerBookingFlowTests(unittest.TestCase):
             availability.assert_called_once_with("9", "1", "2", "2026-11-15", "3")
 
             # 4. Submit passenger details with the selected train/class.
-            booking_response = self.client.post("/api/bookings", {
+            booking_response = self.client.post("/api/bookings", json={
                 "schedule_id": 9,
                 "source_station_id": 1,
                 "destination_station_id": 2,
@@ -161,13 +161,13 @@ class PassengerBookingFlowTests(unittest.TestCase):
             )
 
             # 5. Verify fare calculation uses the newly created booking.
-            fare_response = self.client.post("/api/bookings/501/fare", {})
+            fare_response = self.client.post("/api/bookings/501/fare", json={})
             self.assertEqual(fare_response.status_code, 200)
             self.assertEqual(fare_response.json()["total_fare"], 850.0)
             calculate_fare.assert_called_once_with(501, 7)
 
             # 6. Pay and confirm the booking.
-            payment_response = self.client.post("/api/bookings/501/pay", {})
+            payment_response = self.client.post("/api/bookings/501/pay", json={})
             self.assertEqual(payment_response.status_code, 201)
             self.assertEqual(payment_response.json()["booking_status"], "CONFIRMED")
             self.assertEqual(payment_response.json()["payment_status"], "SUCCEEDED")
@@ -203,7 +203,7 @@ class PassengerBookingFlowTests(unittest.TestCase):
             create_booking.assert_not_called()
 
     def test_anonymous_passenger_cannot_pay_for_a_booking(self):
-        response = self.client.post("/api/bookings/501/pay", {})
+        response = self.client.post("/api/bookings/501/pay", json={})
         self.assertEqual(response.status_code, 401)
 
 
