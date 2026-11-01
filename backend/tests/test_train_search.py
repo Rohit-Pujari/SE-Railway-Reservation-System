@@ -76,13 +76,16 @@ class TrainSearchQueryTests(unittest.TestCase):
         sql, params = cursor.execute.call_args.args
         self.assertIn("origin_stop.stop_sequence < destination_stop.stop_sequence", sql)
         self.assertIn("route_fares", sql)
+        self.assertIn("LEFT JOIN LATERAL", sql)
         self.assertIn("seat_allocations", sql)
-        self.assertEqual(params[0:6], (None, None, None, None, None, None))
-        self.assertEqual(params[6], 1)
-        self.assertEqual(params[7], 2)
-        self.assertEqual(params[8], datetime(2026, 11, 15, 0, 0))
-        self.assertEqual(params[9], datetime(2026, 11, 16, 0, 0))
-        self.assertEqual(params[10], 100)
+        self.assertEqual(sql.count("SELECT fare.fare_amount"), 1)
+        self.assertEqual(params[0:2], (None, None))
+        self.assertEqual(params[2:4], (None, None))
+        self.assertEqual(params[4], 1)
+        self.assertEqual(params[5], 2)
+        self.assertEqual(params[6], datetime(2026, 11, 15, 0, 0))
+        self.assertEqual(params[7], datetime(2026, 11, 16, 0, 0))
+        self.assertEqual(params[8], 100)
         connection.close.assert_called_once()
         cursor.close.assert_called_once()
 
@@ -116,7 +119,7 @@ class TrainSearchQueryTests(unittest.TestCase):
         self.assertEqual(result[0]["starting_fare"], 980.0)
         self.assertEqual(result[0]["available_seats"], 12)
         params = cursor.execute.call_args.args[1]
-        self.assertEqual(params[0:6], (3, 3, 3, 3, 3, 3))
+        self.assertEqual(params[0:4], (3, 3, 3, 3))
 
     def test_invalid_selected_class_is_rejected(self):
         for class_id in ("abc", "0", "-2"):

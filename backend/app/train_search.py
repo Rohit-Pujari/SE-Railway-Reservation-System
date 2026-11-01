@@ -122,42 +122,8 @@ def search_trains(source_station_id, destination_station_id, journey_date, class
                    destination.city AS destination_city,
                    origin_stop.departure_at AS departure_at,
                    destination_stop.arrival_at AS arrival_at,
-                   (
-                       SELECT fare.fare_amount
-                       FROM route_fares AS fare
-                       JOIN route_stops AS fare_origin
-                         ON fare_origin.route_stop_id = fare.from_route_stop_id
-                       JOIN route_stops AS fare_destination
-                         ON fare_destination.route_stop_id = fare.to_route_stop_id
-                       JOIN travel_classes AS fare_class
-                         ON fare_class.class_id = fare.class_id
-                       WHERE fare.route_id = route.route_id
-                         AND fare_origin.route_stop_id = origin_stop.route_stop_id
-                         AND fare_destination.route_stop_id = destination_stop.route_stop_id
-                         AND fare_origin.stop_sequence < fare_destination.stop_sequence
-                         AND fare_class.class_status = 'ACTIVE'
-                         AND (%s IS NULL OR fare_class.class_id = %s)
-                       ORDER BY fare.fare_amount ASC
-                       LIMIT 1
-                   ) AS starting_fare,
-                   (
-                       SELECT fare.currency_code
-                       FROM route_fares AS fare
-                       JOIN route_stops AS fare_origin
-                         ON fare_origin.route_stop_id = fare.from_route_stop_id
-                       JOIN route_stops AS fare_destination
-                         ON fare_destination.route_stop_id = fare.to_route_stop_id
-                       JOIN travel_classes AS fare_class
-                         ON fare_class.class_id = fare.class_id
-                       WHERE fare.route_id = route.route_id
-                         AND fare_origin.route_stop_id = origin_stop.route_stop_id
-                         AND fare_destination.route_stop_id = destination_stop.route_stop_id
-                         AND fare_origin.stop_sequence < fare_destination.stop_sequence
-                         AND fare_class.class_status = 'ACTIVE'
-                         AND (%s IS NULL OR fare_class.class_id = %s)
-                       ORDER BY fare.fare_amount ASC
-                       LIMIT 1
-                   ) AS currency_code,
+                   fare_quote.fare_amount AS starting_fare,
+                   fare_quote.currency_code AS currency_code,
                    (
                        SELECT COUNT(*)
                        FROM schedule_seats AS available_seat
@@ -205,6 +171,19 @@ def search_trains(source_station_id, destination_station_id, journey_date, class
                  ON destination_stop.schedule_id = schedule.schedule_id
                JOIN stations AS destination
                  ON destination.station_id = destination_stop.station_id
+               LEFT JOIN LATERAL (
+                   SELECT fare.fare_amount, fare.currency_code
+                   FROM route_fares AS fare
+                   JOIN travel_classes AS fare_class
+                     ON fare_class.class_id = fare.class_id
+                   WHERE fare.route_id = route.route_id
+                     AND fare.from_route_stop_id = origin_stop.route_stop_id
+                     AND fare.to_route_stop_id = destination_stop.route_stop_id
+                     AND fare_class.class_status = 'ACTIVE'
+                     AND (%s IS NULL OR fare.class_id = %s)
+                   ORDER BY fare.fare_amount ASC, fare.class_id ASC
+                   LIMIT 1
+               ) AS fare_quote ON TRUE
                WHERE origin_stop.station_id = %s
                  AND destination_stop.station_id = %s
                  AND origin_stop.stop_sequence < destination_stop.stop_sequence
@@ -219,7 +198,6 @@ def search_trains(source_station_id, destination_station_id, journey_date, class
                ORDER BY origin_stop.departure_at, train.train_number
                LIMIT %s""",
             (
-                selected_class_id, selected_class_id,
                 selected_class_id, selected_class_id,
                 selected_class_id, selected_class_id,
                 source_id, destination_id, start_at, end_at, MAX_SEARCH_RESULTS,
