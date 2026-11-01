@@ -6,6 +6,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from backend.tests.drf_client import RailwayAPIClient
+from backend.app.booking import BookingUnavailableError
 
 
 class PassengerBookingFlowTests(unittest.TestCase):
@@ -188,19 +189,27 @@ class PassengerBookingFlowTests(unittest.TestCase):
             stations.assert_called_once_with()
             classes.assert_called_once_with()
 
-    def test_booking_is_blocked_when_selected_class_has_no_available_seats(self):
+    def test_booking_endpoint_returns_conflict_when_seats_are_unavailable(self):
         self.login()
-        with patch("backend.app.django_views.get_seat_availability", return_value={
-            "schedule_id": 9, "class_id": 3, "class_code": "SL",
-            "available_seats": 0,
-        }), patch("backend.app.django_views.create_booking") as create_booking:
-            response = self.client.get(
-                "/api/seats/availability?schedule_id=9&source_station_id=1"
-                "&destination_station_id=2&journey_date=2026-11-15&class_id=3"
-            )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.json()["available_seats"], 0)
-            create_booking.assert_not_called()
+        with patch(
+            "backend.app.django_views.create_booking",
+            side_effect=BookingUnavailableError("Only 0 seats remain."),
+        ) as create_booking:
+            response = self.client.post("/api/bookings", json={
+                "schedule_id": 9,
+                "source_station_id": 1,
+                "destination_station_id": 2,
+                "journey_date": "2026-11-15",
+                "class_id": 3,
+                "passengers": self.passengers,
+                "idempotency_key": "no-seat-request-001",
+            })
+        self.assertEqual(response.status_code, 409)
+        self.assertIn("Only 0 seats remain.", response.json()["message"])
+        create_booking.assert_called_once_with(
+            7, 9, 1, 2, "2026-11-15", 3,
+            self.passengers, "no-seat-request-001",
+        )
 
     def test_anonymous_passenger_cannot_pay_for_a_booking(self):
         response = self.client.post("/api/bookings/501/pay", json={})
