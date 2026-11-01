@@ -1,11 +1,11 @@
 """Confirm a pending passenger booking with the project's simulated payment provider.
 
-from .validation import positive_int
-
 No real card, UPI, bank, email, or SMS provider is configured in this repository.
 Successful simulated payments are recorded, held seats are confirmed, and
 notification delivery requests are queued in the existing notifications table.
 """
+
+from .validation import positive_int
 
 from .db import get_db_connection
 
