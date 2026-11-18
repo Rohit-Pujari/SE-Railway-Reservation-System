@@ -56,3 +56,17 @@ Payment confirmation is simulated; refunds are tracked as pending obligations, n
 - [Test Plan](SE_TEST_PLAN.md)
 - [Existing project documentation](PROJECT_DOCUMENTATION.md)
 - [Architecture decisions](ARCHITECTURE_DECISIONS.md)
+
+## Verification notes (2026-11-18)
+- Checked PR review submissions for #72, #79, #80, #81, #87, #88 and #89 using GitHub. PRs #72, #80, #81, #87, #88 and #89 had **zero formal review submissions** in the returned review records. PR #79 had one `CHANGES_REQUESTED` review; this is not an approval. Existing merges must not be presented as formally approved unless separate review evidence exists.
+- GitHub Actions workflow `.github/workflows/tests.yml` was updated in the evaluation PR to run `coverage run --branch`, save the verbose unit-test log, generate text/JSON/XML coverage reports, and upload them as a GitHub Actions artifact named `unit-and-coverage-reports`. The workflow must execute successfully before the results can be marked complete.
+- The GitHub connector did not return a pull-request workflow run for the current documentation branch during this check. No coverage percentage, test count or pass result is asserted.
+- Local checkout of the repository was blocked by unavailable DNS resolution for `github.com`. Therefore no local test suite or real MySQL system validation was executed in this session.
+- GitHub Project board fields and story-point coverage remain unverified. Sprint videos require an actual recording of the working application and cannot be generated from source code alone.
+
+### CI report retrieval after PR execution
+1. Open the **Actions** tab and select the run for this PR's head commit.
+2. Confirm all steps passed, including the coverage command.
+3. Download the `unit-and-coverage-reports` artifact.
+4. Inspect `unit-test.log`, `coverage-summary.txt`, `coverage.json` and `coverage.xml`.
+5. Copy the measured counts and coverage percentages into the final test summary; attach the exact run URL and commit SHA.
