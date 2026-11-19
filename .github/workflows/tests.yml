@@ -35,12 +35,23 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install coverage
 
       - name: Install and build React frontend
         working-directory: frontend
         run: |
           npm ci
           npm run build
+
+      - name: Install Playwright and browser engines
+        working-directory: frontend
+        run: |
+          npm install --no-save --package-lock=false @playwright/test
+          npx playwright install --with-deps chromium firefox webkit msedge
+
+      - name: Run cross-browser compatibility tests
+        working-directory: frontend
+        run: npx playwright test
 
       - name: Compile Python files
         run: python -m compileall -q backend
@@ -50,5 +61,20 @@ jobs:
           python -m backend.manage check
           bash -n run-dev.sh
 
-      - name: Run unit tests
-        run: python -m unittest discover -s backend/tests -p "test_*.py" -v
+      - name: Run unit tests with line and branch coverage
+        run: |
+          mkdir -p docs/test-reports
+          set -o pipefail
+          python -m coverage run --branch --source=backend/app,backend/config -m unittest discover -s backend/tests -p "test_*.py" -v 2>&1 | tee docs/test-reports/unit-test.log
+          python -m coverage report -m | tee docs/test-reports/coverage-summary.txt
+          python -m coverage json -o docs/test-reports/coverage.json
+          python -m coverage xml -o docs/test-reports/coverage.xml
+
+      - name: Upload unit-test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-and-coverage-reports
+          path: |
+            docs/test-reports/
+          if-no-files-found: warn

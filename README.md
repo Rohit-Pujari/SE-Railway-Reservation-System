@@ -1,6 +1,6 @@
 # Railway Reservation System
 
-Coursework project using Django REST Framework, React, and MySQL. Project requirements and test references are in [Documents](Documents/).
+Coursework project using Django REST Framework, React, and MySQL. Project requirements and test references are in [Documents](Documents/).\n\n**[Read the complete project documentation](docs/PROJECT_DOCUMENTATION.md)** and **[failure recovery guide](docs/FAILURE_RECOVERY.md)** and **[architecture decisions and module ownership](docs/ARCHITECTURE_DECISIONS.md)** for setup instructions, architecture, database schema, API reference, security notes, testing, and troubleshooting.
 
 ## Architecture
 
@@ -22,60 +22,70 @@ During development, `run-dev.sh` starts the Vite frontend and Django API as sepa
 6. Create the project schema if needed: `mysql -u root -p < database/schema.sql`. The app uses that existing schema and does not run Django migrations against it.
 7. Run `./run-dev.sh` from the repository root, then open http://127.0.0.1:5173. This single launcher starts the Django REST API and React/Vite frontend together, creates `.venv` if needed, and installs missing project dependencies. MySQL must already be running with the existing schema; the script does not create or migrate database tables. Press Ctrl+C to stop both servers.
 
-### Local train data
-To seed a local Karnataka network, run `sudo .venv/bin/python database/seed_demo.py --db-user root --unix-socket /run/mysqld/mysqld.sock` from the repository root. The seed contains 36 major stations using real Karnataka station names and codes, five local demo services from every station, and daily schedules for the current calendar month. That gives five searchable services for every ordered station pair. These generated connecting services and daily timetables are demo data, not an official complete Indian Railways timetable. Each train gets Sleeper and AC 3 Tier inventory with eight seats per class. The script also creates demo passenger and administrator accounts; their credentials are listed in the local demo section below. Re-running the seed preserves bookings and payments.
-
-Local account credentials:
-
-- Passenger: `passenger@trackline.local` / `RailDemoUser#26`
-- Administrator: `admin@trackline.local` / `RailDemoAdmin#26`
-
-These public demo credentials are for local coursework only. Do not use them for a deployed or production system.
-
 To serve the built React app from Django, run `cd frontend && npm run build`, then open http://127.0.0.1:8000. Django serves the generated files from the ignored `frontend/dist/` directory.
 
-The API uses Django signed-cookie sessions and Django CSRF protection. Cookies are HttpOnly for sessions, SameSite=Lax, and have a 30-minute lifetime. Set `SESSION_COOKIE_SECURE=true` behind HTTPS. The existing services continue to issue parameterized `mysql-connector-python` SQL against `database/schema.sql`; no tables or columns were renamed or added for the migration.
+The API uses Django signed-cookie sessions and Django CSRF protection. Session cookies are HttpOnly, SameSite=Lax, and have a 30-minute lifetime. Session and CSRF cookies default to `Secure` when `APP_DEBUG=false`; set `APP_DEBUG=true` only for local HTTP development. Production deployments must use HTTPS. Browser responses also set `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, and `X-Frame-Options: DENY`. Enable HSTS with `SECURE_HSTS_SECONDS` only after HTTPS is correctly configured. Registration stores passwords as Werkzeug scrypt hashes; login verifies the encoded hash and never returns it to clients. Passenger booking, payment, status, and cancellation services scope lookups by the authenticated user ID, while every admin data/action endpoint requires an administrator session. The existing services continue to issue parameterized `mysql-connector-python` SQL against `database/schema.sql`; no tables or columns were renamed or added for the migration.
 
-## Shared login and administrator access (Issues #4 and #5)
+## Administrator login (Issue #5)
 Admin accounts are existing `users` rows with `role='ADMIN'` and `account_status='ACTIVE'`. Public registration cannot set a role. Create the initial admin through a trusted, access-controlled database administration process; do not expose public admin creation.
 
-- `POST /api/login`: JSON `{"email":"admin@example.com","password":"your-password"}`; verifies the stored Werkzeug password hash, role, and active status, then establishes a session and returns `role: ADMIN` or `role: PASSENGER`. The React login form sends administrators to Payment review.
+- `POST /api/admin/login`: JSON `{"email":"admin@example.com","password":"your-password"}`; verifies the stored Werkzeug password hash, role, and active status, then establishes a session.
 - `POST /api/admin/logout`: clears the authenticated admin session.
 
 Example:
 ```bash
 curl -i -c cookies.txt http://127.0.0.1:8000/api/csrf
-curl -i -b cookies.txt -H 'X-CSRFToken: <token>' -H 'Content-Type: application/json' -d '{"email":"admin@example.com","password":"your-password"}' http://127.0.0.1:8000/api/login
+curl -i -b cookies.txt -H 'X-CSRFToken: <token>' -H 'Content-Type: application/json' -d '{"email":"admin@example.com","password":"your-password"}' http://127.0.0.1:8000/api/admin/login
 curl -i -b cookies.txt -H 'X-CSRFToken: <token>' -X POST http://127.0.0.1:8000/api/admin/logout
 ```
 
 ## Passenger login and logout (Issue #4)
-- `POST /api/login`: JSON `{"email":"passenger@example.com","password":"your-password"}`; verifies an active account and establishes a session using the role stored in MySQL.
+- `POST /api/login`: JSON `{"email":"passenger@example.com","password":"your-password"}`; verifies an active passenger account and establishes a session.
 - `GET /api/session`: restores the current passenger session.
 - `POST /api/logout`: clears the passenger session.
+
+## Train-search performance (Issue #38)
+
+Train search uses a single lateral fare lookup per matching schedule instead of running separate correlated subqueries for fare amount and currency. The query remains parameterized, limits the result set to 100 schedules, and uses the existing indexes on schedule-stop station/date lookup, route-fare segment/class lookup, schedule-seat lookup, and seat-allocation conflicts. The lateral derived table requires MySQL 8.0.16+, which matches the database version required by this project.
+
+### Measure response time against the live database
+
+After configuring `.env`, starting MySQL, and installing backend dependencies, run this from the repository root with valid station IDs and a journey date:
+
+```bash
+uv run python scripts/benchmark_train_search.py --source 1 --destination 2 --date 2026-11-15
+```
+
+Optional arguments: `--class-id 3`, `--warmup 2`, `--iterations 10`, and `--target-seconds 3`. The script performs warm-up requests, measures actual database-backed searches, and reports median, P95, and maximum latency. It exits with status 0 when measured P95 meets the configured target, or status 2 when it does not. Use representative production-like data and repeat under expected concurrent load before making an availability or performance claim. No benchmark result is assumed or fabricated in this repository.
 
 ## Tests
 Run `cd frontend && npm ci && npm run build && cd ..`, then `uv run --active python -m unittest discover -s backend/tests -v` from the repository root. Tests exercise Django/DRF endpoints, CSRF/session behavior, the React build entry and lockfile, and the one-command launcher; database access is mocked, so no development MySQL database is changed by the test suite.
 
+## Availability and recovery (Issue #39)
+
+The coursework project's **proposed availability objective is 99.5% per calendar month**, excluding announced maintenance. This is a planning target, not a measured uptime result or a production SLA. The current local-development deployment is a single Django process, a Vite development server, and one MySQL instance; it does not provide automatic failover or high availability.
+
+### Health checks
+
+- `GET /api/health` checks whether the Django API is responding. It does not require MySQL.
+- `GET /api/health/db` checks the MySQL connection. It returns HTTP 200 when connected and HTTP 503 when the database is unavailable.
+- Database-dependent API endpoints return a controlled error response (normally HTTP 503) for database outages instead of exposing database exception details.
+
+### Restart and recovery procedure
+
+1. Start or restart MySQL and confirm the `railway_reservation` schema is available.
+2. From the repository root, start both application services with `./run-dev.sh`. If they are already running, stop them with Ctrl+C and run the command again.
+3. Check `http://127.0.0.1:8000/api/health`; expect HTTP 200 and `{"status":"ok"}`.
+4. Check `http://127.0.0.1:8000/api/health/db`; expect HTTP 200 and `{"status":"ok","database":"connected"}`.
+5. Open `http://127.0.0.1:5173` and verify the frontend loads and can make API requests.
+6. If the API health check fails, inspect the Django terminal output. If only the database check fails, verify MySQL is running and that the local `.env` credentials and database name are correct, then retry the database health check.
+
+The application uses Django signed-cookie sessions, so session data is self-contained and can be verified by a fresh application worker after a restart as long as the same `SECRET_KEY` and cookie settings are retained. Users may still need to sign in again if cookies expire, are cleared, or the signing key changes.
+
+Automated regression tests cover API health during a database outage, safe 503 responses, database recovery, and signed-session restoration by a fresh client. These tests validate application behavior with mocked database connections; they do not measure real-world uptime or replace deployment-level monitoring and failover testing.
+
 ## Current scope
-The implemented scope includes passenger registration and login/logout; administrator login; train search and results with travel-class fares and seat availability; passenger details and fare calculation; ticket booking with duplicate-request protection and a unique PNR; passenger ticket history; and administrator-reviewed demo payment approval. Refunds and full train/route/schedule administration are outside the current scope.
+The implemented scope includes project setup and database schema; passenger registration and login/logout; administrator login and a protected administrator dashboard; train search, fares, and seat availability; passenger details and fare calculation; ticket booking with duplicate-request protection and a unique PNR; passenger booking history and cancellation/refund records. The administrator dashboard is available from the **Admin** link in the navigation (or `/?admin=1`) after the frontend starts. It provides operational summaries, train activation/deactivation, route stops, schedules and seat inventory, bookings, and cancellation records. Dashboard APIs require an active administrator session. Create an admin account only through a trusted local database administration process. Ticket bookings reserve seats for 15 minutes and remain pending payment; the dashboard does not initiate payments or refunds.
 
 ## Ticket booking (Issue #13)
-Signed-in passengers can choose a train, enter traveler details, and reserve seats. The booking, passenger fares, and expiring seat allocations are written in one transaction. Seat availability is checked again while the schedule inventory is locked. Each successful booking receives a unique 12-character PNR, stored with the booking and shown to the passenger. The payment step uses administrator review as described below.
-
-## Payment (Issue #16)
-The payment flow uses the existing `payments` table without a gateway. A passenger submits an approval request; an authenticated administrator reviews it and approves or rejects it. Approval confirms the booking and held seats in one transaction. Rejection records a failed request and leaves the booking pending while the 15-minute seat hold remains active. The app does not collect card details or process real payments.
-
-The passenger payment endpoint is `POST /api/bookings/<booking_id>/payment` with JSON `{"idempotency_key":"<unique-request-key>"}`. The admin review queue is `GET /api/admin/payments/pending`; approve or reject with `POST /api/admin/payments/<payment_id>/review` and `{"decision":"APPROVE"}` or `{"decision":"REJECT"}`. The server loads amount and booking ownership from the database; the client cannot mark its own payment successful.
-
-## Failed payments (Issue #17)
-A rejected request is saved with status `FAILED`; it does not confirm the booking or seat allocations. The passenger can submit another request while the temporary 15-minute seat hold remains active. An administrator cannot approve a request after its hold expires.
-
-## Verification and local database permissions
-
-The latest scope and actual checks are in [the verification report](Documents/VERIFICATION_2026-11-19.md).
-`run-dev.sh` explicitly trusts the Vite browser origins for CSRF and uses a strict frontend port. Restart the launcher after configuration/backend changes. When starting both servers separately, set `CSRF_TRUSTED_ORIGINS` as shown in `.env.example`; do not disable CSRF protection.
-
-If the existing local `railway_app` account only has SELECT/INSERT, a database administrator must run `sudo mariadb < database/app_permissions.sql` to enable the four table UPDATE privileges required for fare updates and payment approval. Registration needs INSERT, and is unaffected by those UPDATE grants. The permissions script targets the existing `railway_app`@`127.0.0.1` account; adjust it if your configured account differs.
-
-Old databases may still have `demo.passenger@trackline.local` and `demo.admin@trackline.local`. The seed script renames those reserved accounts to the addresses above while preserving user IDs. Changing README/source code alone does not rename live database rows.
+Signed-in passengers can choose a train, enter traveler details, and reserve seats. The booking, passenger fares, and expiring seat allocations are written in one transaction. Seat availability is checked again while the schedule inventory is locked. Each successful booking receives a unique 12-character PNR, stored with the booking and shown to the passenger. Payment is a separate feature.

@@ -37,6 +37,7 @@ CREATE TABLE stations (
   PRIMARY KEY (station_id),
   UNIQUE KEY uq_stations_code (station_code),
   KEY idx_stations_name_city (station_name, city),
+  KEY idx_stations_active_city (station_status, city, station_name, station_code),
   CONSTRAINT chk_stations_code CHECK (CHAR_LENGTH(TRIM(station_code)) > 0),
   CONSTRAINT chk_stations_name CHECK (CHAR_LENGTH(TRIM(station_name)) > 0)
 ) ENGINE=InnoDB;
@@ -85,6 +86,18 @@ CREATE TABLE route_stops (
   CONSTRAINT chk_route_stop_distance CHECK (distance_from_origin_km >= 0)
 ) ENGINE=InnoDB;
 
+CREATE TABLE train_routes (
+  train_id BIGINT UNSIGNED NOT NULL,
+  route_id BIGINT UNSIGNED NOT NULL,
+  assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (train_id, route_id),
+  KEY idx_train_routes_route (route_id, train_id),
+  CONSTRAINT fk_train_routes_train FOREIGN KEY (train_id)
+    REFERENCES trains (train_id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_train_routes_route FOREIGN KEY (route_id)
+    REFERENCES routes (route_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB;
+
 CREATE TABLE train_schedules (
   schedule_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   train_id BIGINT UNSIGNED NOT NULL,
@@ -121,6 +134,8 @@ CREATE TABLE schedule_stops (
   UNIQUE KEY uq_schedule_stop_sequence (schedule_id, stop_sequence),
   UNIQUE KEY uq_schedule_stop_id (schedule_id, schedule_stop_id),
   KEY idx_schedule_stops_station (station_id, schedule_id, stop_sequence),
+  KEY idx_schedule_stops_station_departure (station_id, departure_at, schedule_id, stop_sequence),
+  KEY idx_schedule_stops_station_arrival (station_id, schedule_id, stop_sequence, arrival_at),
   KEY idx_schedule_stops_route_stop (route_id, route_stop_id, schedule_id),
   KEY idx_schedule_stops_arrival (arrival_at),
   KEY idx_schedule_stops_departure (departure_at),
@@ -159,6 +174,7 @@ CREATE TABLE route_fares (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (route_fare_id),
   UNIQUE KEY uq_route_fare_segment_class (route_id, from_route_stop_id, to_route_stop_id, class_id),
+  KEY idx_route_fares_segment_price (route_id, from_route_stop_id, to_route_stop_id, fare_amount, class_id),
   CONSTRAINT fk_route_fares_from_stop FOREIGN KEY (route_id, from_route_stop_id)
     REFERENCES route_stops (route_id, route_stop_id) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT fk_route_fares_to_stop FOREIGN KEY (route_id, to_route_stop_id)
@@ -237,6 +253,7 @@ CREATE TABLE bookings (
   UNIQUE KEY uq_bookings_pnr (pnr),
   UNIQUE KEY uq_bookings_id_schedule_class (booking_id, schedule_id, class_id),
   KEY idx_bookings_user_created (user_id, created_at),
+  KEY idx_bookings_user_departure_created (user_id, departure_at_snapshot, created_at DESC, booking_id),
   KEY idx_bookings_schedule_status (schedule_id, booking_status),
   KEY idx_bookings_boarding_stops (schedule_id, boarding_schedule_stop_id, alighting_schedule_stop_id),
   UNIQUE KEY uq_bookings_user_idempotency (user_id, idempotency_key),
@@ -294,6 +311,7 @@ CREATE TABLE seat_allocations (
   UNIQUE KEY uq_seat_allocation_passenger (booking_passenger_id),
   KEY idx_seat_allocation_conflicts (schedule_id, schedule_seat_id, allocation_status, hold_expires_at),
   KEY idx_seat_allocations_booking (booking_id, allocation_status),
+  KEY idx_seat_allocations_booking_passenger (booking_id, booking_passenger_id),
   CONSTRAINT fk_seat_alloc_booking_schedule_class FOREIGN KEY (booking_id, schedule_id, class_id)
     REFERENCES bookings (booking_id, schedule_id, class_id) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT fk_seat_alloc_booking_passenger FOREIGN KEY (booking_id, booking_passenger_id)

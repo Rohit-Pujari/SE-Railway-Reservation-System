@@ -39,9 +39,6 @@ def get_booking_history(user_id, connection_factory=None):
                       booking.other_charges, booking.total_fare,
                       booking.currency_code, booking.created_at,
                       booking.confirmed_at,
-                      (SELECT payment.payment_status FROM payments AS payment
-                       WHERE payment.booking_id = booking.booking_id
-                       ORDER BY payment.created_at DESC, payment.payment_id DESC LIMIT 1) AS payment_status,
                       CASE WHEN booking.departure_at_snapshot >= CURRENT_TIMESTAMP
                            THEN 'UPCOMING' ELSE 'PREVIOUS' END AS trip_type,
                       passenger.booking_passenger_id, passenger.passenger_name,
@@ -91,7 +88,6 @@ def get_booking_history(user_id, connection_factory=None):
                     "currency_code": row["currency_code"],
                     "created_at": _iso(row["created_at"]),
                     "confirmed_at": _iso(row["confirmed_at"]),
-                    "payment_status": row["payment_status"],
                     "passengers": [],
                 }
             if row.get("booking_passenger_id") is not None:

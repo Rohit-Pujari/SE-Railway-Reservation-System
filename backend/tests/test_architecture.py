@@ -14,6 +14,7 @@ django.setup()
 
 from django.conf import settings
 from django.urls import resolve
+from rest_framework.test import APIClient
 
 from backend.config.urls import urlpatterns
 
@@ -32,14 +33,31 @@ class DjangoReactArchitectureTests(unittest.TestCase):
             "api/logout",
             "api/admin/login",
             "api/admin/logout",
+            "api/admin/dashboard",
+            "api/admin/cancellations",
+            "api/admin/bookings/1",
+            "api/admin/trains",
+            "api/admin/trains/1",
+            "api/admin/stations",
+            "api/admin/stations/1",
+            "api/admin/routes",
+            "api/admin/routes/1",
+            "api/admin/train-routes",
+            "api/admin/schedules",
+            "api/admin/schedules/1",
+            "api/admin/schedules/1/seats",
+            "api/admin/schedules/1/seats/2",
             "api/travel-classes",
             "api/seats/availability",
             "api/stations",
             "api/trains/search",
             "api/bookings",
+            "api/bookings/1/pay",
+            "api/bookings/history",
+            "api/bookings/status",
+            "api/bookings/1/cancel",
             "api/bookings/1/passengers",
             "api/bookings/1/fare",
-            "api/bookings/1/payment",
         ]
         for path in api_paths:
             with self.subTest(path=path):
@@ -47,12 +65,25 @@ class DjangoReactArchitectureTests(unittest.TestCase):
                 self.assertTrue(hasattr(callback, "cls"), "API routes should be dispatched by DRF views.")
                 self.assertFalse(getattr(callback, "csrf_exempt", False))
 
-    def test_mysql_and_session_settings_do_not_require_new_schema_tables(self):
+    def test_mysql_and_signed_cookie_session_settings_remain_configured(self):
         self.assertEqual(settings.DATABASES["default"]["ENGINE"], "mysql.connector.django")
         self.assertEqual(settings.SESSION_ENGINE, "django.contrib.sessions.backends.signed_cookies")
         self.assertNotIn("django.contrib.sessions", settings.INSTALLED_APPS)
-        self.assertTrue(resolve("/api/admin/payments/pending"))
-        self.assertTrue(resolve("/api/bookings/history"))
+        self.assertTrue(settings.SESSION_COOKIE_HTTPONLY)
+        self.assertEqual(settings.SESSION_COOKIE_SAMESITE, "Lax")
+        self.assertEqual(settings.SESSION_COOKIE_SECURE, not settings.DEBUG)
+        self.assertTrue(settings.CSRF_COOKIE_SECURE)
+        self.assertTrue(settings.SECURE_CONTENT_TYPE_NOSNIFF)
+        self.assertEqual(settings.SECURE_REFERRER_POLICY, "same-origin")
+        self.assertEqual(settings.X_FRAME_OPTIONS, "DENY")
+        self.assertIn("django.middleware.clickjacking.XFrameOptionsMiddleware", settings.MIDDLEWARE)
+        self.assertEqual(len(urlpatterns), 36)
+
+    def test_security_headers_are_added_to_api_responses(self):
+        response = APIClient().get("/api/health")
+        self.assertEqual(response["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(response["Referrer-Policy"], "same-origin")
+        self.assertEqual(response["X-Frame-Options"], "DENY")
 
     def test_react_frontend_has_locked_build_and_runtime_entry(self):
         package = json.loads((ROOT / "frontend" / "package.json").read_text())

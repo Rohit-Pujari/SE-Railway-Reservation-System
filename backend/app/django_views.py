@@ -16,16 +16,20 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .booking import BookingRequestError, BookingUnavailableError, create_booking
+from .booking_history import get_booking_history
+from .booking_cancellation import (
+    BookingCancellationError,
+    BookingCancellationNotFound,
+    cancel_booking,
+)
+from .booking_status import get_booking_status
+from .booking_payment import (
+    PaymentBookingNotFound,
+    PaymentConfirmationError,
+    confirm_booking_payment,
+)
 from .db import get_db_connection
 from .fare_calculation import FareCalculationError, calculate_booking_fare
-from .payment_approval import (
-    PaymentApprovalConflict,
-    PaymentApprovalError,
-    list_pending_payment_approvals,
-    request_payment_approval,
-    review_payment_approval,
-)
-from .booking_history import get_booking_history
 from .passenger_details import PassengerDetailsValidationError, save_passenger_details
 from .registration import RegistrationValidationError, register_user
 from .seat_availability import (
@@ -137,8 +141,8 @@ def passenger_login(request):
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
-            "SELECT user_id, full_name, email, password_hash, role FROM users "
-            "WHERE email = %s AND account_status = 'ACTIVE' LIMIT 1",
+            "SELECT user_id, full_name, email, password_hash FROM users "
+            "WHERE email = %s AND account_status = 'ACTIVE' AND role = 'PASSENGER' LIMIT 1",
             (email.strip().lower(),),
         )
         user = cursor.fetchone()
@@ -155,17 +159,12 @@ def passenger_login(request):
                 connection.close()
             except Exception:
                 pass
-    if (not user or user["role"] not in {"PASSENGER", "ADMIN"}
-            or not check_password_hash(user["password_hash"], password)):
+    if not user or not check_password_hash(user["password_hash"], password):
         return Response({"status": "error", "message": "Invalid email or password."}, status=401)
     request.session.flush()
     request.session["user_id"] = user["user_id"]
-    request.session["role"] = user["role"]
-    if user["role"] == "ADMIN":
-        return Response({"status": "ok", "message": "Administrator login successful.", "role": "ADMIN", "admin": {
-            "user_id": user["user_id"], "email": user["email"],
-        }})
-    return Response({"status": "ok", "message": "Login successful.", "role": "PASSENGER", "user": {
+    request.session["role"] = "PASSENGER"
+    return Response({"status": "ok", "message": "Login successful.", "user": {
         "user_id": user["user_id"], "full_name": user["full_name"], "email": user["email"],
     }})
 
@@ -258,14 +257,6 @@ def admin_logout(request):
 
 
 @endpoint(["GET"])
-def admin_session(request):
-    if request.session.get("role") != "ADMIN" or not request.session.get("user_id"):
-        return Response({"status": "unauthenticated", "authenticated": False}, status=401)
-    return Response({"status": "ok", "authenticated": True,
-                     "admin": {"user_id": request.session["user_id"]}})
-
-
-@endpoint(["GET"])
 def travel_classes(request):
     try:
         return Response({"status": "ok", "travel_classes": get_active_travel_classes()})
@@ -343,6 +334,39 @@ def booking_create(request):
 
 
 @endpoint(["POST"])
+def passenger_booking_pay(request, booking_id):
+    """Confirm a passenger-owned booking using the explicitly simulated provider."""
+    user_id = _user_id(request)
+    if user_id is None:
+        return Response({"status": "error", "message": "Please log in to pay for a booking."}, status=401)
+    try:
+        result = confirm_booking_payment(user_id, booking_id)
+    except PaymentBookingNotFound as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except PaymentConfirmationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Payment is temporarily unavailable. Please try again."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Payment could not be completed."}, status=500)
+    return Response({"status": "ok", **result}, status=200 if result.get("replayed") else 201)
+
+
+@endpoint(["GET"])
+def passenger_booking_history(request):
+    user_id = _user_id(request)
+    if user_id is None:
+        return Response({"status": "error", "message": "Please log in to view your booking history."}, status=401)
+    try:
+        result = get_booking_history(user_id)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Booking history is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Booking history could not be loaded."}, status=500)
+    return Response({"status": "ok", **result})
+
+
+@endpoint(["POST"])
 def booking_passenger_details(request, booking_id):
     user_id = _user_id(request)
     if user_id is None:
@@ -377,72 +401,6 @@ def booking_fare(request, booking_id):
     return Response({"status": "ok", **result})
 
 
-@endpoint(["POST"])
-def booking_payment(request, booking_id):
-    user_id = _user_id(request)
-    if user_id is None:
-        return Response({"status": "error", "message": "Please log in before paying for a booking."}, status=401)
-    payload = _payload(request)
-    if payload is None:
-        return Response({"status": "error", "message": "Submit payment details as JSON."}, status=400)
-    try:
-        result = request_payment_approval(booking_id, user_id, payload.get("idempotency_key"))
-    except PaymentApprovalConflict as exc:
-        return Response({"status": "error", "message": str(exc)}, status=409)
-    except PaymentApprovalError as exc:
-        return Response({"status": "error", "message": str(exc)}, status=400)
-    except mysql.connector.Error:
-        return Response({"status": "error", "message": "Payment request is temporarily unavailable."}, status=503)
-    except Exception:
-        return Response({"status": "error", "message": "Payment request could not be submitted."}, status=500)
-    return Response({"status": "ok", **result}, status=202)
-
-
-@endpoint(["GET"])
-def passenger_booking_history(request):
-    user_id = _user_id(request)
-    if user_id is None:
-        return Response({"status": "error", "message": "Please log in to view your tickets."}, status=401)
-    try:
-        result = get_booking_history(user_id)
-    except mysql.connector.Error:
-        return Response({"status": "error", "message": "Your tickets are temporarily unavailable."}, status=503)
-    except Exception:
-        return Response({"status": "error", "message": "Your tickets could not be loaded."}, status=500)
-    return Response({"status": "ok", **result})
-
-
-@endpoint(["GET"])
-@_admin_required
-def admin_payment_queue(request):
-    try:
-        payments = list_pending_payment_approvals()
-    except mysql.connector.Error:
-        return Response({"status": "error", "message": "Pending payments are temporarily unavailable."}, status=503)
-    except Exception:
-        return Response({"status": "error", "message": "Pending payments could not be loaded."}, status=500)
-    return Response({"status": "ok", "payments": payments})
-
-
-@endpoint(["POST"])
-@_admin_required
-def admin_review_payment(request, payment_id):
-    payload = _payload(request)
-    if payload is None:
-        return Response({"status": "error", "message": "Submit an approval decision as JSON."}, status=400)
-    try:
-        result = review_payment_approval(payment_id, request.session["user_id"], payload.get("decision"))
-    except PaymentApprovalConflict as exc:
-        return Response({"status": "error", "message": str(exc)}, status=409)
-    except PaymentApprovalError as exc:
-        return Response({"status": "error", "message": str(exc)}, status=400)
-    except mysql.connector.Error:
-        return Response({"status": "error", "message": "Payment review is temporarily unavailable."}, status=503)
-    except Exception:
-        return Response({"status": "error", "message": "Payment could not be reviewed."}, status=500)
-    return Response({"status": "ok", **result})
-
-
 @ensure_csrf_cookie
 def frontend(request):
     index = settings.FRONTEND_DIST / "index.html"
@@ -457,3 +415,377 @@ def frontend_asset(request, asset_path):
     if root not in asset.parents or not asset.is_file():
         raise Http404
     return HttpResponse(asset.read_bytes(), content_type=mimetypes.guess_type(asset.name)[0] or "application/octet-stream")
+
+
+
+@endpoint(["GET"])
+def passenger_booking_status(request):
+    user_id = _user_id(request)
+    if user_id is None:
+        return Response({"status": "error", "message": "Please log in to check a booking."}, status=401)
+    pnr = request.query_params.get("pnr")
+    try:
+        result = get_booking_status(user_id, pnr)
+    except ValueError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Booking status is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Booking status could not be loaded."}, status=500)
+    if result is None:
+        return Response({"status": "error", "message": "No booking with that PNR was found in your account."}, status=404)
+    return Response({"status": "ok", **result})
+
+
+
+@endpoint(["POST"])
+def passenger_booking_cancel(request, booking_id):
+    user_id = _user_id(request)
+    if user_id is None:
+        return Response({"status": "error", "message": "Please log in to cancel a booking."}, status=401)
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit valid cancellation details."}, status=400)
+    try:
+        result = cancel_booking(user_id, booking_id, payload.get("reason"))
+    except BookingCancellationNotFound as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except BookingCancellationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Cancellation is temporarily unavailable. Please try again."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Booking could not be cancelled."}, status=500)
+    return Response({"status": "ok", **result})
+
+
+@endpoint(["GET"])
+@_admin_required
+def admin_dashboard_data(request):
+    """Return the administrator's operational dashboard data."""
+    from .admin_dashboard import get_admin_dashboard
+    try:
+        return Response({"status": "ok", **get_admin_dashboard()})
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Dashboard data is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Dashboard data could not be loaded."}, status=500)
+
+
+
+@endpoint(["GET"])
+@_admin_required
+def admin_cancellation_records(request):
+    """Return cancellation items and their refund attempts to administrators."""
+    from .admin_cancellation_records import get_admin_cancellation_records
+    try:
+        return Response({"status": "ok", "cancellations": get_admin_cancellation_records()})
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Cancellation records are temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Cancellation records could not be loaded."}, status=500)
+
+
+@endpoint(["GET"])
+@_admin_required
+def admin_booking_detail(request, booking_id):
+    """Expose full passenger reservation details to administrators only."""
+    from .admin_booking_details import get_admin_booking_details
+    try:
+        result = get_admin_booking_details(booking_id)
+    except ValueError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Booking details are temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Booking details could not be loaded."}, status=500)
+    if result is None:
+        return Response({"status": "error", "message": "Booking not found."}, status=404)
+    return Response({"status": "ok", **result})
+
+
+@endpoint(["POST"])
+@_admin_required
+def admin_station_create(request):
+    from .station_route_management import DuplicateStationCodeError, StationRouteValidationError, create_station
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit station details as JSON."}, status=400)
+    try:
+        station = create_station(payload)
+    except DuplicateStationCodeError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except StationRouteValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except IntegrityError:
+        return Response({"status": "error", "message": "A station with this code already exists."}, status=409)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Station management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Station could not be added."}, status=500)
+    return Response({"status": "ok", "message": "Station added successfully.", "station": station}, status=201)
+
+
+@endpoint(["PATCH"])
+@_admin_required
+def admin_station_update(request, station_id):
+    from .station_route_management import DuplicateStationCodeError, StationRouteValidationError, update_station
+    payload = _payload(request)
+    if payload is None or not payload:
+        return Response({"status": "error", "message": "Submit station details as JSON."}, status=400)
+    try:
+        station = update_station(station_id, payload)
+    except DuplicateStationCodeError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except StationRouteValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Station management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Station could not be updated."}, status=500)
+    return Response({"status": "ok", "message": "Station updated successfully.", "station": station})
+
+
+@endpoint(["POST"])
+@_admin_required
+def admin_route_create(request):
+    from .station_route_management import StationRouteValidationError, create_route
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit route details as JSON."}, status=400)
+    try:
+        route = create_route(payload)
+    except StationRouteValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Route management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Route could not be created."}, status=500)
+    return Response({"status": "ok", "message": "Route created successfully.", "route": route}, status=201)
+
+
+@endpoint(["PATCH"])
+@_admin_required
+def admin_route_update(request, route_id):
+    from .station_route_management import StationRouteValidationError, update_route
+    payload = _payload(request)
+    if payload is None or not payload:
+        return Response({"status": "error", "message": "Submit route details as JSON."}, status=400)
+    try:
+        route = update_route(route_id, payload)
+    except StationRouteValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Route management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Route could not be updated."}, status=500)
+    return Response({"status": "ok", "message": "Route updated successfully.", "route": route})
+
+
+@endpoint(["POST", "DELETE"])
+@_admin_required
+def admin_train_route_manage(request):
+    from .station_route_management import StationRouteValidationError, assign_route_to_train, remove_train_route
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit a train and route ID."}, status=400)
+    try:
+        if request.method == "DELETE":
+            result = remove_train_route(payload.get("train_id"), payload.get("route_id"))
+            message = "Train-route assignment removed."
+        else:
+            result = assign_route_to_train(payload.get("train_id"), payload.get("route_id"))
+            message = "Route assigned to train successfully."
+    except StationRouteValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except IntegrityError:
+        return Response({"status": "error", "message": "This train is already assigned to the selected route."}, status=409)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Train-route management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Train-route assignment could not be changed."}, status=500)
+    return Response({"status": "ok", "message": message, "assignment": result})
+
+
+
+@endpoint(["GET"])
+@_admin_required
+def admin_schedule_seats(request, schedule_id):
+    from .seat_management import get_schedule_seats
+    try:
+        result = get_schedule_seats(schedule_id)
+    except ValueError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Seat inventory is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Seat inventory could not be loaded."}, status=500)
+    return Response({"status": "ok", **result})
+
+
+@endpoint(["PATCH"])
+@_admin_required
+def admin_schedule_seat_update(request, schedule_id, schedule_seat_id):
+    from .seat_management import (
+        SeatManagementConflictError,
+        SeatManagementValidationError,
+        update_schedule_seat_status,
+    )
+    payload = _payload(request)
+    if payload is None or set(payload) != {"operational_status"}:
+        return Response({"status": "error", "message": "Submit a valid seat operational status."}, status=400)
+    try:
+        result = update_schedule_seat_status(
+            schedule_id, schedule_seat_id, payload.get("operational_status")
+        )
+    except SeatManagementConflictError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except SeatManagementValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Seat inventory is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Seat status could not be updated."}, status=500)
+    return Response({"status": "ok", "message": "Seat status updated successfully.", "seat": result})
+
+
+@endpoint(["POST"])
+@_admin_required
+def admin_schedule_create(request):
+    from .schedule_management import ScheduleValidationError, create_schedule
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit schedule details as JSON."}, status=400)
+    try:
+        schedule = create_schedule(payload)
+    except ScheduleValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except IntegrityError:
+        return Response({"status": "error", "message": "A schedule already exists for this train at the selected departure time."}, status=409)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Schedule management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Schedule could not be created."}, status=500)
+    return Response({"status": "ok", "message": "Train schedule created successfully.", "schedule": schedule}, status=201)
+
+
+@endpoint(["PATCH"])
+@_admin_required
+def admin_schedule_update(request, schedule_id):
+    from .schedule_management import ScheduleConflictError, ScheduleValidationError, update_schedule
+    payload = _payload(request)
+    if payload is None or not payload:
+        return Response({"status": "error", "message": "Submit at least one schedule detail."}, status=400)
+    try:
+        schedule = update_schedule(schedule_id, payload)
+    except ScheduleConflictError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except ScheduleValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except IntegrityError:
+        return Response({"status": "error", "message": "A schedule already exists for this train at the selected departure time."}, status=409)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Schedule management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Schedule could not be updated."}, status=500)
+    return Response({"status": "ok", "message": "Train schedule updated successfully.", "schedule": schedule})
+
+
+@endpoint(["PATCH", "DELETE"])
+@_admin_required
+def admin_train_update(request, train_id):
+    """Update train details or safely remove a train for an administrator."""
+    if request.method == "DELETE":
+        from .train_management import remove_train
+        try:
+            result = remove_train(train_id)
+        except ValueError as exc:
+            return Response({"status": "error", "message": str(exc)}, status=400)
+        except LookupError as exc:
+            return Response({"status": "error", "message": str(exc)}, status=404)
+        except IntegrityError:
+            return Response({
+                "status": "error",
+                "message": "Train is still linked to railway records and could not be deleted.",
+            }, status=409)
+        except mysql.connector.Error:
+            return Response({"status": "error", "message": "Train management is temporarily unavailable."}, status=503)
+        except Exception:
+            return Response({"status": "error", "message": "Train could not be removed."}, status=500)
+        return Response({"status": "ok", "message": result["message"], "train": result})
+
+    payload = _payload(request)
+    if payload is None or not any(key in payload for key in ("train_number", "train_name", "train_status")):
+        return Response({"status": "error", "message": "Submit at least one valid train detail."}, status=400)
+    from .train_management import (
+        DuplicateTrainNumberError,
+        TrainValidationError,
+        update_train,
+    )
+    try:
+        result = update_train(
+            train_id,
+            payload.get("train_number"),
+            payload.get("train_name"),
+            payload.get("train_status"),
+        )
+    except DuplicateTrainNumberError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except (TrainValidationError, ValueError) as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except LookupError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except IntegrityError as exc:
+        if getattr(exc, "errno", None) == 1062:
+            return Response({"status": "error", "message": "A train with this train number already exists."}, status=409)
+        return Response({"status": "error", "message": "Train details could not be updated."}, status=500)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Train management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Train details could not be updated."}, status=500)
+    return Response({"status": "ok", "message": "Train details updated successfully.", "train": result})
+
+
+@endpoint(["POST"])
+@_admin_required
+def admin_train_create(request):
+    """Create a train from validated details submitted by an administrator."""
+    payload = _payload(request)
+    if payload is None:
+        return Response({"status": "error", "message": "Submit train details as JSON."}, status=400)
+    from .train_management import (
+        DuplicateTrainNumberError,
+        TrainValidationError,
+        create_train,
+    )
+    try:
+        result = create_train(
+            payload.get("train_number"),
+            payload.get("train_name"),
+            payload.get("train_status", "ACTIVE"),
+        )
+    except TrainValidationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=400)
+    except DuplicateTrainNumberError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except IntegrityError as exc:
+        if getattr(exc, "errno", None) == 1062:
+            return Response({"status": "error", "message": "A train with this train number already exists."}, status=409)
+        return Response({"status": "error", "message": "Train could not be added."}, status=500)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Train management is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Train could not be added."}, status=500)
+    return Response({"status": "ok", "message": "Train added successfully.", "train": result}, status=201)

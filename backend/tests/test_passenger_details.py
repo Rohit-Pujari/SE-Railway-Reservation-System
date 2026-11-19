@@ -24,6 +24,18 @@ def configured_connection(existing_count=0, booking=None):
 
 
 class PassengerDetailsServiceTests(unittest.TestCase):
+    def test_rejects_malformed_booking_and_user_ids_before_database_access(self):
+        factory = MagicMock()
+        for booking_id, user_id in ((True, 7), (41.5, 7), ("041", 7), (41, False), (41, "7.0")):
+            with self.subTest(booking_id=booking_id, user_id=user_id):
+                with self.assertRaises(PassengerDetailsValidationError):
+                    save_passenger_details(
+                        booking_id, user_id,
+                        [{"passenger_name": "A", "age": 20}],
+                        connection_factory=factory,
+                    )
+        factory.assert_not_called()
+
     def test_saves_valid_passenger_details_to_pending_booking(self):
         connection = configured_connection()
         result = save_passenger_details(
@@ -100,6 +112,27 @@ class PassengerDetailsEndpointTests(unittest.TestCase):
         set_session(self.client, user_id=7, role="PASSENGER")
         response = self.client.post("/api/bookings/41/passengers", json=["not", "an object"])
         self.assertEqual(response.status_code, 400)
+
+    def test_validation_and_database_errors_return_safe_messages(self):
+        from unittest.mock import patch
+        set_session(self.client, user_id=7, role="PASSENGER")
+        with patch(
+            "backend.app.django_views.save_passenger_details",
+            side_effect=PassengerDetailsValidationError("Select a valid booking."),
+        ):
+            invalid = self.client.post("/api/bookings/41/passengers", json={"passengers": []})
+        self.assertEqual(invalid.status_code, 400)
+        self.assertIn("Select a valid booking.", invalid.json()["message"])
+
+        with patch(
+            "backend.app.django_views.save_passenger_details",
+            side_effect=mysql.connector.Error("private database connection details"),
+        ):
+            unavailable = self.client.post("/api/bookings/41/passengers", json={
+                "passengers": [{"passenger_name": "A", "age": 20}]
+            })
+        self.assertEqual(unavailable.status_code, 503)
+        self.assertNotIn("private database connection details", unavailable.content.decode())
 
     def test_saves_passengers_for_authenticated_user(self):
         from unittest.mock import patch
