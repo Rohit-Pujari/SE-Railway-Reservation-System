@@ -162,33 +162,15 @@ class PaymentEndpointTests(unittest.TestCase):
         self.client = RailwayAPIClient()
 
     def test_anonymous_user_cannot_pay(self):
-        self.assertEqual(self.client.post("/api/bookings/41/payment", json={}).status_code, 401)
+        self.assertEqual(self.client.post("/api/bookings/41/pay", json={}).status_code, 401)
 
-    @patch("backend.app.django_views.request_payment_approval")
-    def test_passenger_requests_review_and_cannot_choose_success_or_amount(self, request):
-        request.return_value = {"payment_status": "INITIATED", "booking_status": "PENDING_PAYMENT"}
+    @patch("backend.app.django_views.confirm_booking_payment")
+    def test_passenger_can_complete_simulated_payment(self, confirm):
+        confirm.return_value = {"booking_status": "CONFIRMED", "payment_status": "SUCCEEDED"}
         set_session(self.client, user_id=7, role="PASSENGER")
-        response = self.client.post("/api/bookings/41/payment", json={
-            "idempotency_key": "request-one", "simulated_outcome": "SUCCESS", "amount": 0,
-        })
-        self.assertEqual(response.status_code, 202)
-        self.assertEqual(response.json()["booking_status"], "PENDING_PAYMENT")
-        request.assert_called_once_with(41, 7, "request-one")
-
-    @patch("backend.app.django_views.review_payment_approval")
-    def test_passenger_cannot_approve_payment(self, review):
-        set_session(self.client, user_id=7, role="PASSENGER")
-        self.assertEqual(self.client.post("/api/admin/payments/1/review", json={"decision": "APPROVE"}).status_code, 403)
-        review.assert_not_called()
-
-    @patch("backend.app.django_views.review_payment_approval")
-    def test_admin_can_review_payment(self, review):
-        set_session(self.client, user_id=8, role="ADMIN")
-        review.return_value = {"payment_status": "SUCCEEDED", "booking_status": "CONFIRMED"}
-        response = self.client.post("/api/admin/payments/1/review", json={"decision": "APPROVE"})
-        self.assertEqual(response.status_code, 200)
-        review.assert_called_once_with(1, 8, "APPROVE")
-
+        response = self.client.post("/api/bookings/41/pay", json={})
+        self.assertEqual(response.status_code, 201)
+        confirm.assert_called_once_with(7, 41)
 
 if __name__ == "__main__":
     unittest.main()
