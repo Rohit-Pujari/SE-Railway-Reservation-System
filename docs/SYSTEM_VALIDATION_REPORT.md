@@ -19,7 +19,7 @@ This report evaluates whether the reservation system meets the requirements in `
 - **Backend:** Python 3.11.18, Django 5.2, Django REST Framework, `mysql-connector-python`, `werkzeug` password hashing.
 - **Frontend:** React 19, Vite, Playwright (Chromium).
 - **Test database:** MySQL 8.0.16+ is installed and listening on port 3306, but no database credentials are available in this environment. `root` and `railway_app` connections are both denied. `sudo` is unavailable without a password. Real-database integration testing is therefore **BLOCKED**.
-- **Backend unit tests:** 232 tests, all passing (see `docs/test-reports/unit-test.log`). Database access is mocked; no development database is modified.
+- **Backend unit tests:** 232 tests run, 230 passing and 2 skipped (see `docs/test-reports/unit-test.log`). Database access is mocked; no development database is modified.
 - **Frontend:** Production build succeeds; Playwright cross-browser smoke tests pass in Chromium.
 - **Coverage:** `coverage.py` 7.17.3 with `--branch` on `backend/app` and `backend/config`.
 
@@ -52,7 +52,7 @@ This report evaluates whether the reservation system meets the requirements in `
 
 ## 4. Unit and build evidence
 
-- **Backend unit tests:** 232 tests executed, **232 passed**, 0 failed, 0 errors, 2 skipped. Command: `uv run --active python -m unittest discover -s backend/tests -p "test_*.py" -v`. Full log: `docs/test-reports/unit-test.log`.
+- **Backend unit tests:** 232 tests executed, **230 passed, 2 skipped**, 0 failed, 0 errors, 2 skipped. Command: `uv run --active python -m unittest discover -s backend/tests -p "test_*.py" -v`. Full log: `docs/test-reports/unit-test.log`.
 - **Frontend production build:** `npm run build` succeeds (vite build, ~526 ms).
 - **Django system check / compileall:** `python -m compileall -q backend` passes.
 - **Browser tests:** 3 Playwright tests pass in Chromium.
@@ -88,7 +88,7 @@ Previously recorded evidence (101 unit tests passed after fixes on an earlier sn
 
 ## 7. Final assessment
 
-**Overall result: Conditional.** All passenger and administrator workflows described in the SRS are implemented in the backend codebase (registration, auth, search, booking, simulated payment, history/status, cancellation/refunds, admin management) and are covered by 232 passing unit tests. The frontend build and Chromium browser tests pass. Real-database integration testing is **BLOCKED** by unavailable database credentials, so runtime correctness against MySQL cannot be confirmed in this session. The system cannot yet be marked as fully validated against the complete SRS until a database administrator applies `database/app_permissions.sql` and the live workflow checks are repeated.
+**Overall result: Conditional.** All passenger and administrator workflows described in the SRS are implemented in the backend codebase (registration, auth, search, booking, simulated payment, history/status, cancellation/refunds, admin management) and are covered by 230 passing unit tests (2 skipped). The frontend build and Chromium browser tests pass. Real-database integration testing is **BLOCKED** by unavailable database credentials, so runtime correctness against MySQL cannot be confirmed in this session. The system cannot yet be marked as fully validated against the complete SRS until a database administrator applies `database/app_permissions.sql` and the live workflow checks are repeated.
 
 **Reviewer sign-off:** Pending.  
 **Independent rerun by report author:** Not performed against live DB.
@@ -111,3 +111,10 @@ Payment remains **simulated**, as required. No Razorpay or real payment gateway 
 - `database/schema.sql` — Database schema
 - `database/app_permissions.sql` — Required DB grants (unapplied, blocked)
 - `docs/test-reports/` — Test logs and coverage reports
+## 9. Final evidence reconciliation (2026-11-19)
+
+- The committed unit-test log shows **232 executed, 230 passed, 2 skipped, zero failures/errors**, per the reported skipped count. The previous phrase “232 passed” overstated successful executions.
+- Frontend build and **three Chromium smoke tests** were reported successful. This is **not a completed cross-browser validation**; Firefox, Edge and WebKit remain not run.
+- GitHub Actions has not been verified against the final evaluation branch. The available commit-workflow query checks pull-request-triggered runs only and returned none; push-triggered runs may still exist.
+- Real MySQL validation and performance testing remain excluded from this follow-up at the project owner's request, **not passed**.
+- Outstanding requirement mismatches (past search dates and passenger age zero), actual demo recordings/screenshots, reviewer approvals, and final sign-off remain open.
