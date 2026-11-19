@@ -1,17 +1,23 @@
 # System Validation Report — Railway Reservation System
 
-**Report date:** 19 November 2026  
-**Status:** CONDITIONAL / CHANGES REQUIRED  
-**Source of execution evidence:** `Documents/VERIFICATION_2026-11-19.md` on this branch. This report transcribes the recorded execution results; the current reviewer did not independently rerun the browser, MariaDB, or local test commands.  
-**Scope:** Django backend, React frontend, booking/simulated payment flow, and an isolated MariaDB test instance.
+**Date:** 19 November 2026  
+**Result:** Conditional — further checks required  
+**Reference:** `Documents/VERIFICATION_2026-11-19.md`  
+**Systems covered:** Django backend, React frontend, booking and simulated payment, and a separate MariaDB test database.
+
+This report is based on the verification notes already recorded in the repository. I have kept the results from those notes separate from checks that still need to be run after the latest payment changes.
 
 ## 1. Purpose and acceptance criteria
 
-Evaluate the implemented passenger and administrator workflows against the railway SRS and test plan. A feature is **PASS** only when the verification record documents an executed check; **PARTIAL** when only a subset was checked; **FAIL / NOT IMPLEMENTED** where a required workflow is absent; **BLOCKED** where prerequisites prevent execution; and **NOT VERIFIED** without evidence.
+The aim was to check whether the reservation system meets the main requirements in the Software Requirements Specification (SRS) and the test plan. The report covers account access, train search, seat booking, payment, and the checks around data consistency.
+
+A test is marked **PASS** only when an actual result is mentioned in the verification notes. **NOT IMPLEMENTED** means the tested version did not have that feature. **BLOCKED** means the test could not be completed, and **NOT VERIFIED** means there is no recorded result to support a pass.
 
 ## 2. Environment and method
 
-The recorded verification used a separate MariaDB instance on port 13316 with a dedicated temporary data directory, a Django/Vite launcher on ports 8001/5175, and Chromium. The schema was imported unchanged. The demo seeder generated 36 stations, 180 trains and 5,400 November schedules. A restarted live frontend on port 5173 was used for existing-account login/logout checks without inserting personal records. These are claims in the source verification record, not a fresh execution in this report.
+The earlier tests were carried out using a separate MariaDB database on port 13316. The Django backend and Vite frontend were started on ports 8001 and 5175, and the browser checks used Chromium. The existing schema was imported without changes. Demo data included 36 stations, 180 trains, and 5,400 schedules for November.
+
+The verification notes also mention a frontend running on port 5173, which was used to check login and logout with an existing account. These environment details come from the recorded test session; they have not been recreated for this revision of the report.
 
 ## 3. Executed system validation cases
 
@@ -38,11 +44,15 @@ The recorded verification used a separate MariaDB instance on port 13316 with a 
 
 ## 4. Unit and build evidence
 
-The source verification document records **101 unit tests passed after corrections**, with an initial run showing one failure and three errors. It also records a passing React production build and Django system check. The original test output was kept at `/tmp/railway-tests-after.log` and is **not attached to this repository**. Therefore, this report does not independently certify the unit-test count. No measured line or branch coverage percentage is available in the supplied record.
+According to the earlier verification notes, **101 unit tests passed** after the reported issues were corrected. The first run had one failure and three errors. The notes also record a successful React production build and Django system check.
+
+The full test output was saved locally as `/tmp/railway-tests-after.log`, but that file is not included in the repository. Because of that, the 101-test result is reported as earlier evidence, not as a fresh result for the current branch. The report also does not have a measured code-coverage percentage. The payment changes made later still need their own test run.
 
 ## 5. Security validation
 
-Recorded checks include origin/CSRF protection, payment ownership, payment ownership checks, isolation of booking history, booking idempotency, and transaction rollback. Session-cookie theft/replay, penetration testing, and broader security testing remain outside the recorded execution scope.
+The verification notes cover request-origin and Cross-Site Request Forgery (CSRF) checks, access to passenger-owned bookings, duplicate booking requests, and database rollback after a failed operation. These checks are useful for basic access control and data consistency.
+
+They do not amount to a complete security audit. Session-cookie replay, penetration testing, and wider security testing were not recorded.
 
 ## 6. Defects, deviations and outstanding work
 
@@ -56,7 +66,9 @@ Recorded checks include origin/CSRF protection, payment ownership, payment owner
 
 ## 7. Final assessment
 
-**CONDITIONAL — NOT FULLY VALIDATED AGAINST THE COMPLETE SRS.** The source verification record supports a functioning isolated registration/search/booking/simulated-payment workflow and several integrity/security checks, but it also explicitly identifies missing cancellation/refund and admin-management features, blocked live database permissions, and incomplete nonfunctional coverage. A final unconditional PASS would be unsupported.
+**Overall result: Conditional.** The recorded tests show that core registration, train search, and booking operations worked in the isolated test setup. They also provide evidence for some access-control and database-consistency checks. However, the simulated payment flow was restored after that testing, so its current behaviour still needs to be checked. The earlier notes also identify gaps in cancellation, refunds, administration, database permissions, and nonfunctional testing.
+
+For these reasons, the system cannot yet be marked as fully validated against the complete SRS.
 
 **Prepared from:** `Documents/VERIFICATION_2026-11-19.md` (19 November 2026).  
 **Reviewer sign-off:** Pending.  
@@ -65,4 +77,6 @@ Recorded checks include origin/CSRF protection, payment ownership, payment owner
 
 ## Payment workflow change (2026-11-19)
 
-The manual administrator payment-approval implementation was removed in favor of the original simulated payment confirmation flow. No real payment provider, Razorpay integration, or money transfer is involved. Payment-related checks above marked NOT RE-RUN must be executed again after integrating the merge; previous manual-approval evidence does not validate this restored workflow.
+The project briefly used an administrator approval step in place of payment. That approach has now been removed, and the earlier simulated payment flow has been restored. In the restored flow, a passenger can confirm a booking through a demo payment action. It does not connect to Razorpay or transfer actual money.
+
+The previous approval tests are not evidence that the restored payment flow works. Payment confirmation, repeat requests, access control, and the frontend payment button should be checked again once the merge is complete.
