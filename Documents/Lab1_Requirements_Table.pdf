@@ -1,0 +1,167 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 6166 >>
+stream
+0.13 0.28 0.39 rg
+BT /F2 18 Tf 40 553 Td (LAB 1 - REQUIREMENTS ENGINEERING) Tj ET
+BT /F1 10 Tf 40 532 Td (Railway Reservation System | 5 FRs and 2 NFRs | Requirements Table) Tj ET
+0.88 0.91 0.95 rg 30 466 784 35 re f
+0 0 0 rg BT /F2 8 Tf 34 483 Td (Req ID) Tj ET
+0 0 0 rg BT /F2 8 Tf 98 483 Td (Type) Tj ET
+0 0 0 rg BT /F2 8 Tf 185 483 Td (Description \(The system shall...\)) Tj ET
+0 0 0 rg BT /F2 8 Tf 410 483 Td (Priority) Tj ET
+0 0 0 rg BT /F2 8 Tf 468 483 Td (Acceptance Criteria) Tj ET
+0 0 0 rg BT /F2 8 Tf 708 483 Td (Rationale) Tj ET
+1 1 1 rg 30 416 784 50 re f
+0 0 0 rg BT /F2 8 Tf 34 449 Td (FR-001) Tj ET
+0 0 0 rg BT /F1 8 Tf 98 449 Td (Functional) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 449 Td (The system shall authenticate) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 437 Td (registered passengers using valid) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 425 Td (credentials.) Tj ET
+0 0 0 rg BT /F1 8 Tf 410 449 Td (High) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 449 Td (Valid credentials establish a session;) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 437 Td (invalid credentials return an error.) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 449 Td (Protects account) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 437 Td (access.) Tj ET
+0.72 0.72 0.72 RG 0.6 w 30 416 784 50 re S
+94 416 m 94 466 l S
+181 416 m 181 466 l S
+406 416 m 406 466 l S
+464 416 m 464 466 l S
+704 416 m 704 466 l S
+0.97 0.98 0.99 rg 30 366 784 50 re f
+0 0 0 rg BT /F2 8 Tf 34 399 Td (FR-002) Tj ET
+0 0 0 rg BT /F1 8 Tf 98 399 Td (Functional) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 399 Td (The system shall search train) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 387 Td (schedules using origin, destination) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 375 Td (and journey date.) Tj ET
+0 0 0 rg BT /F1 8 Tf 410 399 Td (High) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 399 Td (Matching schedules are returned;) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 387 Td (invalid queries are rejected.) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 399 Td (Enables journey) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 387 Td (discovery.) Tj ET
+0.72 0.72 0.72 RG 0.6 w 30 366 784 50 re S
+94 366 m 94 416 l S
+181 366 m 181 416 l S
+406 366 m 406 416 l S
+464 366 m 464 416 l S
+704 366 m 704 416 l S
+1 1 1 rg 30 316 784 50 re f
+0 0 0 rg BT /F2 8 Tf 34 349 Td (FR-003) Tj ET
+0 0 0 rg BT /F1 8 Tf 98 349 Td (Functional) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 349 Td (The system shall create a booking) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 337 Td (with a unique PNR and temporary seat) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 325 Td (hold.) Tj ET
+0 0 0 rg BT /F1 8 Tf 410 349 Td (High) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 349 Td (Booking and seat hold persist) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 337 Td (together; duplicate allocation is) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 325 Td (prevented.) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 349 Td (Core reservation) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 337 Td (workflow.) Tj ET
+0.72 0.72 0.72 RG 0.6 w 30 316 784 50 re S
+94 316 m 94 366 l S
+181 316 m 181 366 l S
+406 316 m 406 366 l S
+464 316 m 464 366 l S
+704 316 m 704 366 l S
+0.97 0.98 0.99 rg 30 266 784 50 re f
+0 0 0 rg BT /F2 8 Tf 34 299 Td (FR-004) Tj ET
+0 0 0 rg BT /F1 8 Tf 98 299 Td (Functional) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 299 Td (The system shall confirm an eligible) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 287 Td (held booking through simulated) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 275 Td (payment.) Tj ET
+0 0 0 rg BT /F1 8 Tf 410 299 Td (High) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 299 Td (Valid held booking changes to) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 287 Td (CONFIRMED; expired hold is rejected.) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 299 Td (Completes demo) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 287 Td (booking.) Tj ET
+0.72 0.72 0.72 RG 0.6 w 30 266 784 50 re S
+94 266 m 94 316 l S
+181 266 m 181 316 l S
+406 266 m 406 316 l S
+464 266 m 464 316 l S
+704 266 m 704 316 l S
+1 1 1 rg 30 220 784 46 re f
+0 0 0 rg BT /F2 8 Tf 34 249 Td (FR-005) Tj ET
+0 0 0 rg BT /F1 8 Tf 98 249 Td (Functional) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 249 Td (The system shall allow the owner to) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 237 Td (cancel an eligible reservation.) Tj ET
+0 0 0 rg BT /F1 8 Tf 410 249 Td (High) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 249 Td (Status becomes CANCELLED; seats) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 237 Td (release; pending refund is recorded.) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 249 Td (Supports) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 237 Td (cancellation.) Tj ET
+0.72 0.72 0.72 RG 0.6 w 30 220 784 46 re S
+94 220 m 94 266 l S
+181 220 m 181 266 l S
+406 220 m 406 266 l S
+464 220 m 464 266 l S
+704 220 m 704 266 l S
+0.97 0.98 0.99 rg 30 158 784 62 re f
+0 0 0 rg BT /F2 8 Tf 34 203 Td (NFR-001) Tj ET
+0 0 0 rg BT /F1 8 Tf 98 203 Td (Nonfunctional) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 203 Td (The system shall achieve) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 191 Td (train-search P95 response time at) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 179 Td (most 3 seconds under documented) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 167 Td (load.) Tj ET
+0 0 0 rg BT /F1 8 Tf 410 203 Td (High) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 203 Td (Benchmark records P95 <= 3 seconds) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 191 Td (under defined representative load.) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 203 Td (Sets performance) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 191 Td (target.) Tj ET
+0.72 0.72 0.72 RG 0.6 w 30 158 784 62 re S
+94 158 m 94 220 l S
+181 158 m 181 220 l S
+406 158 m 406 220 l S
+464 158 m 464 220 l S
+704 158 m 704 220 l S
+1 1 1 rg 30 108 784 50 re f
+0 0 0 rg BT /F2 8 Tf 34 141 Td (NFR-002) Tj ET
+0 0 0 rg BT /F1 8 Tf 98 141 Td (Nonfunctional) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 141 Td (The system shall protect reservation) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 129 Td (changes with authenticated ownership) Tj ET
+0 0 0 rg BT /F1 8 Tf 185 117 Td (checks.) Tj ET
+0 0 0 rg BT /F1 8 Tf 410 141 Td (High) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 141 Td (Unauthenticated and cross-user) Tj ET
+0 0 0 rg BT /F1 8 Tf 468 129 Td (modification requests are rejected.) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 141 Td (Protects user) Tj ET
+0 0 0 rg BT /F1 8 Tf 708 129 Td (data.) Tj ET
+0.72 0.72 0.72 RG 0.6 w 30 108 784 50 re S
+94 108 m 94 158 l S
+181 108 m 181 158 l S
+406 108 m 406 158 l S
+464 108 m 464 158 l S
+704 108 m 704 158 l S
+0 0 0 rg BT /F1 9 Tf 35 30 Td (Note: NFR-001 is a target, not a measured result. Real payment processing is out of scope.) Tj ET
+
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000185 00000 n 
+0000000260 00000 n 
+0000000396 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+6614
+%%EOF
