@@ -23,7 +23,7 @@
 - [ ] Add Sprint 1 one-minute demonstration video (recorded by the team). (Not created — videos must be recorded from the actual working application.)
 - [ ] Add Sprint 2 two-minute demonstration video (recorded by the team). (Not created.)
 - [ ] Record development freeze commit SHA and freeze decision. (Not yet frozen.)
-- [ ] Document requirement/design changes between baseline and final implementation. (See `docs/SYSTEM_VALIDATION_REPORT.md` §6–§8.)
+- [x] Document known requirement/design changes between baseline and final implementation (see `docs/SYSTEM_VALIDATION_REPORT.md` §6–§8; formal baseline approval pending).
 
 ---
 
@@ -31,10 +31,10 @@
 
 - [x] Execute the final backend unit test suite and preserve full log.
   - Command: `uv run --active python -m unittest discover -s backend/tests -p "test_*.py" -v`
-  - Result: **232 tests, 232 passed, 0 failed, 0 errors, 2 skipped**
+  - Result: **232 tests run, 230 passed, 0 failed, 0 errors, 2 skipped**
   - Log: `docs/test-reports/unit-test.log`
   - Fixes applied: `test_architecture.py` URL-pattern count (36→37); `test_booking_flow.py` and `test_booking_cancellation_flow.py` mock user dicts now include `"role": "PASSENGER"` required by the login view.
-- [x] Execute frontend build and cross-browser suite and preserve full log.
+- [ ] Execute frontend build and full cross-browser suite and preserve full log (frontend build and Chromium smoke tests completed; Firefox, Edge, and WebKit not executed).
   - `npm ci` and `npm run build` succeed.
   - `npx playwright test --project=Chrome`: **3 passed** (application loads, responsive layout, keyboard accessibility).
   - Other browsers (Firefox, Edge, Safari) not installed in this environment.
@@ -42,9 +42,9 @@
   - **BLOCKED**: MySQL listens on port 3306 but no credentials are available; `root` and `railway_app` both denied; `sudo` unavailable without password. `database/app_permissions.sql` is prepared but unapplied.
 - [ ] Execute performance benchmark with representative data and record P95.
   - **BLOCKED**: Requires configured MySQL database with representative records; no credentials available.
-- [x] Generate **Unit Test Report**: commit, environment, command, counts, failures and CI link.
-  - Commit: `8bc9b10` + fixes on `se-evaluation-complete`. Environment: Python 3.11.18, uv, Linux. Counts: 232 passed / 0 failed. CI link: pending (GitHub Actions not accessible locally).
-- [x] Generate **System Validation Report**: test case IDs, actual outcomes, defect IDs.
+- [ ] Generate **Unit Test Report** with final commit and CI link (local test log and counts are recorded; final CI link pending).
+  - Commit: `8bc9b10` + fixes on `se-evaluation-complete`. Environment: Python 3.11.18, uv, Linux. Counts: 230 passed / 2 skipped / 0 failed. CI link: pending (GitHub Actions not accessible locally).
+- [ ] Finalize **System Validation Report** with live screenshots and final reviewer sign-off (report drafted; actual screenshots/sign-off pending).
   - `docs/SYSTEM_VALIDATION_REPORT.md` updated (SV-01 through SV-18 with PASS / IMPLEMENTED / BLOCKED / NOT VERIFIED statuses).
 - [x] Generate **Code Coverage Report**: coverage tool output and source revision.
   - `docs/test-reports/coverage-summary.txt`, `coverage.json`, `coverage.xml`.
@@ -58,7 +58,7 @@
 
 | Item | Commit SHA | Environment / command | Observed result | Evidence link | Owner |
 |------|------------|----------------------|-----------------|---------------|-------|
-| Backend unit tests | `8bc9b10` + fixes | Python 3.11.18, `uv run --active python -m unittest discover -s backend/tests -p "test_*.py" -v` | 232 passed, 0 failed, 0 errors, 2 skipped | `docs/test-reports/unit-test.log` | Developer |
+| Backend unit tests | `8bc9b10` + fixes | Python 3.11.18, `uv run --active python -m unittest discover -s backend/tests -p "test_*.py" -v` | 230 passed, 0 failed, 0 errors, 2 skipped | `docs/test-reports/unit-test.log` | Developer |
 | Browser tests | `8bc9b10` + fixes | Node 26.13.1, `npx playwright test --project=Chrome` | 3 passed | Playwright output (local run) | Developer |
 | Database system tests | TBD | Disposable MySQL environment | **BLOCKED** — no DB credentials | N/A | DBA required |
 | Line/branch coverage | `8bc9b10` + fixes | `coverage run --branch --source=backend/app,backend/config ...` | 63% line, 56% branch | `docs/test-reports/coverage-*` | Developer |
@@ -115,4 +115,10 @@ Payment confirmation is simulated; refunds are tracked as pending obligations, n
 - [Existing project documentation](PROJECT_DOCUMENTATION.md)
 - [Architecture decisions](ARCHITECTURE_DECISIONS.md)
 - [System Validation Report](SYSTEM_VALIDATION_REPORT.md)
-- [Test reports](docs/test-reports/)
+- [Test reports](test-reports/)
+## Final evidence reconciliation (2026-11-19)
+- The saved `unit-test.log` ends with `Ran 232 tests` and `OK`; the evaluation report identifies two skips. Report as **230 passed, 2 skipped**, not 232 passed.
+- The React build and three Chromium Playwright checks were reported locally. This does **not** establish Firefox, Edge, or WebKit compatibility.
+- The GitHub connector returned no pull-request-triggered workflow runs for commits `167d56e` or `8bc9b10`. This is **not proof that no push-triggered runs exist**, because that query excludes them. A GitHub Actions run URL and outcome are still required.
+- A merged pull request, sprint board, actual sprint recordings, reviewer approvals, live browser screenshots, and final sign-off are distinct evidence items; do not mark them complete without records.
+- Outstanding code/requirements discrepancies: server-side past-date search validation and passenger age-zero handling. The current branch did not fix either; resolve them in a separate verified implementation change.
