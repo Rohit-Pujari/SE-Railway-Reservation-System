@@ -65,6 +65,28 @@ class PassengerDetailsServiceTests(unittest.TestCase):
                 with self.assertRaises(PassengerDetailsValidationError):
                     save_passenger_details(41, 7, passengers, connection_factory=lambda: configured_connection())
 
+    def test_rejects_age_zero_and_negative_age(self):
+        for age in (-1, 0):
+            with self.subTest(age=age):
+                with self.assertRaisesRegex(PassengerDetailsValidationError, "age must be between 1 and 120"):
+                    save_passenger_details(
+                        41, 7,
+                        [{"passenger_name": "A", "age": age}],
+                        connection_factory=lambda: configured_connection(),
+                    )
+
+    def test_accepts_age_boundary_one_and_120(self):
+        for age in (1, 120):
+            with self.subTest(age=age):
+                connection = configured_connection()
+                result = save_passenger_details(
+                    41, 7,
+                    [{"passenger_name": "A", "age": age}],
+                    connection_factory=lambda: connection,
+                )
+                self.assertEqual(result["passengers"][0]["age"], age)
+
+
     def test_rejects_wrong_owner_or_missing_booking(self):
         connection = configured_connection(booking=None)
         connection.cursor.return_value.fetchone.side_effect = [None]

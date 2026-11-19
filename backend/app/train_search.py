@@ -34,6 +34,9 @@ def validate_search(source_station_id, destination_station_id, journey_date, cla
         raise TrainSearchValidationError("Journey date must use YYYY-MM-DD format.") from None
     if parsed_date.isoformat() != journey_date:
         raise TrainSearchValidationError("Journey date must use YYYY-MM-DD format.")
+    today = date.today()
+    if parsed_date < today:
+        raise TrainSearchValidationError("Journey date cannot be in the past.")
 
     if class_id is not None:
         class_id = positive_int(

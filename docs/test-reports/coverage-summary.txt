@@ -1,10 +1,10 @@
 Name                                        Stmts   Miss Branch BrPart  Cover   Missing
 ---------------------------------------------------------------------------------------
 backend/app/__init__.py                         0      0      0      0   100%
-backend/app/admin_booking_details.py           54     42     24      1    19%   7, 11, 25-137
+backend/app/admin_booking_details.py           54      8     24      3    81%   96-99, 123-126, 134->136
 backend/app/admin_cancellation_records.py      22      0      8      1    97%   57->59
-backend/app/admin_dashboard.py                 53     50     14      0     4%   8-129, 134-156
-backend/app/booking.py                        127     17     38     12    81%   39, 45, 93, 115, 148, 151, 213, 280, 305->315, 316, 364->366, 367-370, 372->377, 375-376, 380-381
+backend/app/admin_dashboard.py                 53      0     14      3    96%   36->31, 127->129, 154->156
+backend/app/booking.py                        130     16     40     11    83%   39, 45, 96, 118, 154, 216, 283, 308->318, 319, 367->369, 370-373, 375->380, 378-379, 383-384
 backend/app/booking_cancellation.py           100     11     34      8    86%   27, 53, 55, 76, 192, 202->204, 218->223, 221-222, 225->230, 228-229, 233-234
 backend/app/booking_history.py                 41      7     12      3    81%   8, 11-12, 93->68, 113->118, 116-117, 121-122
 backend/app/booking_payment.py                 75     10     24      7    83%   55, 76, 141, 151, 154->156, 181->186, 184-185, 188->193, 191-192, 196-197
@@ -16,12 +16,12 @@ backend/app/django_views.py                   633    241    104     21    61%   
 backend/app/fare_calculation.py                68     15     22      6    74%   18-19, 21, 95, 99-100, 102, 128->130, 132->134, 135-138, 140->145, 143-144, 148-149
 backend/app/passenger_details.py               86     11     36      6    84%   28, 40, 50, 121->123, 125->127, 128-131, 133->138, 136-137, 141-142
 backend/app/registration.py                    66     10     22      6    82%   23, 31, 40, 46, 81->86, 84-85, 88->93, 91-92, 96-97
-backend/app/schedule_management.py            145     90     50      4    36%   23, 26-27, 29, 35, 42, 61-94, 120-121, 130, 147-174, 178-245
-backend/app/seat_availability.py               69     10     14      4    83%   30, 36, 120->125, 123-124, 128-129, 147->152, 150-151, 155-156
+backend/app/schedule_management.py            145     21     50     15    82%   26-27, 29, 42, 66, 72, 78, 90, 93, 168-170, 172->174, 180, 183, 202, 204, 218-220, 231-232, 243->245
+backend/app/seat_availability.py               72     11     16      5    82%   30, 36, 39, 123->128, 126-127, 131-132, 150->155, 153-154, 158-159
 backend/app/seat_management.py                 63     23     20      4    60%   16, 19-20, 22, 36-107, 133->153, 169->171
-backend/app/station_route_management.py       226    166     92     11    27%   35-36, 38, 41, 43, 50, 53, 61, 66, 79-80, 82, 84, 89, 96-116, 120-154, 158-188, 192-251, 255-281, 285-313
+backend/app/station_route_management.py       226     37     92     24    79%   38, 43, 50, 61, 66, 79-80, 82, 114->116, 141, 152->154, 161, 173, 182-184, 186->188, 193, 204, 208, 210-238, 249->251, 257, 268, 271, 279->281, 286, 304, 311->313
 backend/app/train_management.py               103      3     40      6    94%   38, 65->67, 128, 141->143, 148, 191->193
-backend/app/train_search.py                    71     26     18      5    63%   36, 49, 51, 54, 59-91, 225->230, 228-229, 233-234
+backend/app/train_search.py                    74     27     20      6    63%   36, 39, 52, 54, 57, 62-94, 228->233, 231-232, 236-237
 backend/app/validation.py                      11      0      4      0   100%
 backend/config/__init__.py                      0      0      0      0   100%
 backend/config/asgi.py                          4      4      0      0     0%   1-6
@@ -29,4 +29,4 @@ backend/config/settings.py                     41      0      4      1    98%   
 backend/config/urls.py                          3      0      0      0   100%
 backend/config/wsgi.py                          4      4      0      0     0%   1-6
 ---------------------------------------------------------------------------------------
-TOTAL                                        2176    754    624    116    63%
+TOTAL                                        2185    473    630    146    76%

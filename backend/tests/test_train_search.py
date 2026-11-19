@@ -18,38 +18,38 @@ from backend.app.train_search import (
 class TrainSearchValidationTests(unittest.TestCase):
     def test_valid_search_normalizes_station_ids_and_date(self):
         self.assertEqual(
-            validate_search("1", "2", "2026-11-15"),
-            (1, 2, date(2026, 11, 15), None),
+            validate_search("1", "2", "2026-11-20"),
+            (1, 2, date(2026, 11, 20), None),
         )
 
     def test_missing_or_non_numeric_station_ids_are_rejected(self):
         for source, destination in ((None, "2"), ("abc", "2"), ("1", None), ("1", "x")):
             with self.subTest(source=source, destination=destination):
                 with self.assertRaises(TrainSearchValidationError):
-                    validate_search(source, destination, "2026-11-15")
+                    validate_search(source, destination, "2026-11-20")
 
     def test_non_positive_station_ids_are_rejected(self):
         for source, destination in (("0", "2"), ("-1", "2"), ("1", "0")):
             with self.subTest(source=source, destination=destination):
                 with self.assertRaises(TrainSearchValidationError):
-                    validate_search(source, destination, "2026-11-15")
+                    validate_search(source, destination, "2026-11-20")
 
     def test_station_and_class_ids_reject_non_canonical_values(self):
         invalid_ids = (True, False, 1.5, "01", "+1", " 1 ", "1.0", "")
         for value in invalid_ids:
             with self.subTest(value=value, field="source"):
                 with self.assertRaises(TrainSearchValidationError):
-                    validate_search(value, "2", "2026-11-15")
+                    validate_search(value, "2", "2026-11-20")
             with self.subTest(value=value, field="destination"):
                 with self.assertRaises(TrainSearchValidationError):
-                    validate_search("1", value, "2026-11-15")
+                    validate_search("1", value, "2026-11-20")
             with self.subTest(value=value, field="class"):
                 with self.assertRaises(TrainSearchValidationError):
-                    validate_search("1", "2", "2026-11-15", class_id=value)
+                    validate_search("1", "2", "2026-11-20", class_id=value)
 
     def test_same_station_is_rejected(self):
         with self.assertRaises(TrainSearchValidationError):
-            validate_search("3", "3", "2026-11-15")
+            validate_search("3", "3", "2026-11-20")
 
     def test_invalid_date_is_rejected(self):
         for journey_date in ("", "15-11-2026", "2026-02-30", "2026-1-1", None):
@@ -80,7 +80,7 @@ class TrainSearchQueryTests(unittest.TestCase):
             "currency_code": "INR",
             "available_seats": 42,
         }]
-        result = search_trains("1", "2", "2026-11-15", connection_factory=lambda: connection)
+        result = search_trains("1", "2", "2026-11-20", connection_factory=lambda: connection)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["departure_at"], "2026-11-15T09:30:00")
         self.assertEqual(result[0]["arrival_at"], "2026-11-15T12:15:00")
@@ -97,8 +97,8 @@ class TrainSearchQueryTests(unittest.TestCase):
         self.assertEqual(params[2:4], (None, None))
         self.assertEqual(params[4], 1)
         self.assertEqual(params[5], 2)
-        self.assertEqual(params[6], datetime(2026, 11, 15, 0, 0))
-        self.assertEqual(params[7], datetime(2026, 11, 16, 0, 0))
+        self.assertEqual(params[6], datetime(2026, 11, 20, 0, 0))
+        self.assertEqual(params[7], datetime(2026, 11, 21, 0, 0))
         self.assertEqual(params[8], 100)
         connection.close.assert_called_once()
         cursor.close.assert_called_once()
@@ -129,7 +129,7 @@ class TrainSearchQueryTests(unittest.TestCase):
         ]
 
         results = search_trains(
-            "1", "2", "2026-11-15",
+            "1", "2", "2026-11-20",
             connection_factory=lambda: connection,
         )
 
@@ -165,7 +165,7 @@ class TrainSearchQueryTests(unittest.TestCase):
         }]
 
         result = search_trains(
-            "1", "2", "2026-11-15", class_id="3",
+            "1", "2", "2026-11-20", class_id="3",
             connection_factory=lambda: connection,
         )
 
@@ -177,13 +177,13 @@ class TrainSearchQueryTests(unittest.TestCase):
     def test_invalid_selected_class_is_rejected(self):
         for class_id in ("abc", "0", "-2"):
             with self.subTest(class_id=class_id), self.assertRaises(TrainSearchValidationError):
-                search_trains("1", "2", "2026-11-15", class_id=class_id)
+                search_trains("1", "2", "2026-11-20", class_id=class_id)
 
     def test_database_errors_propagate_for_api_handling(self):
         connection = MagicMock()
         connection.cursor.return_value.execute.side_effect = mysql.connector.Error("db unavailable")
         with self.assertRaises(mysql.connector.Error):
-            search_trains("1", "2", "2026-11-15", connection_factory=lambda: connection)
+            search_trains("1", "2", "2026-11-20", connection_factory=lambda: connection)
         connection.close.assert_called_once()
 
 

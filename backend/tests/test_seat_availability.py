@@ -41,17 +41,17 @@ class TravelClassQueryTests(unittest.TestCase):
 class SeatAvailabilityValidationTests(unittest.TestCase):
     def test_valid_parameters_are_normalized(self):
         self.assertEqual(
-            validate_availability("9", "1", "2", "2026-11-15", "3"),
-            (9, 1, 2, datetime(2026, 11, 15).date(), 3),
+            validate_availability("9", "1", "2", "2026-11-20", "3"),
+            (9, 1, 2, datetime(2026, 11, 20).date(), 3),
         )
 
     def test_invalid_ids_and_same_station_are_rejected(self):
         cases = [
-            (None, "1", "2", "2026-11-15", "3"),
-            ("0", "1", "2", "2026-11-15", "3"),
-            ("9", "1", "1", "2026-11-15", "3"),
+            (None, "1", "2", "2026-11-20", "3"),
+            ("0", "1", "2", "2026-11-20", "3"),
+            ("9", "1", "1", "2026-11-20", "3"),
             ("9", "1", "2", "2026-02-30", "3"),
-            ("9", "1", "2", "2026-11-15", "0"),
+            ("9", "1", "2", "2026-11-20", "0"),
         ]
         for args in cases:
             with self.subTest(args=args), self.assertRaises(SeatAvailabilityValidationError):
@@ -70,7 +70,7 @@ class SeatAvailabilityQueryTests(unittest.TestCase):
         }
 
         result = get_seat_availability(
-            "9", "1", "2", "2026-11-15", "3",
+            "9", "1", "2", "2026-11-20", "3",
             connection_factory=lambda: connection,
         )
 
@@ -86,7 +86,7 @@ class SeatAvailabilityQueryTests(unittest.TestCase):
         self.assertIn("hold_expires_at > CURRENT_TIMESTAMP", sql)
         self.assertEqual(params[0:3], (1, 2, 3))
         self.assertEqual(params[3], 9)
-        self.assertEqual(params[4], datetime(2026, 11, 15, 0, 0))
+        self.assertEqual(params[4], datetime(2026, 11, 20, 0, 0))
         connection.close.assert_called_once()
         cursor.close.assert_called_once()
 
@@ -94,7 +94,7 @@ class SeatAvailabilityQueryTests(unittest.TestCase):
         connection = MagicMock()
         connection.cursor.return_value.fetchone.return_value = None
         result = get_seat_availability(
-            "9", "1", "2", "2026-11-15", "3",
+            "9", "1", "2", "2026-11-20", "3",
             connection_factory=lambda: connection,
         )
         self.assertEqual(result["available_seats"], 0)
@@ -105,7 +105,7 @@ class SeatAvailabilityQueryTests(unittest.TestCase):
         connection.cursor.return_value.execute.side_effect = mysql.connector.Error("db unavailable")
         with self.assertRaises(mysql.connector.Error):
             get_seat_availability(
-                "9", "1", "2", "2026-11-15", "3",
+                "9", "1", "2", "2026-11-20", "3",
                 connection_factory=lambda: connection,
             )
         connection.close.assert_called_once()
