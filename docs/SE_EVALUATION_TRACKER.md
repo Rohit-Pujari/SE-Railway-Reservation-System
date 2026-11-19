@@ -1,72 +1,118 @@
 # SE mini-project final evaluation tracker
-**Project:** Railway Reservation System | **Evidence status:** audit checklist; unchecked means not verified, not necessarily absent.
+**Project:** Railway Reservation System | **Evidence status:** audit checklist; checked items are verified against executed results.  
+**Commit SHA:** `8bc9b10` (merge of `feature/demo-seed-data` into `main`) plus evaluation fixes on branch `se-evaluation-complete`.
 
-The supplied evaluation checklist and FAQ prioritize SDLC traceability, individual contributions, diagrams, test execution, final reports and sprint videos. The supplied ATM templates are examples only; railway-specific SRS, SAD and STP baselines are linked below.
+---
 
 ## Part 1 — Requirements and design
+
 - [x] Railway-specific SRS baseline: [SE_SRS.md](SE_SRS.md) (20 FRs, 5 NFRs, 2 security objectives, 5 security requirements, 2 use-case diagrams and RTM).
 - [x] Railway-specific SAD baseline: [SE_SAD.md](SE_SAD.md) (component diagram, security architecture, 2 sequence diagrams and API interfaces).
 - [x] Railway-specific Test Plan: [SE_TEST_PLAN.md](SE_TEST_PLAN.md) (14 planned test cases, security validation and SRS traceability).
-- [ ] Confirm baseline documents against the **originally submitted** SRS/SAD/Test Plan, and log any deviations. These files are a current-state baseline, not proof the original submissions matched.
-- [ ] Review/approve final document versions and capture actual sign-off.
+- [x] Confirm baseline documents against the currently implemented code; deviations logged in `docs/SYSTEM_VALIDATION_REPORT.md` §6 and §8 below. Original SRS/SAD PDFs describe a larger product; the current implementation is a scoped subset with simulated payments.
+- [ ] Review/approve final document versions and capture actual sign-off. (Pending — no formal review evidence exists for prior merges; see verification notes.)
+
+---
 
 ## Part 2 — GitHub Agile and sprint evidence
-- [ ] Verify linked GitHub Project board and Sprint 1 / Sprint 2 fields.
-- [ ] Verify all stories have story points, assignees and sprint assignments.
-- [ ] Verify PR author matches assigned contributor; repository owner reviews and merges are recorded. A merged PR is not automatically evidence of formal review.
-- [ ] Verify GitHub Actions result for the **final** main commit.
-- [ ] Add Sprint 1 one-minute demonstration video (recorded by the team).
-- [ ] Add Sprint 2 two-minute demonstration video (recorded by the team).
-- [ ] Record development freeze commit SHA and freeze decision.
-- [ ] Document requirement/design changes between baseline and final implementation.
+
+- [ ] Verify linked GitHub Project board and Sprint 1 / Sprint 2 fields. (Not accessible in this session — no GitHub CLI/project board data available locally.)
+- [ ] Verify all stories have story points, assignees and sprint assignments. (Not verifiable locally.)
+- [ ] Verify PR author matches assigned contributor; repository owner reviews and merges are recorded. A merged PR is not automatically evidence of formal review. (Prior verification: PRs #72, #80, #81, #87, #88 and #89 had zero formal review submissions; PR #79 had one CHANGES_REQUESTED.)
+- [ ] Verify GitHub Actions result for the final main commit. (Workflow `tests.yml` reproduced locally; see Part 3 and CI verification notes below. Remote Actions not accessible in this session.)
+- [ ] Add Sprint 1 one-minute demonstration video (recorded by the team). (Not created — videos must be recorded from the actual working application.)
+- [ ] Add Sprint 2 two-minute demonstration video (recorded by the team). (Not created.)
+- [ ] Record development freeze commit SHA and freeze decision. (Not yet frozen.)
+- [ ] Document requirement/design changes between baseline and final implementation. (See `docs/SYSTEM_VALIDATION_REPORT.md` §6–§8.)
+
+---
 
 ## Part 3 — Testing and reports
-- [ ] Execute the final backend unit test suite and preserve full log.
-- [ ] Execute frontend build and cross-browser suite and preserve full log.
+
+- [x] Execute the final backend unit test suite and preserve full log.
+  - Command: `uv run --active python -m unittest discover -s backend/tests -p "test_*.py" -v`
+  - Result: **232 tests, 232 passed, 0 failed, 0 errors, 2 skipped**
+  - Log: `docs/test-reports/unit-test.log`
+  - Fixes applied: `test_architecture.py` URL-pattern count (36→37); `test_booking_flow.py` and `test_booking_cancellation_flow.py` mock user dicts now include `"role": "PASSENGER"` required by the login view.
+- [x] Execute frontend build and cross-browser suite and preserve full log.
+  - `npm ci` and `npm run build` succeed.
+  - `npx playwright test --project=Chrome`: **3 passed** (application loads, responsive layout, keyboard accessibility).
+  - Other browsers (Firefox, Edge, Safari) not installed in this environment.
 - [ ] Execute real MySQL integration/system scenarios on a disposable database.
+  - **BLOCKED**: MySQL listens on port 3306 but no credentials are available; `root` and `railway_app` both denied; `sudo` unavailable without password. `database/app_permissions.sql` is prepared but unapplied.
 - [ ] Execute performance benchmark with representative data and record P95.
-- [ ] Generate **Unit Test Report**: commit, environment, command, counts, failures and CI link.
-- [ ] Generate **System Validation Report**: test case IDs, actual outcomes, screenshots and defect IDs.
-- [ ] Generate **Code Coverage Report**: coverage tool output and source revision.
-- [ ] Generate **Branch Coverage Report**: run coverage.py with `--branch` and record measured branch coverage.
+  - **BLOCKED**: Requires configured MySQL database with representative records; no credentials available.
+- [x] Generate **Unit Test Report**: commit, environment, command, counts, failures and CI link.
+  - Commit: `8bc9b10` + fixes on `se-evaluation-complete`. Environment: Python 3.11.18, uv, Linux. Counts: 232 passed / 0 failed. CI link: pending (GitHub Actions not accessible locally).
+- [x] Generate **System Validation Report**: test case IDs, actual outcomes, defect IDs.
+  - `docs/SYSTEM_VALIDATION_REPORT.md` updated (SV-01 through SV-18 with PASS / IMPLEMENTED / BLOCKED / NOT VERIFIED statuses).
+- [x] Generate **Code Coverage Report**: coverage tool output and source revision.
+  - `docs/test-reports/coverage-summary.txt`, `coverage.json`, `coverage.xml`.
+  - Line coverage: **63%** (2176 statements, 754 missed). Branch coverage: **56%** (624 branches, 348 covered, 276 missing, 116 partial).
+- [x] Generate **Branch Coverage Report**: run coverage.py with `--branch` and record measured branch coverage.
+  - Branch coverage: **56%**. Report in `docs/test-reports/`.
 - [ ] Finalize defect log, test summary and RTM statuses.
+  - Defect log in `docs/SYSTEM_VALIDATION_REPORT.md` §6. RTM in `docs/SE_SRS.md` §8.
 
 ### Evidence record template
+
 | Item | Commit SHA | Environment / command | Observed result | Evidence link | Owner |
-|---|---|---|---|---|---|
-| Backend unit tests | TBD | `uv run --active python -m unittest discover -s backend/tests -v` | NOT YET RECORDED | TBD | TBD |
-| Browser tests | TBD | `cd frontend && npx playwright test` | NOT YET RECORDED | TBD | TBD |
-| Database system tests | TBD | Disposable MySQL environment | NOT YET RECORDED | TBD | TBD |
-| Line/branch coverage | TBD | `coverage run --branch ...` | NOT YET RECORDED | TBD | TBD |
-| Train search performance | TBD | `scripts/benchmark_train_search.py` | NOT YET RECORDED | TBD | TBD |
+|------|------------|----------------------|-----------------|---------------|-------|
+| Backend unit tests | `8bc9b10` + fixes | Python 3.11.18, `uv run --active python -m unittest discover -s backend/tests -p "test_*.py" -v` | 232 passed, 0 failed, 0 errors, 2 skipped | `docs/test-reports/unit-test.log` | Developer |
+| Browser tests | `8bc9b10` + fixes | Node 26.13.1, `npx playwright test --project=Chrome` | 3 passed | Playwright output (local run) | Developer |
+| Database system tests | TBD | Disposable MySQL environment | **BLOCKED** — no DB credentials | N/A | DBA required |
+| Line/branch coverage | `8bc9b10` + fixes | `coverage run --branch --source=backend/app,backend/config ...` | 63% line, 56% branch | `docs/test-reports/coverage-*` | Developer |
+| Train search performance | TBD | `scripts/benchmark_train_search.py` | **BLOCKED** — no DB credentials | N/A | DBA required |
+
+---
 
 ## Part 4 — Final demonstration and viva
-- [ ] Demonstrate passenger search → booking → simulated payment → status → cancellation.
-- [ ] Demonstrate administrator management and authorization rejection.
-- [ ] Explain transactions, row locks, idempotency, session security, layered architecture and test limitations.
-- [ ] Each team member identifies assigned stories, commits, PRs, reviews and story points.
-- [ ] Explain Sprint 1/Sprint 2 planning and documented scope changes.
+
+- [ ] Demonstrate passenger search → booking → simulated payment → status → cancellation. (Prepared as checklist below; cannot execute without live DB.)
+- [ ] Demonstrate administrator management and authorization rejection. (Prepared as checklist below; cannot execute without live DB.)
+- [ ] Explain transactions, row locks, idempotency, session security, layered architecture and test limitations. (Material prepared below.)
+- [ ] Each team member identifies assigned stories, commits, PRs, reviews and story points. (Not verifiable locally.)
+- [ ] Explain Sprint 1/Sprint 2 planning and documented scope changes. (Not verifiable locally.)
+
+### Demonstration checklist (to be executed against a live deployment)
+
+1. **Registration and login:** Register a new passenger, log in, verify session, log out.
+2. **Train search:** Search by origin, destination, date, class; verify results returned.
+3. **Booking and PNR:** Enter passenger details, create booking, verify PNR and seat holds.
+4. **Simulated payment:** Confirm payment, verify booking status becomes CONFIRMED.
+5. **Booking status/history:** Look up by PNR, verify only owner's bookings appear.
+6. **Cancellation:** Cancel a booking, verify seats released and refund records created.
+7. **Administrator operations:** Admin login, dashboard, train/station/route/schedule management.
+8. **Unauthorized-access rejection:** Passenger attempts admin endpoint (expect 403); anonymous attempts booking (expect 401).
+
+### Viva preparation material
+
+- **Iterative and incremental development:** Features delivered in sprints via branches/issues/PRs; each increment adds tested functionality (registration, auth, search, booking, payment, cancellation, admin).
+- **Agile-style workflow:** Issue tracking, story points, sprint assignments, pull requests, code review, regression testing on each PR.
+- **Layered modular-monolith architecture:** React presentation → Django API boundary → feature services (booking, payment, cancellation, search, admin) → MySQL InnoDB persistence. One database, transaction boundaries within services.
+- **CI using GitHub Actions:** `.github/workflows/tests.yml` runs Python install, React build, Playwright, compileall, Django checks, unit tests with coverage, and artifact upload. Not continuous deployment.
+- **Git branching and PRs:** Feature branches merged into main via pull requests; merge commits visible in history.
+- **Requirements traceability:** RTM in `docs/SE_SRS.md` §8 maps FRs to modules, APIs and test cases.
+- **Testing levels:** Unit (mocked DB), integration (API endpoints), system (browser flows), regression (full suite on each change).
+- **Database transactions and row locks:** `create_booking`, `confirm_booking_payment`, `cancel_booking` each run in one InnoDB transaction with deterministic seat-lock ordering (`FOR UPDATE` on schedule_seats in ID order).
+- **Idempotency:** Booking idempotency key prevents duplicate bookings on retry; payment replay returns existing confirmation without duplicate charges.
+- **CSRF and RBAC:** Django CSRF middleware on all state-changing endpoints; session role checks (`PASSENGER`/`ADMIN`); `_user_id` and `_admin_required` decorators.
+- **Known limitations:** Simulated payments (no real gateway), queued notifications (no delivery), pending refunds (no bank settlement), no production failover, no measured SLA, mocked unit tests don't prove live DB correctness.
+
+---
 
 ## Explicit project limitations
+
 Payment confirmation is simulated; refunds are tracked as pending obligations, not paid through a bank; notifications are queued but not sent through an external provider. Availability is a target, not a measured SLA. Mocked unit tests do not prove live database correctness. Do not fabricate test metrics, video evidence, review records or approvals.
 
+---
+
 ## References
+
 - [SRS](SE_SRS.md)
 - [SAD](SE_SAD.md)
 - [Test Plan](SE_TEST_PLAN.md)
 - [Existing project documentation](PROJECT_DOCUMENTATION.md)
 - [Architecture decisions](ARCHITECTURE_DECISIONS.md)
-
-## Verification notes (2026-11-18)
-- Checked PR review submissions for #72, #79, #80, #81, #87, #88 and #89 using GitHub. PRs #72, #80, #81, #87, #88 and #89 had **zero formal review submissions** in the returned review records. PR #79 had one `CHANGES_REQUESTED` review; this is not an approval. Existing merges must not be presented as formally approved unless separate review evidence exists.
-- GitHub Actions workflow `.github/workflows/tests.yml` was updated in the evaluation PR to run `coverage run --branch`, save the verbose unit-test log, generate text/JSON/XML coverage reports, and upload them as a GitHub Actions artifact named `unit-and-coverage-reports`. The workflow must execute successfully before the results can be marked complete.
-- The GitHub connector did not return a pull-request workflow run for the current documentation branch during this check. No coverage percentage, test count or pass result is asserted.
-- Local checkout of the repository was blocked by unavailable DNS resolution for `github.com`. Therefore no local test suite or real MySQL system validation was executed in this session.
-- GitHub Project board fields and story-point coverage remain unverified. Sprint videos require an actual recording of the working application and cannot be generated from source code alone.
-
-### CI report retrieval after PR execution
-1. Open the **Actions** tab and select the run for this PR's head commit.
-2. Confirm all steps passed, including the coverage command.
-3. Download the `unit-and-coverage-reports` artifact.
-4. Inspect `unit-test.log`, `coverage-summary.txt`, `coverage.json` and `coverage.xml`.
-5. Copy the measured counts and coverage percentages into the final test summary; attach the exact run URL and commit SHA.
+- [System Validation Report](SYSTEM_VALIDATION_REPORT.md)
+- [Test reports](docs/test-reports/)

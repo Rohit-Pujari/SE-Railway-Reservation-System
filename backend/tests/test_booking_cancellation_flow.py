@@ -16,6 +16,7 @@ class PassengerCancellationFlowTests(unittest.TestCase):
             "full_name": "Test Passenger",
             "email": "passenger@example.com",
             "password_hash": "stored-password-hash",
+            "role": "PASSENGER",
         }
         self.booking = {
             "booking_id": 501,
