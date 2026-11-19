@@ -18,12 +18,10 @@ from rest_framework.response import Response
 from .booking import BookingRequestError, BookingUnavailableError, create_booking
 from .db import get_db_connection
 from .fare_calculation import FareCalculationError, calculate_booking_fare
-from .payment_approval import (
-    PaymentApprovalConflict,
-    PaymentApprovalError,
-    list_pending_payment_approvals,
-    request_payment_approval,
-    review_payment_approval,
+from .booking_payment import (
+    PaymentBookingNotFound,
+    PaymentConfirmationError,
+    confirm_booking_payment,
 )
 from .booking_history import get_booking_history
 from .passenger_details import PassengerDetailsValidationError, save_passenger_details
@@ -378,24 +376,22 @@ def booking_fare(request, booking_id):
 
 
 @endpoint(["POST"])
-def booking_payment(request, booking_id):
+def passenger_booking_pay(request, booking_id):
+    """Confirm a passenger-owned booking using the explicitly simulated provider."""
     user_id = _user_id(request)
     if user_id is None:
-        return Response({"status": "error", "message": "Please log in before paying for a booking."}, status=401)
-    payload = _payload(request)
-    if payload is None:
-        return Response({"status": "error", "message": "Submit payment details as JSON."}, status=400)
+        return Response({"status": "error", "message": "Please log in to pay for a booking."}, status=401)
     try:
-        result = request_payment_approval(booking_id, user_id, payload.get("idempotency_key"))
-    except PaymentApprovalConflict as exc:
+        result = confirm_booking_payment(user_id, booking_id)
+    except PaymentBookingNotFound as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except PaymentConfirmationError as exc:
         return Response({"status": "error", "message": str(exc)}, status=409)
-    except PaymentApprovalError as exc:
-        return Response({"status": "error", "message": str(exc)}, status=400)
     except mysql.connector.Error:
-        return Response({"status": "error", "message": "Payment request is temporarily unavailable."}, status=503)
+        return Response({"status": "error", "message": "Payment is temporarily unavailable. Please try again."}, status=503)
     except Exception:
-        return Response({"status": "error", "message": "Payment request could not be submitted."}, status=500)
-    return Response({"status": "ok", **result}, status=202)
+        return Response({"status": "error", "message": "Payment could not be completed."}, status=500)
+    return Response({"status": "ok", **result}, status=200 if result.get("replayed") else 201)
 
 
 @endpoint(["GET"])
@@ -409,37 +405,6 @@ def passenger_booking_history(request):
         return Response({"status": "error", "message": "Your tickets are temporarily unavailable."}, status=503)
     except Exception:
         return Response({"status": "error", "message": "Your tickets could not be loaded."}, status=500)
-    return Response({"status": "ok", **result})
-
-
-@endpoint(["GET"])
-@_admin_required
-def admin_payment_queue(request):
-    try:
-        payments = list_pending_payment_approvals()
-    except mysql.connector.Error:
-        return Response({"status": "error", "message": "Pending payments are temporarily unavailable."}, status=503)
-    except Exception:
-        return Response({"status": "error", "message": "Pending payments could not be loaded."}, status=500)
-    return Response({"status": "ok", "payments": payments})
-
-
-@endpoint(["POST"])
-@_admin_required
-def admin_review_payment(request, payment_id):
-    payload = _payload(request)
-    if payload is None:
-        return Response({"status": "error", "message": "Submit an approval decision as JSON."}, status=400)
-    try:
-        result = review_payment_approval(payment_id, request.session["user_id"], payload.get("decision"))
-    except PaymentApprovalConflict as exc:
-        return Response({"status": "error", "message": str(exc)}, status=409)
-    except PaymentApprovalError as exc:
-        return Response({"status": "error", "message": str(exc)}, status=400)
-    except mysql.connector.Error:
-        return Response({"status": "error", "message": "Payment review is temporarily unavailable."}, status=503)
-    except Exception:
-        return Response({"status": "error", "message": "Payment could not be reviewed."}, status=500)
     return Response({"status": "ok", **result})
 
 
