@@ -47,7 +47,7 @@ function messageText(error) {
 
 function currentPage() {
   const page = window.location.hash.replace(/^#\/?/, "").split("/")[0];
-  return ["search", "account", "booking", "payment", "tickets", "admin"].includes(page) ? page : "search";
+  return ["search", "account", "booking", "payment", "tickets"].includes(page) ? page : "search";
 }
 
 function App() {
@@ -86,7 +86,6 @@ function App() {
   const [admin, setAdmin] = useState(null);
   const [adminMessage, setAdminMessage] = useState("");
   const [adminBusy, setAdminBusy] = useState(false);
-  const [pendingPayments, setPendingPayments] = useState([]);
 
   function navigate(nextPage) {
     if (currentPage() === nextPage) {
@@ -162,19 +161,6 @@ function App() {
       api("/bookings/history").then(setTickets).catch((error) => setTicketsMessage(messageText(error)));
     }
   }, [page, user]);
-
-  useEffect(() => {
-    if (page === "admin" && admin) refreshPendingPayments();
-  }, [page, admin]);
-
-  async function refreshPendingPayments() {
-    try {
-      const result = await api("/admin/payments/pending");
-      setPendingPayments(result.payments || []);
-    } catch (error) {
-      setAdminMessage(messageText(error));
-    }
-  }
 
   const selectedClass = useMemo(() => classes.find((item) => String(item.class_id) === classId), [classes, classId]);
 
@@ -261,38 +247,15 @@ function App() {
     }
   }
 
-  async function refreshPaymentStatus() {
-    if (!paymentBooking) return;
-    setPaymentBusy(true);
-    try {
-      const history = await api("/bookings/history");
-      const booking = [...history.upcoming, ...history.previous].find((item) => item.booking_id === paymentBooking.booking_id);
-      if (!booking) throw new Error("Booking could not be found in your account.");
-      setPaymentBooking((current) => ({ ...current, ...booking }));
-      setPaymentError(booking.payment_status === "FAILED");
-      setPaymentMessage(booking.booking_status === "CONFIRMED" ? "Payment approved. Your ticket is confirmed." : booking.payment_status === "FAILED" ? "Payment was rejected. You can submit another request while your seat hold is active." : "Your request is awaiting administrator review.");
-    } catch (error) {
-      setPaymentError(true);
-      setPaymentMessage(messageText(error));
-    } finally {
-      setPaymentBusy(false);
-    }
-  }
-
   async function submitPaymentRequest() {
     if (!paymentBooking || paymentBooking.booking_status === "CONFIRMED") return;
     setPaymentBusy(true);
     setPaymentMessage("");
     try {
-      const idempotencyKey = globalThis.crypto?.randomUUID?.();
-      if (!idempotencyKey) throw new Error("Secure payment requests are unavailable in this browser.");
-      const result = await api(`/bookings/${paymentBooking.booking_id}/payment`, {
-        method: "POST",
-        body: { idempotency_key: idempotencyKey },
-      });
-      setPaymentBooking((current) => ({ ...current, booking_status: result.booking_status, payment_status: result.payment_status }));
+      const result = await api(`/bookings/${paymentBooking.booking_id}/pay`, { method: "POST" });
+      setPaymentBooking((current) => ({ ...current, ...result }));
       setPaymentError(false);
-      setPaymentMessage(`Payment request submitted. An administrator must approve booking ${result.pnr}; your seats are held temporarily.`);
+      setPaymentMessage("Simulated payment completed. Your ticket is confirmed.");
     } catch (error) {
       setPaymentError(true);
       setPaymentMessage(messageText(error));
@@ -358,29 +321,10 @@ function App() {
     }
   }
 
-  async function reviewPayment(paymentId, decision) {
-    setAdminBusy(true);
-    setAdminMessage("");
-    try {
-      const result = await api(`/admin/payments/${paymentId}/review`, { method: "POST", body: { decision } });
-      setAdminMessage(`PNR ${result.pnr}: ${decision === "APPROVE" ? "approved" : "rejected"}.`);
-      await refreshPendingPayments();
-      if (paymentBooking?.booking_id === result.booking_id) {
-        setPaymentBooking((current) => ({ ...current, booking_status: result.booking_status, payment_status: result.payment_status }));
-      }
-    } catch (error) {
-      setAdminMessage(messageText(error));
-      await refreshPendingPayments();
-    } finally {
-      setAdminBusy(false);
-    }
-  }
-
   async function logoutAdmin() {
     try {
       await api("/admin/logout", { method: "POST" });
       setAdmin(null);
-      setPendingPayments([]);
       setAdminMessage("Administrator signed out.");
     } catch (error) {
       setAdminMessage(messageText(error));
@@ -390,7 +334,7 @@ function App() {
   return <>
     <header className="site-header">
       <a className="brand" href="#/search" aria-label="Trackline home"><span className="brand-mark" aria-hidden="true">🚆</span><span className="brand-name">trackline<span>RAILWAY RESERVATIONS</span></span></a>
-      <nav className="top-nav page-nav" aria-label="Main navigation"><a href="#/search" aria-current={page === "search" ? "page" : undefined}>Search</a>{user && <a href="#/tickets" aria-current={page === "tickets" ? "page" : undefined}>My tickets</a>}<a href="#/account" aria-current={page === "account" ? "page" : undefined}>{user || admin ? "Account" : "Login"}</a>{admin && <a href="#/admin" aria-current={page === "admin" ? "page" : undefined}>Payment review</a>}<div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
+      <nav className="top-nav page-nav" aria-label="Main navigation"><a href="#/search" aria-current={page === "search" ? "page" : undefined}>Search</a>{user && <a href="#/tickets" aria-current={page === "tickets" ? "page" : undefined}>My tickets</a>}<a href="#/account" aria-current={page === "account" ? "page" : undefined}>{user || admin ? "Account" : "Login"}</a>{admin && }<div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
     </header>
     <main id="top" className={`page-shell app-page app-page-${page}`}>
       <section className="hero" aria-labelledby="hero-title">
@@ -409,7 +353,7 @@ function App() {
         </form>
         {searchDataError && <p className="form-message is-error" role="alert">{searchDataError} <button type="button" className="retry-button" onClick={() => initialize()} disabled={loadingSearchData}>{loadingSearchData ? "Retrying…" : "Retry"}</button></p>}
         <p className={`form-message ${searchError ? "is-error" : ""}`} role="status">{searchMessage}</p>
-        {paymentBooking && <section className="payment-panel" aria-labelledby="payment-title"><div className="results-heading"><div><p className="section-kicker">PAYMENT REVIEW</p><h2 id="payment-title">{paymentBooking.booking_status === "CONFIRMED" ? "Ticket confirmed" : "Request payment approval"}</h2></div><span className="step-label">{paymentBooking.booking_status === "CONFIRMED" ? "CONFIRMED" : paymentBooking.payment_status === "INITIATED" ? "AWAITING ADMIN" : "PENDING"}</span></div><p className="payment-reference">Booking reference <strong>{paymentBooking.pnr}</strong></p><p className="payment-amount">Amount to pay <strong>{paymentBooking.currency_code} {Number(paymentBooking.total_fare).toFixed(2)}</strong></p><p className="payment-demo-note">No payment gateway is connected. Submit this request for an administrator to review and approve.</p>{paymentBooking.booking_status !== "CONFIRMED" && paymentBooking.payment_status !== "INITIATED" && <button type="button" className="account-submit" disabled={paymentBusy} onClick={submitPaymentRequest}>{paymentBusy ? "Submitting…" : "Submit for admin approval"}</button>}{paymentBooking.payment_status === "INITIATED" && paymentBooking.booking_status !== "CONFIRMED" && <p className="approval-waiting" role="status">Waiting for the administrator. Seats are held for a limited time.</p>}<p className={`form-message ${paymentError ? "is-error" : "is-success"}`} role="status" aria-live="polite">{paymentMessage}</p><button type="button" className="secondary-button" disabled={paymentBusy} onClick={refreshPaymentStatus}>Check payment status</button><a className="text-button" href="#/tickets">View my tickets</a></section>}
+        {paymentBooking && <section className="payment-panel" aria-labelledby="payment-title"><div className="results-heading"><div><p className="section-kicker">DEMO PAYMENT</p><h2 id="payment-title">{paymentBooking.booking_status === "CONFIRMED" ? "Ticket confirmed" : "Complete simulated payment"}</h2></div><span className="step-label">{paymentBooking.booking_status === "CONFIRMED" ? "CONFIRMED" : "PENDING"}</span></div><p className="payment-reference">Booking reference <strong>{paymentBooking.pnr}</strong></p><p className="payment-amount">Amount to pay <strong>{paymentBooking.currency_code} {Number(paymentBooking.total_fare).toFixed(2)}</strong></p><p className="payment-demo-note">No real money is charged. This demo simulates a successful payment.</p>{paymentBooking.booking_status !== "CONFIRMED" && <button type="button" className="account-submit" disabled={paymentBusy} onClick={submitPaymentRequest}>{paymentBusy ? "Processing…" : "Pay (demo)"}</button>}<p className={`form-message ${paymentError ? "is-error" : "is-success"}`} role="status" aria-live="polite">{paymentMessage}</p><a className="text-button" href="#/tickets">View my tickets</a></section>}
         {(trains.length > 0 || searchMessage) && <section id="search-results" className="search-results" aria-labelledby="results-title"><div className="results-heading"><div><p className="section-kicker">YOUR OPTIONS</p><h2 id="results-title">{trains.length ? "Matching trains" : "No trains found"}</h2></div><p className="results-summary">{trains.length ? `${trains.length} scheduled service${trains.length === 1 ? "" : "s"}` : "Try another date or station pair."}</p></div>
           <div className="train-results-list">{trains.map((train) => <TrainCard key={train.schedule_id} train={train} classId={classId} selectedClass={selectedClass} sourceId={sourceId} destinationId={destinationId} journeyDate={journeyDate} passengerCount={passengerCount} onBook={beginBooking} />)}</div>
           {selectedTrain && <section className="booking-panel" aria-labelledby="booking-title"><div className="results-heading"><div><p className="section-kicker">COMPLETE YOUR JOURNEY</p><h2 id="booking-title">Traveler details</h2></div><span className="step-label">BOOK TICKET</span></div><p className="booking-summary">{selectedTrain.train_name} ({selectedTrain.train_number}) · {selectedTrain.source_station_name} to {selectedTrain.destination_station_name} · {passengerCount} passenger{passengerCount === 1 ? "" : "s"}</p>
@@ -433,7 +377,6 @@ function App() {
         </div>
       </section>
       {page === "tickets" && <section className="ticket-history-page" aria-labelledby="tickets-title"><div className="page-heading-row"><div><p className="section-kicker">YOUR JOURNEYS</p><h1 id="tickets-title">My tickets</h1><p>Bookings, seat details, and payment status.</p></div><button type="button" className="secondary-button" onClick={() => { setTickets(null); setTicketsMessage(""); api("/bookings/history").then(setTickets).catch((error) => setTicketsMessage(messageText(error))); }}>Refresh</button></div>{!user ? <div className="empty-state"><p>Sign in to see your bookings.</p><a className="primary-link-button" href="#/account">Sign in</a></div> : ticketsMessage ? <p className="form-message is-error" role="alert">{ticketsMessage}</p> : tickets ? <><TicketGroup title="Upcoming journeys" bookings={tickets.upcoming || []} /><TicketGroup title="Past journeys" bookings={tickets.previous || []} /></> : <p className="loading-note">Loading your tickets…</p>}</section>}
-      {page === "admin" && <section className="admin-review-page" aria-labelledby="admin-title">{!admin ? <div className="empty-state"><h1 id="admin-title">Administrator access required</h1><p>Use the Log in tab on the Account page with an administrator account.</p><a className="primary-link-button" href="#/account">Go to account login</a></div> : <><div className="page-heading-row"><div><p className="section-kicker">PAYMENT DESK</p><h1 id="admin-title">Approval queue</h1><p>Review pending payment requests before tickets are confirmed.</p></div><div className="admin-toolbar"><button type="button" className="secondary-button" disabled={adminBusy} onClick={refreshPendingPayments}>Refresh queue</button><button type="button" className="text-button" onClick={logoutAdmin}>Sign out</button></div></div>{adminMessage && <p className="form-message" role="status">{adminMessage}</p>}{pendingPayments.length ? <div className="approval-list">{pendingPayments.map((payment) => <article className="approval-card" key={payment.payment_id}><div className="approval-card-heading"><div><span className="approval-label">PENDING REVIEW</span><h2>{payment.train_name_snapshot} <small>#{payment.train_number_snapshot}</small></h2></div><strong className="approval-amount">{payment.currency_code} {Number(payment.amount).toFixed(2)}</strong></div><p className="approval-route">{payment.boarding_station_name_snapshot} → {payment.alighting_station_name_snapshot}</p><dl><div><dt>Passenger</dt><dd>{payment.full_name} · {payment.email}</dd></div><div><dt>Booking</dt><dd>PNR {payment.pnr} · {payment.passenger_count} passenger(s)</dd></div><div><dt>Departure</dt><dd>{new Date(payment.departure_at_snapshot).toLocaleString()}</dd></div><div><dt>Seat hold expires</dt><dd>{payment.hold_expires_at ? new Date(payment.hold_expires_at).toLocaleString() : "Expired"}</dd></div></dl><div className="approval-actions"><button type="button" className="approve-button" disabled={adminBusy || !payment.hold_expires_at || new Date(payment.hold_expires_at) <= new Date()} onClick={() => reviewPayment(payment.payment_id, "APPROVE")}>Approve & confirm ticket</button><button type="button" className="reject-button" disabled={adminBusy} onClick={() => reviewPayment(payment.payment_id, "REJECT")}>Reject</button></div></article>)}</div> : <div className="empty-state"><h2>No pending requests</h2><p>New passenger payment requests will appear here.</p></div>}</>}</section>}
     </main>
     <footer className="site-footer"><a className="footer-brand" href="#top">trackline</a><span>Plan well. Travel happy.</span><a href="#plan">Back to top ↑</a></footer>
   </>;
