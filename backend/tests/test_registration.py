@@ -57,6 +57,7 @@ class RegistrationServiceTests(unittest.TestCase):
         params = connection.cursor.return_value.execute.call_args.args[1]
         stored_hash = params[3]
         self.assertNotEqual(stored_hash, VALID["password"])
+        self.assertTrue(stored_hash.startswith("scrypt:"))
         self.assertTrue(check_password_hash(stored_hash, VALID["password"]))
         self.assertEqual(result["user_id"], 42)
         connection.commit.assert_called_once()

@@ -8,6 +8,7 @@ import mysql.connector
 
 from backend.tests.drf_client import RailwayAPIClient, set_session
 from backend.app.train_search import (
+    MAX_SEARCH_RESULTS,
     TrainSearchValidationError,
     search_trains,
     validate_search,
@@ -32,6 +33,19 @@ class TrainSearchValidationTests(unittest.TestCase):
             with self.subTest(source=source, destination=destination):
                 with self.assertRaises(TrainSearchValidationError):
                     validate_search(source, destination, "2026-11-15")
+
+    def test_station_and_class_ids_reject_non_canonical_values(self):
+        invalid_ids = (True, False, 1.5, "01", "+1", " 1 ", "1.0", "")
+        for value in invalid_ids:
+            with self.subTest(value=value, field="source"):
+                with self.assertRaises(TrainSearchValidationError):
+                    validate_search(value, "2", "2026-11-15")
+            with self.subTest(value=value, field="destination"):
+                with self.assertRaises(TrainSearchValidationError):
+                    validate_search("1", value, "2026-11-15")
+            with self.subTest(value=value, field="class"):
+                with self.assertRaises(TrainSearchValidationError):
+                    validate_search("1", "2", "2026-11-15", class_id=value)
 
     def test_same_station_is_rejected(self):
         with self.assertRaises(TrainSearchValidationError):
@@ -76,15 +90,57 @@ class TrainSearchQueryTests(unittest.TestCase):
         sql, params = cursor.execute.call_args.args
         self.assertIn("origin_stop.stop_sequence < destination_stop.stop_sequence", sql)
         self.assertIn("route_fares", sql)
+        self.assertIn("LEFT JOIN LATERAL", sql)
         self.assertIn("seat_allocations", sql)
-        self.assertEqual(params[0:6], (None, None, None, None, None, None))
-        self.assertEqual(params[6], 1)
-        self.assertEqual(params[7], 2)
-        self.assertEqual(params[8], datetime(2026, 11, 15, 0, 0))
-        self.assertEqual(params[9], datetime(2026, 11, 16, 0, 0))
-        self.assertEqual(params[10], 100)
+        self.assertEqual(sql.count("SELECT fare.fare_amount"), 1)
+        self.assertEqual(params[0:2], (None, None))
+        self.assertEqual(params[2:4], (None, None))
+        self.assertEqual(params[4], 1)
+        self.assertEqual(params[5], 2)
+        self.assertEqual(params[6], datetime(2026, 11, 15, 0, 0))
+        self.assertEqual(params[7], datetime(2026, 11, 16, 0, 0))
+        self.assertEqual(params[8], 100)
         connection.close.assert_called_once()
         cursor.close.assert_called_once()
+
+    def test_large_train_result_set_is_bounded_and_uses_one_database_query(self):
+        connection = MagicMock()
+        cursor = connection.cursor.return_value
+        cursor.fetchall.return_value = [
+            {
+                "schedule_id": index,
+                "train_number": f"{12000 + index}",
+                "train_name": f"Express {index}",
+                "source_station_id": 1,
+                "source_station_code": "AAA",
+                "source_station_name": "Alpha",
+                "source_city": "Alpha City",
+                "destination_station_id": 2,
+                "destination_station_code": "BBB",
+                "destination_station_name": "Beta",
+                "destination_city": "Beta City",
+                "departure_at": datetime(2026, 11, 15, 8, 0),
+                "arrival_at": datetime(2026, 11, 15, 12, 0),
+                "starting_fare": 450.00,
+                "currency_code": "INR",
+                "available_seats": 40,
+            }
+            for index in range(1, MAX_SEARCH_RESULTS + 1)
+        ]
+
+        results = search_trains(
+            "1", "2", "2026-11-15",
+            connection_factory=lambda: connection,
+        )
+
+        self.assertEqual(len(results), MAX_SEARCH_RESULTS)
+        self.assertEqual(cursor.execute.call_count, 1)
+        self.assertEqual(cursor.fetchall.call_count, 1)
+        sql, params = cursor.execute.call_args.args
+        self.assertIn("LIMIT %s", sql)
+        self.assertEqual(params[-1], MAX_SEARCH_RESULTS)
+        connection.close.assert_called_once_with()
+        cursor.close.assert_called_once_with()
 
     def test_selected_class_filters_fare_and_seat_availability(self):
         connection = MagicMock()
@@ -116,7 +172,7 @@ class TrainSearchQueryTests(unittest.TestCase):
         self.assertEqual(result[0]["starting_fare"], 980.0)
         self.assertEqual(result[0]["available_seats"], 12)
         params = cursor.execute.call_args.args[1]
-        self.assertEqual(params[0:6], (3, 3, 3, 3, 3, 3))
+        self.assertEqual(params[0:4], (3, 3, 3, 3))
 
     def test_invalid_selected_class_is_rejected(self):
         for class_id in ("abc", "0", "-2"):

@@ -16,13 +16,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .booking import BookingRequestError, BookingUnavailableError, create_booking
-from .db import get_db_connection
-from .fare_calculation import FareCalculationError, calculate_booking_fare
-from .booking_payment import (
-    PaymentBookingNotFound,
-    PaymentConfirmationError,
-    confirm_booking_payment,
-)
 from .booking_history import get_booking_history
 from .booking_cancellation import (
     BookingCancellationError,
@@ -30,6 +23,13 @@ from .booking_cancellation import (
     cancel_booking,
 )
 from .booking_status import get_booking_status
+from .booking_payment import (
+    PaymentBookingNotFound,
+    PaymentConfirmationError,
+    confirm_booking_payment,
+)
+from .db import get_db_connection
+from .fare_calculation import FareCalculationError, calculate_booking_fare
 from .passenger_details import PassengerDetailsValidationError, save_passenger_details
 from .registration import RegistrationValidationError, register_user
 from .seat_availability import (
@@ -347,6 +347,39 @@ def booking_create(request):
 
 
 @endpoint(["POST"])
+def passenger_booking_pay(request, booking_id):
+    """Confirm a passenger-owned booking using the explicitly simulated provider."""
+    user_id = _user_id(request)
+    if user_id is None:
+        return Response({"status": "error", "message": "Please log in to pay for a booking."}, status=401)
+    try:
+        result = confirm_booking_payment(user_id, booking_id)
+    except PaymentBookingNotFound as exc:
+        return Response({"status": "error", "message": str(exc)}, status=404)
+    except PaymentConfirmationError as exc:
+        return Response({"status": "error", "message": str(exc)}, status=409)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Payment is temporarily unavailable. Please try again."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Payment could not be completed."}, status=500)
+    return Response({"status": "ok", **result}, status=200 if result.get("replayed") else 201)
+
+
+@endpoint(["GET"])
+def passenger_booking_history(request):
+    user_id = _user_id(request)
+    if user_id is None:
+        return Response({"status": "error", "message": "Please log in to view your booking history."}, status=401)
+    try:
+        result = get_booking_history(user_id)
+    except mysql.connector.Error:
+        return Response({"status": "error", "message": "Booking history is temporarily unavailable."}, status=503)
+    except Exception:
+        return Response({"status": "error", "message": "Booking history could not be loaded."}, status=500)
+    return Response({"status": "ok", **result})
+
+
+@endpoint(["POST"])
 def booking_passenger_details(request, booking_id):
     user_id = _user_id(request)
     if user_id is None:
@@ -381,39 +414,6 @@ def booking_fare(request, booking_id):
     return Response({"status": "ok", **result})
 
 
-@endpoint(["POST"])
-def passenger_booking_pay(request, booking_id):
-    """Confirm a passenger-owned booking using the explicitly simulated provider."""
-    user_id = _user_id(request)
-    if user_id is None:
-        return Response({"status": "error", "message": "Please log in to pay for a booking."}, status=401)
-    try:
-        result = confirm_booking_payment(user_id, booking_id)
-    except PaymentBookingNotFound as exc:
-        return Response({"status": "error", "message": str(exc)}, status=404)
-    except PaymentConfirmationError as exc:
-        return Response({"status": "error", "message": str(exc)}, status=409)
-    except mysql.connector.Error:
-        return Response({"status": "error", "message": "Payment is temporarily unavailable. Please try again."}, status=503)
-    except Exception:
-        return Response({"status": "error", "message": "Payment could not be completed."}, status=500)
-    return Response({"status": "ok", **result}, status=200 if result.get("replayed") else 201)
-
-
-@endpoint(["GET"])
-def passenger_booking_history(request):
-    user_id = _user_id(request)
-    if user_id is None:
-        return Response({"status": "error", "message": "Please log in to view your tickets."}, status=401)
-    try:
-        result = get_booking_history(user_id)
-    except mysql.connector.Error:
-        return Response({"status": "error", "message": "Your tickets are temporarily unavailable."}, status=503)
-    except Exception:
-        return Response({"status": "error", "message": "Your tickets could not be loaded."}, status=500)
-    return Response({"status": "ok", **result})
-
-
 @ensure_csrf_cookie
 def frontend(request):
     index = settings.FRONTEND_DIST / "index.html"
@@ -428,6 +428,7 @@ def frontend_asset(request, asset_path):
     if root not in asset.parents or not asset.is_file():
         raise Http404
     return HttpResponse(asset.read_bytes(), content_type=mimetypes.guess_type(asset.name)[0] or "application/octet-stream")
+
 
 
 @endpoint(["GET"])

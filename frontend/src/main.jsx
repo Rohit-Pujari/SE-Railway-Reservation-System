@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import AdminApp from "./admin.jsx";
 import { createRoot } from "react-dom/client";
 import "../styles.css";
 import "./react.css";
@@ -45,13 +46,7 @@ function messageText(error) {
   return error instanceof Error ? error.message : "The request could not be completed.";
 }
 
-function currentPage() {
-  const page = window.location.hash.replace(/^#\/?/, "").split("/")[0];
-  return ["search", "account", "booking", "payment", "tickets"].includes(page) ? page : "search";
-}
-
 function App() {
-  const [page, setPage] = useState(currentPage);
   const [apiOnline, setApiOnline] = useState(false);
   const [loadingSearchData, setLoadingSearchData] = useState(true);
   const [searchDataError, setSearchDataError] = useState("");
@@ -63,6 +58,7 @@ function App() {
   const [authError, setAuthError] = useState(false);
   const [searchMessage, setSearchMessage] = useState("");
   const [searchError, setSearchError] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [sourceId, setSourceId] = useState("");
   const [destinationId, setDestinationId] = useState("");
   const [journeyDate, setJourneyDate] = useState(new Date().toLocaleDateString("en-CA"));
@@ -72,34 +68,14 @@ function App() {
   const [selectedTrain, setSelectedTrain] = useState(null);
   const [bookingMessage, setBookingMessage] = useState("");
   const [bookingError, setBookingError] = useState(false);
-  const [paymentBooking, setPaymentBooking] = useState(null);
-  const [paymentMessage, setPaymentMessage] = useState("");
-  const [paymentError, setPaymentError] = useState(false);
-  const [paymentBusy, setPaymentBusy] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const [passengers, setPassengers] = useState([]);
   const [bookingKey, setBookingKey] = useState("");
-  const [pendingTrain, setPendingTrain] = useState(null);
-  const [tickets, setTickets] = useState(null);
-  const [ticketsMessage, setTicketsMessage] = useState("");
-  const [admin, setAdmin] = useState(null);
-  const [adminMessage, setAdminMessage] = useState("");
-  const [adminBusy, setAdminBusy] = useState(false);
-
-  function navigate(nextPage) {
-    if (currentPage() === nextPage) {
-      setPage(nextPage);
-      return;
-    }
-    window.location.hash = `/${nextPage}`;
-  }
-
-  useEffect(() => {
-    const updatePage = () => setPage(currentPage());
-    window.addEventListener("hashchange", updatePage);
-    return () => window.removeEventListener("hashchange", updatePage);
-  }, []);
+  const [bookingConfirmation, setBookingConfirmation] = useState(null);
+  const [paymentBusy, setPaymentBusy] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState("");
+  const [paymentError, setPaymentError] = useState(false);
 
   async function initialize(isActive = () => true) {
     setLoadingSearchData(true);
@@ -132,11 +108,8 @@ function App() {
         setSearchDataError("The Django API health check failed. Restart the app with ./run-dev.sh and try again.");
       }
 
-      const [session, administrator] = await Promise.all([
-        api("/session").catch(() => null), api("/admin/session").catch(() => null),
-      ]);
+      const session = await api("/session").catch(() => null);
       if (isActive() && session?.authenticated) setUser(session.user);
-      if (isActive() && administrator?.authenticated) setAdmin(administrator.admin);
     } catch (_error) {
       if (isActive()) {
         setApiOnline(false);
@@ -155,13 +128,6 @@ function App() {
     return () => { active = false; };
   }, []);
 
-  useEffect(() => {
-    if (page === "tickets" && user) {
-      setTicketsMessage("");
-      api("/bookings/history").then(setTickets).catch((error) => setTicketsMessage(messageText(error)));
-    }
-  }, [page, user]);
-
   const selectedClass = useMemo(() => classes.find((item) => String(item.class_id) === classId), [classes, classId]);
 
   async function submitSearch(event) {
@@ -175,30 +141,28 @@ function App() {
       return;
     }
     const params = new URLSearchParams({ source_station_id: sourceId, destination_station_id: destinationId, journey_date: journeyDate, class_id: classId });
+    setSearching(true);
     try {
       const result = await api(`/trains/search?${params}`);
       setTrains(result.trains || []);
       setSearchError(false);
       setSearchMessage(result.trains?.length ? `${result.trains.length} train${result.trains.length === 1 ? "" : "s"} found.` : "No scheduled trains match this route and date.");
-      navigate("search");
-      requestAnimationFrame(() => document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth", block: "start" }));
     } catch (error) {
       setSearchError(true);
       setSearchMessage(messageText(error));
-      navigate("search");
+    } finally {
+      setSearching(false);
     }
   }
 
   function beginBooking(train) {
     if (!user) {
-      setPendingTrain(train);
       setAuthMode("login");
       setAuthError(true);
       setAuthMessage("Log in before booking a ticket.");
-      navigate("account");
+      document.querySelector("#account")?.scrollIntoView({ behavior: "smooth" });
       return;
     }
-    setPendingTrain(null);
     setSelectedTrain(train);
     setBookingKey(globalThis.crypto?.randomUUID?.() || "");
     setPassengers(Array.from({ length: passengerCount }, (_, index) => ({
@@ -206,7 +170,9 @@ function App() {
     })));
     setBookingMessage("");
     setBookingError(false);
-    navigate("booking");
+    setBookingConfirmation(null);
+    setPaymentMessage("");
+    setPaymentError(false);
   }
 
   function changePassenger(index, field, value) {
@@ -216,6 +182,15 @@ function App() {
   async function submitBooking(event) {
     event.preventDefault();
     if (!selectedTrain) return;
+    const invalidPassenger = passengers.findIndex((passenger) =>
+      !passenger.passenger_name.trim() || !Number.isInteger(Number(passenger.age)) ||
+      Number(passenger.age) < 0 || Number(passenger.age) > 120
+    );
+    if (invalidPassenger !== -1) {
+      setBookingError(true);
+      setBookingMessage("Check passenger " + (invalidPassenger + 1) + ": enter a name and a whole-number age between 0 and 120.");
+      return;
+    }
     setSubmitting(true);
     setBookingMessage("");
     try {
@@ -231,14 +206,11 @@ function App() {
       } });
       const assigned = (result.assigned_seats || []).map((seat) => `${seat.coach_number}-${seat.seat_number}`).join(", ");
       setBookingError(false);
-      setBookingMessage(`Seats held for 15 minutes. PNR ${result.pnr} · ${assigned}.`);
-      setPaymentBooking({ ...result, booking_status: result.status });
-      setPaymentMessage("");
-      setPaymentError(false);
+      setBookingMessage("");
+      setBookingConfirmation({ booking: result, train: selectedTrain, passengers: passengers.map((passenger) => ({ ...passenger })), journeyDate, className: selectedClass?.class_name || "Selected class", classCode: selectedClass?.class_code || "", passengerCount });
       setSelectedTrain(null);
       setBookingKey("");
       setTrains((current) => [...current]);
-      navigate("payment");
     } catch (error) {
       setBookingError(true);
       setBookingMessage(messageText(error));
@@ -247,15 +219,19 @@ function App() {
     }
   }
 
-  async function submitPaymentRequest() {
-    if (!paymentBooking || paymentBooking.booking_status === "CONFIRMED") return;
+  async function submitSimulatedPayment() {
+    if (!bookingConfirmation?.booking?.booking_id || paymentBusy) return;
     setPaymentBusy(true);
     setPaymentMessage("");
+    setPaymentError(false);
     try {
-      const result = await api(`/bookings/${paymentBooking.booking_id}/pay`, { method: "POST" });
-      setPaymentBooking((current) => ({ ...current, ...result }));
-      setPaymentError(false);
-      setPaymentMessage("Simulated payment completed. Your ticket is confirmed.");
+      const result = await api(`/bookings/${bookingConfirmation.booking.booking_id}/pay`, { method: "POST", body: {} });
+      setBookingConfirmation((current) => current ? {
+        ...current,
+        booking: { ...current.booking, status: result.booking_status },
+        payment: result,
+      } : current);
+      setPaymentMessage(result.message || "Ticket confirmed.");
     } catch (error) {
       setPaymentError(true);
       setPaymentMessage(messageText(error));
@@ -277,27 +253,9 @@ function App() {
         setAuthMessage("Account created. Please log in.");
       } else {
         const result = await api("/login", { method: "POST", body: values });
-        if (result.role === "ADMIN") {
-          setUser(null);
-          setAdmin(result.admin);
-          setAdminMessage("Administrator signed in.");
-          navigate("admin");
-          return;
-        }
-        setAdmin(null);
         setUser(result.user);
         setAuthError(false);
         setAuthMessage("You are signed in.");
-        if (pendingTrain) {
-          const train = pendingTrain;
-          setPendingTrain(null);
-          setSelectedTrain(train);
-          setBookingKey(globalThis.crypto?.randomUUID?.() || "");
-          setPassengers(Array.from({ length: passengerCount }, (_, index) => ({
-            passenger_name: index === 0 ? result.user.full_name : "", age: "", gender: "", berth_preference: "NO_PREFERENCE",
-          })));
-          navigate("booking");
-        }
       }
     } catch (error) {
       setAuthError(true);
@@ -321,69 +279,236 @@ function App() {
     }
   }
 
-  async function logoutAdmin() {
-    try {
-      await api("/admin/logout", { method: "POST" });
-      setAdmin(null);
-      setAdminMessage("Administrator signed out.");
-    } catch (error) {
-      setAdminMessage(messageText(error));
-    }
-  }
-
   return <>
     <header className="site-header">
-      <a className="brand" href="#/search" aria-label="Trackline home"><span className="brand-mark" aria-hidden="true">🚆</span><span className="brand-name">trackline<span>RAILWAY RESERVATIONS</span></span></a>
-      <nav className="top-nav page-nav" aria-label="Main navigation"><a href="#/search" aria-current={page === "search" ? "page" : undefined}>Search</a>{user && <a href="#/tickets" aria-current={page === "tickets" ? "page" : undefined}>My tickets</a>}<a href="#/account" aria-current={page === "account" ? "page" : undefined}>{user || admin ? "Account" : "Login"}</a>{admin && }<div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
+      <a className="brand" href="#top" aria-label="Trackline home"><span className="brand-mark" aria-hidden="true">🚆</span><span className="brand-name">trackline<span>RAILWAY RESERVATIONS</span></span></a>
+      <nav className="top-nav" aria-label="Main navigation"><a href="/?admin=1">Admin</a><a href="#plan">Plan a journey</a>{user && <><a href="#booking-history">My bookings</a><a href="#booking-status">Check status</a></>}<a href="#account">{user ? "Your account" : "Create account"}</a><div className="service-status" role="status"><span className={`status-indicator ${apiOnline ? "is-online" : "is-offline"}`} /><span>{apiOnline ? "Backend API is running" : "Backend API is not reachable"}</span></div></nav>
     </header>
-    <main id="top" className={`page-shell app-page app-page-${page}`}>
+    <main id="top" className="page-shell">
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-copy"><p className="eyebrow"><span className="eyebrow-line" /> YOUR NEXT JOURNEY, MADE SIMPLE</p><h1 id="hero-title">There’s a better<br />way to <em>get there.</em></h1><p className="hero-intro">Find the right train for your plans. Pick your stations, choose a date, and explore the routes ahead.</p><a className="hero-link" href="#plan">Find your train <span aria-hidden="true">↓</span></a></div>
         <div className="hero-visual" aria-hidden="true"><div className="visual-orbit orbit-one" /><div className="visual-orbit orbit-two" /><div className="visual-caption"><span className="caption-star">✳</span> Every great trip begins with a plan.</div></div><div className="hero-index" aria-hidden="true">01 <span /> EXPLORE</div>
       </section>
+      {user && <><BookingHistory user={user} /><BookingStatusLookup /></>}
+      <nav className="journey-steps" aria-label="Booking steps"><a href="#plan" aria-current={!selectedTrain && !bookingConfirmation ? "step" : undefined} className={!selectedTrain && !bookingConfirmation ? "is-current" : "is-complete"}><span>1</span><span><strong>Search</strong><small>Choose your train</small></span></a><span className="journey-step-connector" aria-hidden="true">→</span><a href={selectedTrain ? "#booking-title" : "#plan"} aria-current={selectedTrain ? "step" : undefined} className={selectedTrain ? "is-current" : bookingConfirmation ? "is-complete" : ""}><span>2</span><span><strong>Passenger details</strong><small>Enter traveller information</small></span></a><span className="journey-step-connector" aria-hidden="true">→</span><a href={bookingConfirmation ? "#confirmation-title" : "#plan"} aria-current={bookingConfirmation ? "step" : undefined} className={bookingConfirmation ? "is-current" : ""}><span>3</span><span><strong>Confirm</strong><small>Pay and check your PNR</small></span></a></nav>
       <section id="plan" className="search-panel" aria-labelledby="search-title">
         <div className="section-heading"><div><p className="section-kicker">LET’S GET MOVING</p><h2 id="search-title">Where would you like to go?</h2></div><span className="step-label"><span>01</span> SEARCH TRAINS</span></div>
         <form className="search-form" onSubmit={submitSearch}>
-          <div className="field-group"><label htmlFor="source-station">From</label><select id="source-station" required disabled={loadingSearchData} value={sourceId} onChange={(event) => { setSourceId(event.target.value); if (event.target.value === destinationId) setDestinationId(""); }}><option value="">{loadingSearchData ? "Loading stations…" : "Select a station"}</option>{stations.filter((station) => String(station.station_id) !== destinationId).map((station) => <option key={station.station_id} value={station.station_id}>{station.station_name} ({station.station_code}) — {station.city}</option>)}</select></div>
-          <div className="field-group"><label htmlFor="destination-station">To</label><select id="destination-station" required disabled={loadingSearchData} value={destinationId} onChange={(event) => { setDestinationId(event.target.value); if (event.target.value === sourceId) setSourceId(""); }}><option value="">{loadingSearchData ? "Loading stations…" : "Select a station"}</option>{stations.filter((station) => String(station.station_id) !== sourceId).map((station) => <option key={station.station_id} value={station.station_id}>{station.station_name} ({station.station_code}) — {station.city}</option>)}</select></div>
+          <div className="field-group"><label htmlFor="source-station">From</label><select id="source-station" required disabled={loadingSearchData} value={sourceId} onChange={(event) => setSourceId(event.target.value)}><option value="">{loadingSearchData ? "Loading stations…" : "Select a station"}</option>{stations.map((station) => <option key={station.station_id} value={station.station_id}>{station.station_name} ({station.station_code}) — {station.city}</option>)}</select></div>
+          <div className="field-group"><label htmlFor="destination-station">To</label><select id="destination-station" required disabled={loadingSearchData} value={destinationId} onChange={(event) => setDestinationId(event.target.value)}><option value="">{loadingSearchData ? "Loading stations…" : "Select a station"}</option>{stations.map((station) => <option key={station.station_id} value={station.station_id}>{station.station_name} ({station.station_code}) — {station.city}</option>)}</select></div>
           <div className="field-group date-field"><label htmlFor="journey-date">Journey date</label><input id="journey-date" type="date" min={new Date().toLocaleDateString("en-CA")} value={journeyDate} onChange={(event) => setJourneyDate(event.target.value)} required /></div>
           <div className="field-group"><label htmlFor="travel-class">Travel class</label><select id="travel-class" value={classId} onChange={(event) => setClassId(event.target.value)} required disabled={loadingSearchData}><option value="">{loadingSearchData ? "Loading travel classes…" : "Select a travel class"}</option>{classes.map((item) => <option key={item.class_id} value={item.class_id}>{item.class_name} ({item.class_code})</option>)}</select></div>
           <div className="field-group"><label htmlFor="passenger-count">Passengers</label><select id="passenger-count" value={passengerCount} onChange={(event) => setPassengerCount(Number(event.target.value))}>{[1, 2, 3, 4, 5, 6].map((count) => <option key={count} value={count}>{count} passenger{count === 1 ? "" : "s"}</option>)}</select></div>
-          <button type="submit" id="search-button" disabled={loadingSearchData || !apiOnline || !stations.length || !classes.length}><span>{loadingSearchData ? "Loading search options…" : "Search trains"}</span><span className="button-arrow" aria-hidden="true">↗</span></button>
+          <button type="submit" id="search-button" disabled={loadingSearchData || searching || !apiOnline || !stations.length || !classes.length}><span>{loadingSearchData ? "Loading search options…" : searching ? "Searching…" : "Search trains"}</span><span className="button-arrow" aria-hidden="true">↗</span></button>
         </form>
         {searchDataError && <p className="form-message is-error" role="alert">{searchDataError} <button type="button" className="retry-button" onClick={() => initialize()} disabled={loadingSearchData}>{loadingSearchData ? "Retrying…" : "Retry"}</button></p>}
-        <p className={`form-message ${searchError ? "is-error" : ""}`} role="status">{searchMessage}</p>
-        {paymentBooking && <section className="payment-panel" aria-labelledby="payment-title"><div className="results-heading"><div><p className="section-kicker">DEMO PAYMENT</p><h2 id="payment-title">{paymentBooking.booking_status === "CONFIRMED" ? "Ticket confirmed" : "Complete simulated payment"}</h2></div><span className="step-label">{paymentBooking.booking_status === "CONFIRMED" ? "CONFIRMED" : "PENDING"}</span></div><p className="payment-reference">Booking reference <strong>{paymentBooking.pnr}</strong></p><p className="payment-amount">Amount to pay <strong>{paymentBooking.currency_code} {Number(paymentBooking.total_fare).toFixed(2)}</strong></p><p className="payment-demo-note">No real money is charged. This demo simulates a successful payment.</p>{paymentBooking.booking_status !== "CONFIRMED" && <button type="button" className="account-submit" disabled={paymentBusy} onClick={submitPaymentRequest}>{paymentBusy ? "Processing…" : "Pay (demo)"}</button>}<p className={`form-message ${paymentError ? "is-error" : "is-success"}`} role="status" aria-live="polite">{paymentMessage}</p><a className="text-button" href="#/tickets">View my tickets</a></section>}
-        {(trains.length > 0 || searchMessage) && <section id="search-results" className="search-results" aria-labelledby="results-title"><div className="results-heading"><div><p className="section-kicker">YOUR OPTIONS</p><h2 id="results-title">{trains.length ? "Matching trains" : "No trains found"}</h2></div><p className="results-summary">{trains.length ? `${trains.length} scheduled service${trains.length === 1 ? "" : "s"}` : "Try another date or station pair."}</p></div>
+        <p className={`form-message ${searchError ? "is-error" : ""}`} role={searchError ? "alert" : "status"} aria-live="polite">{searchMessage}</p>
+        {trains.length > 0 && <section className="search-results" aria-labelledby="results-title"><div className="results-heading"><div><p className="section-kicker">YOUR OPTIONS</p><h2 id="results-title">Matching trains</h2></div><p className="results-summary">{trains.length} scheduled service{trains.length === 1 ? "" : "s"}</p></div>
           <div className="train-results-list">{trains.map((train) => <TrainCard key={train.schedule_id} train={train} classId={classId} selectedClass={selectedClass} sourceId={sourceId} destinationId={destinationId} journeyDate={journeyDate} passengerCount={passengerCount} onBook={beginBooking} />)}</div>
-          {selectedTrain && <section className="booking-panel" aria-labelledby="booking-title"><div className="results-heading"><div><p className="section-kicker">COMPLETE YOUR JOURNEY</p><h2 id="booking-title">Traveler details</h2></div><span className="step-label">BOOK TICKET</span></div><p className="booking-summary">{selectedTrain.train_name} ({selectedTrain.train_number}) · {selectedTrain.source_station_name} to {selectedTrain.destination_station_name} · {passengerCount} passenger{passengerCount === 1 ? "" : "s"}</p>
+          {selectedTrain && <section className="booking-panel" aria-labelledby="booking-title"><div className="results-heading"><div><p className="section-kicker">COMPLETE YOUR JOURNEY</p><h2 id="booking-title">Traveler details</h2></div><button type="button" className="cancel-dismiss-button" onClick={() => { setSelectedTrain(null); setBookingMessage(""); }}>← Back to train results</button></div><p className="booking-summary">{selectedTrain.train_name} ({selectedTrain.train_number}) · {selectedTrain.source_station_name} to {selectedTrain.destination_station_name} · {passengerCount} passenger{passengerCount === 1 ? "" : "s"}</p>
             <form className="booking-form" onSubmit={submitBooking}><div className="booking-passenger-fields">{passengers.map((passenger, index) => <fieldset className="booking-passenger-entry" key={index}><legend>Passenger {index + 1}</legend><div className="field-group"><label htmlFor={`passenger-${index}-name`}>Full name</label><input id={`passenger-${index}-name`} maxLength="120" required value={passenger.passenger_name} onChange={(event) => changePassenger(index, "passenger_name", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-age`}>Age</label><input id={`passenger-${index}-age`} type="number" min="0" max="120" required value={passenger.age} onChange={(event) => changePassenger(index, "age", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-gender`}>Gender (optional)</label><input id={`passenger-${index}-gender`} maxLength="30" value={passenger.gender} onChange={(event) => changePassenger(index, "gender", event.target.value)} /></div><div className="field-group"><label htmlFor={`passenger-${index}-berth`}>Berth preference</label><select id={`passenger-${index}-berth`} value={passenger.berth_preference} onChange={(event) => changePassenger(index, "berth_preference", event.target.value)}>{[["NO_PREFERENCE", "No preference"], ["LOWER", "Lower"], ["MIDDLE", "Middle"], ["UPPER", "Upper"], ["SIDE_LOWER", "Side lower"], ["SIDE_UPPER", "Side upper"]].map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></div></fieldset>)}</div><button type="submit" className="account-submit" disabled={submitting}>{submitting ? "Checking seats…" : "Book and reserve seats"}</button></form>
           </section>}
-          {bookingMessage && <p className={`form-message ${bookingError ? "is-error" : "is-success"}`} role="status">{bookingMessage}</p>}
+          {bookingMessage && <p className={`form-message ${bookingError ? "is-error" : "is-success"}`} role={bookingError ? "alert" : "status"} aria-live="polite">{bookingMessage}</p>}
+          {bookingConfirmation && <TicketConfirmation confirmation={bookingConfirmation} onPay={submitSimulatedPayment} paymentBusy={paymentBusy} paymentMessage={paymentMessage} paymentError={paymentError} />}
         </section>}
       </section>
       <section id="account" className="account-section" aria-labelledby="registration-title"><div className="account-copy"><p className="section-kicker">A LITTLE MORE CONVENIENT</p><h2>Make the next trip<br /><em>yours.</em></h2><p>Create an account to get started with railway reservations. Your details stay yours.</p><div className="account-note"><span className="note-mark" aria-hidden="true">✳</span><span><strong>One less thing to do at the station.</strong><br />Set up your account before your next journey.</span></div><div className="account-decoration" aria-hidden="true"><span /><span /><span /><span /><span /><span /><span /></div></div>
         <div className="account-form-wrap"><div className="form-title-row"><div><p className="section-kicker">GET STARTED</p><h2 id="registration-title">{user ? "Your account" : authMode === "login" ? "Welcome back" : "Create your account"}</h2></div><span className="form-step">02</span></div>
-          {admin ? <div className="account-panel"><p className="section-kicker">ADMINISTRATOR SIGNED IN</p><h3>Administrator account</h3><p>{admin.email}</p><button type="button" className="account-submit" onClick={logoutAdmin}>Log out ↗</button></div> : user ? <div className="account-panel"><p className="section-kicker">SIGNED IN</p><h3>Welcome, {user.full_name}</h3><p>{user.email}</p><button type="button" className="account-submit" onClick={logout}>Log out ↗</button></div> : <><div className="account-tabs" role="group" aria-label="Account actions"><button type="button" aria-pressed={authMode === "login"} onClick={() => { setAuthMode("login"); setAuthError(false); setAuthMessage(""); }}>Log in</button><button type="button" aria-pressed={authMode === "register"} onClick={() => { setAuthMode("register"); setAuthError(false); setAuthMessage(""); }}>Create account</button></div>
-            <form className="registration-form" onSubmit={submitAuth} key={authMode} noValidate>
+          {user ? <div className="account-panel"><p className="section-kicker">SIGNED IN</p><h3>Welcome, {user.full_name}</h3><p>{user.email}</p><button type="button" className="account-submit" onClick={logout}>Log out ↗</button></div> : <><div className="account-tabs" role="group" aria-label="Account actions"><button type="button" aria-pressed={authMode === "login"} onClick={() => { setAuthMode("login"); setAuthMessage(""); }}>Log in</button><button type="button" aria-pressed={authMode === "register"} onClick={() => { setAuthMode("register"); setAuthMessage(""); }}>Create account</button></div>
+            <form className="registration-form" onSubmit={submitAuth} key={authMode}>
               {authMode === "register" && <div className="field-group"><label htmlFor="full-name">Full name</label><input id="full-name" name="full_name" autoComplete="name" maxLength="120" placeholder="e.g. Aditi Rao" required /></div>}
               <div className="field-group"><label htmlFor="email">Email address</label><input id="email" name="email" type="email" autoComplete={authMode === "login" ? "username" : "email"} maxLength="254" placeholder="you@example.com" required /></div>
               {authMode === "register" && <div className="field-group"><label htmlFor="phone-number">Phone number <span className="optional">OPTIONAL</span></label><input id="phone-number" name="phone_number" type="tel" autoComplete="tel" maxLength="25" placeholder="Your phone number" /></div>}
-              <div className="field-group"><label htmlFor="password">Password</label><input id="password" name="password" type="password" autoComplete={authMode === "login" ? "current-password" : "new-password"} minLength={authMode === "register" ? 8 : undefined} title={authMode === "register" ? "Use 8–128 characters with an uppercase letter, a lowercase letter, and a number." : undefined} maxLength="128" placeholder={authMode === "login" ? "Your password" : "Create a strong password"} required /></div>
+              <div className="field-group"><label htmlFor="password">Password</label><input id="password" name="password" type="password" autoComplete={authMode === "login" ? "current-password" : "new-password"} minLength={authMode === "register" ? 8 : undefined} maxLength="128" placeholder={authMode === "login" ? "Your password" : "Create a strong password"} required /></div>
               {authMode === "register" && <p className="field-help">8–128 characters, with uppercase, lowercase, and a number.</p>}
               <button type="submit" className="account-submit" disabled={authBusy}>{authBusy ? "Please wait…" : authMode === "login" ? "Log in ↗" : "Create account ↗"}</button>
             </form></>}
           <p className={`form-message ${authError ? "is-error" : ""}`} role="status">{authMessage}</p><p className="privacy-note"><span aria-hidden="true">▣</span> Your password is securely protected.</p>
         </div>
       </section>
-      {page === "tickets" && <section className="ticket-history-page" aria-labelledby="tickets-title"><div className="page-heading-row"><div><p className="section-kicker">YOUR JOURNEYS</p><h1 id="tickets-title">My tickets</h1><p>Bookings, seat details, and payment status.</p></div><button type="button" className="secondary-button" onClick={() => { setTickets(null); setTicketsMessage(""); api("/bookings/history").then(setTickets).catch((error) => setTicketsMessage(messageText(error))); }}>Refresh</button></div>{!user ? <div className="empty-state"><p>Sign in to see your bookings.</p><a className="primary-link-button" href="#/account">Sign in</a></div> : ticketsMessage ? <p className="form-message is-error" role="alert">{ticketsMessage}</p> : tickets ? <><TicketGroup title="Upcoming journeys" bookings={tickets.upcoming || []} /><TicketGroup title="Past journeys" bookings={tickets.previous || []} /></> : <p className="loading-note">Loading your tickets…</p>}</section>}
     </main>
     <footer className="site-footer"><a className="footer-brand" href="#top">trackline</a><span>Plan well. Travel happy.</span><a href="#plan">Back to top ↑</a></footer>
   </>;
 }
 
-function TicketGroup({ title, bookings }) {
-  return <section className="ticket-group"><div className="ticket-group-heading"><h2>{title}</h2><span>{bookings.length}</span></div>{bookings.length ? <div className="ticket-list">{bookings.map((ticket) => <article className="ticket-card" key={ticket.booking_id}><div className="ticket-card-top"><div><span className="section-kicker">PNR {ticket.pnr}</span><h3>{ticket.train_name} <small>#{ticket.train_number}</small></h3></div><span className={`ticket-status ticket-status-${ticket.booking_status.toLowerCase()}`}>{ticket.booking_status.replaceAll("_", " ")}</span></div><p className="ticket-route">{ticket.source_station_name} <span>→</span> {ticket.destination_station_name}</p><div className="ticket-meta"><span>{new Date(ticket.departure_at).toLocaleString()}</span><span>{ticket.class_code} · {ticket.currency_code} {Number(ticket.total_fare).toFixed(2)}</span><span>Payment: {ticket.payment_status || "NOT SUBMITTED"}</span></div><div className="ticket-passengers">{ticket.passengers.map((passenger) => <span key={passenger.passenger_id}>{passenger.passenger_name}{passenger.coach_number && passenger.seat_number ? ` · ${passenger.coach_number}-${passenger.seat_number}` : ""}</span>)}</div></article>)}</div> : <p className="empty-inline">No {title.toLowerCase()} yet.</p>}</section>;
+
+
+function BookingHistory({ user }) {
+  const [history, setHistory] = useState({ upcoming: [], previous: [], count: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const [cancelConfirmId, setCancelConfirmId] = useState(null);
+  const [cancelingId, setCancelingId] = useState(null);
+  const [cancelMessage, setCancelMessage] = useState("");
+  const [cancelError, setCancelError] = useState(false);
+
+  async function cancelTicket(booking) {
+    setCancelingId(booking.booking_id);
+    setCancelMessage("");
+    setCancelError(false);
+    try {
+      const result = await api("/bookings/" + booking.booking_id + "/cancel", {
+        method: "POST", body: { reason: "Cancelled by passenger" },
+      });
+      setCancelMessage(result.message || "Your booking has been cancelled.");
+      setCancelConfirmId(null);
+      await loadHistory();
+    } catch (requestError) {
+      setCancelError(true);
+      setCancelMessage(messageText(requestError));
+    } finally {
+      setCancelingId(null);
+    }
+  }
+
+  async function loadHistory() {
+    setLoading(true);
+    setError("");
+    try {
+      const result = await api("/bookings/history");
+      setHistory({ upcoming: result.upcoming || [], previous: result.previous || [], count: result.count || 0 });
+    } catch (requestError) {
+      setError(messageText(requestError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    api("/bookings/history").then((result) => {
+      if (active) setHistory({ upcoming: result.upcoming || [], previous: result.previous || [], count: result.count || 0 });
+    }).catch((requestError) => {
+      if (active) setError(messageText(requestError));
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [user.user_id]);
+
+  const bookings = history[activeTab] || [];
+  const formatDate = (value) => value ? new Date(value).toLocaleString(undefined, {
+    weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+  }) : "Not available";
+
+  return <section id="booking-history" className="booking-history" aria-labelledby="booking-history-title">
+    <div className="section-heading">
+      <div><p className="section-kicker">YOUR TRAVEL RECORD</p><h2 id="booking-history-title">My bookings</h2><p className="booking-history-intro">{history.count} booking{history.count === 1 ? "" : "s"} linked to your account</p></div>
+      <button type="button" className="history-refresh" onClick={loadHistory} disabled={loading}>{loading ? "Loading…" : "Refresh ↻"}</button>
+    </div>
+    {cancelMessage && <p className={cancelError ? "form-message is-error" : "form-message is-success"} role="status">{cancelMessage}</p>}
+    <div className="history-tabs" role="tablist" aria-label="Booking history">
+      <button type="button" role="tab" aria-selected={activeTab === "upcoming"} className={activeTab === "upcoming" ? "is-active" : ""} onClick={() => setActiveTab("upcoming")}>Upcoming ({history.upcoming.length})</button>
+      <button type="button" role="tab" aria-selected={activeTab === "previous"} className={activeTab === "previous" ? "is-active" : ""} onClick={() => setActiveTab("previous")}>Previous ({history.previous.length})</button>
+    </div>
+    {error && <p className="form-message is-error" role="alert">{error}</p>}
+    {loading ? <p className="history-empty">Loading your bookings…</p> : bookings.length === 0 ? <div className="history-empty"><strong>No {activeTab} bookings yet.</strong><span>{activeTab === "upcoming" ? "Your next journey will appear here after you reserve a ticket." : "Completed journeys will appear here."}</span>{activeTab === "upcoming" && <a className="history-find-train" href="#plan">Find a train ↗</a>}</div> :
+      <div className="history-list">{bookings.map((booking) => <article className="history-card" key={booking.booking_id}>
+        <div className="history-card-top"><div><span className="history-pnr-label">PNR</span><strong className="history-pnr">{booking.pnr}</strong></div><span className="history-status">{String(booking.booking_status).replaceAll("_", " ")}</span></div>
+        <div className="history-train"><strong>{booking.train_name}</strong><span>Train {booking.train_number} · Class {booking.class_code}</span></div>
+        <div className="history-route"><div><strong>{booking.source_station_name}</strong><span>{booking.source_station_code}</span></div><span className="history-route-arrow">→</span><div><strong>{booking.destination_station_name}</strong><span>{booking.destination_station_code}</span></div></div>
+        <div className="history-meta"><div><span>Departure</span><strong>{formatDate(booking.departure_at)}</strong></div><div><span>Arrival</span><strong>{formatDate(booking.arrival_at)}</strong></div><div><span>Total fare</span><strong>{booking.currency_code} {Number(booking.total_fare).toFixed(2)}</strong></div></div>
+        <div className="history-passengers"><strong>Passengers and seats</strong>{booking.passengers.map((passenger) => <span key={passenger.passenger_id}>{passenger.passenger_name} · {passenger.coach_number && passenger.seat_number ? `${passenger.coach_number} / ${passenger.seat_number}` : passenger.allocation_status || "Seat details unavailable"}</span>)}</div>
+        {["PENDING_PAYMENT", "CONFIRMED", "PARTIALLY_CANCELLED"].includes(booking.booking_status) && booking.trip_type === "UPCOMING" && <div className="history-cancel-actions">
+          {cancelConfirmId === booking.booking_id ? <><span>Cancel this entire booking and release its seats? This action cannot be undone. Check the booking status and refund details after cancellation.</span><button type="button" className="cancel-confirm-button" onClick={() => cancelTicket(booking)} disabled={cancelingId === booking.booking_id}>{cancelingId === booking.booking_id ? "Cancelling…" : "Confirm cancellation"}</button><button type="button" className="cancel-dismiss-button" onClick={() => setCancelConfirmId(null)} disabled={cancelingId === booking.booking_id}>Keep booking</button></> : <button type="button" className="cancel-ticket-button" onClick={() => { setCancelMessage(""); setCancelConfirmId(booking.booking_id); }}>Cancel ticket</button>}
+        </div>}
+      </article>)}</div>}
+  </section>;
+}
+
+
+
+function BookingStatusLookup() {
+  const [pnr, setPnr] = useState("");
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function checkStatus(event) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    setResult(null);
+    try {
+      const data = await api(`/bookings/status?pnr=${encodeURIComponent(pnr.trim())}`);
+      setResult(data);
+    } catch (requestError) {
+      setError(messageText(requestError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const booking = result?.booking;
+  return <section id="booking-status" className="booking-status" aria-labelledby="booking-status-title">
+    <div className="section-heading"><div><p className="section-kicker">TRACK YOUR RESERVATION</p><h2 id="booking-status-title">Check booking status</h2><p className="booking-history-intro">Enter the PNR from a booking in your account.</p></div></div>
+    <form className="status-lookup-form" onSubmit={checkStatus}>
+      <label htmlFor="status-pnr">PNR number</label>
+      <div><input id="status-pnr" value={pnr} onChange={(event) => setPnr(event.target.value.toUpperCase())} maxLength="20" autoComplete="off" placeholder="Enter your PNR" required /><button type="submit" disabled={loading}>{loading ? "Checking…" : "Check status ↗"}</button></div>
+    </form>
+    {error && <p className="form-message is-error" role="alert">{error}</p>}
+    {booking && <article className="status-result" aria-live="polite">
+      <div className="history-card-top"><div><span className="history-pnr-label">PNR</span><strong className="history-pnr">{booking.pnr}</strong></div><span className="history-status">{booking.booking_status.replaceAll("_", " ")}</span></div>
+      <div className="history-train"><strong>{booking.train_name_snapshot}</strong><span>Train {booking.train_number_snapshot} · Class {booking.class_code_snapshot}</span></div>
+      <div className="history-route"><div><strong>{booking.boarding_station_name_snapshot}</strong><span>{booking.boarding_station_code_snapshot}</span></div><span className="history-route-arrow">→</span><div><strong>{booking.alighting_station_name_snapshot}</strong><span>{booking.alighting_station_code_snapshot}</span></div></div>
+      <div className="status-lifecycle">
+        <div><span>Booking status</span><strong>{booking.booking_status.replaceAll("_", " ")}</strong></div>
+        <div><span>Payment status</span><strong>{result.payment_status.replaceAll("_", " ")}</strong></div>
+        <div><span>Total fare</span><strong>{booking.currency_code} {Number(booking.total_fare).toFixed(2)}</strong></div>
+      </div>
+      {result.payments.length > 0 && <div className="status-section"><h3>Payment details</h3>{result.payments.map((payment, index) => <p key={index}><strong>{payment.payment_status.replaceAll("_", " ")}</strong> · {payment.payment_method} · {payment.currency_code} {Number(payment.amount).toFixed(2)}{payment.failure_code ? ` · ${payment.failure_code}` : ""}</p>)}</div>}
+      {result.cancellations.length > 0 && <div className="status-section"><h3>Cancellation and refund</h3>{result.cancellations.map((item, index) => <p key={index}><strong>Cancellation: {item.cancellation_status.replaceAll("_", " ")}</strong>{item.item_status ? ` · Passenger item: ${item.item_status}` : ""}{item.refund_status ? ` · Refund: ${item.refund_status}` : " · Refund not recorded"}{item.refund_amount != null ? ` · Refund due: ${booking.currency_code} ${Number(item.refund_amount).toFixed(2)}` : ""}{item.refunded_amount != null ? ` · Refunded: ${item.refund_currency} ${Number(item.refunded_amount).toFixed(2)}` : ""}</p>)}</div>}
+    </article>}
+  </section>;
+}
+
+function TicketConfirmation({ confirmation, onPay, paymentBusy, paymentMessage, paymentError }) {
+  const { booking, train, passengers, journeyDate, className, classCode, passengerCount } = confirmation;
+  const currency = booking.currency_code || train.currency_code || "INR";
+  const farePerPassenger = Number(booking.fare_per_passenger ?? train.starting_fare ?? 0);
+  const totalFare = Number(booking.total_fare ?? farePerPassenger * passengerCount);
+  const journeyLabel = new Date(`${journeyDate}T00:00:00`).toLocaleDateString(undefined, {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  });
+  const seats = booking.assigned_seats || [];
+
+  return <section className="ticket-confirmation" aria-labelledby="confirmation-title" aria-live="polite">
+    <div className="confirmation-heading">
+      <div><p className="section-kicker">BOOKING SUCCESSFUL</p><h2 id="confirmation-title">Your ticket details</h2></div>
+      <span className="confirmation-status">{String(booking.status || "PENDING_PAYMENT").replaceAll("_", " ")}</span>
+    </div>
+    <div className="confirmation-pnr"><span>YOUR PNR</span><strong>{booking.pnr}</strong><small>Keep this number for your journey.</small></div>
+    <div className="confirmation-grid">
+      <div><span>Train</span><strong>{train.train_name} ({train.train_number})</strong></div>
+      <div><span>Journey date</span><strong>{journeyLabel}</strong></div>
+      <div><span>From</span><strong>{train.source_station_name} ({train.source_station_code})</strong></div>
+      <div><span>To</span><strong>{train.destination_station_name} ({train.destination_station_code})</strong></div>
+      <div><span>Departure</span><strong>{train.departure_at}</strong></div>
+      <div><span>Arrival</span><strong>{train.arrival_at}</strong></div>
+      <div><span>Travel class</span><strong>{className}{classCode ? ` (${classCode})` : ""}</strong></div>
+      <div><span>Passengers</span><strong>{passengerCount}</strong></div>
+    </div>
+    <div className="confirmation-passengers">
+      <h3>Passenger and seat details</h3>
+      {passengers.map((passenger, index) => <div className="confirmation-passenger" key={index}>
+        <span><strong>{index + 1}. {passenger.passenger_name}</strong><small>Age {passenger.age}{passenger.gender ? ` · ${passenger.gender}` : ""}</small></span>
+        <strong>{seats[index] ? `${seats[index].coach_number} · Seat ${seats[index].seat_number}` : "Seat assigned"}</strong>
+      </div>)}
+    </div>
+    <div className="confirmation-fare">
+      <div><span>Fare per passenger</span><strong>{currency} {farePerPassenger.toFixed(2)}</strong></div>
+      <div><span>Total fare</span><strong>{currency} {totalFare.toFixed(2)}</strong></div>
+    </div>
+    {booking.status === "PENDING_PAYMENT" ? <>
+      {booking.hold_expires_at && <p className="confirmation-note">Seat hold expires: {new Date(booking.hold_expires_at).toLocaleString()}.</p>}
+      <p className="confirmation-note">This project uses a simulated payment only. No real money will be charged.</p>
+      <button type="button" className="account-submit" onClick={onPay} disabled={paymentBusy}>{paymentBusy ? "Processing simulated payment…" : `Pay ${currency} ${totalFare.toFixed(2)} and confirm ticket`}</button>
+    </> : <>
+      <p className="confirmation-note">Payment successful · SIMULATED. Your ticket is confirmed.</p>
+      <p className="confirmation-note">Email/SMS confirmation requests are queued where contact details are available. Actual delivery is not configured.</p>
+    </>}
+    {paymentMessage && <p className={`form-message ${paymentError ? "is-error" : "is-success"}`} role="status">{paymentMessage}</p>}
+  </section>;
 }
 
 function TrainCard({ train, classId, selectedClass, sourceId, destinationId, journeyDate, passengerCount, onBook }) {
@@ -400,4 +525,5 @@ function TrainCard({ train, classId, selectedClass, sourceId, destinationId, jou
   return <article className="train-result"><div className="train-result-heading"><h3>{train.train_name}</h3><span className="train-number">{train.train_number}</span></div><div className="train-route"><div><strong>{train.source_station_name}</strong><span>{train.source_station_code} · {train.departure_at}</span></div><span className="route-arrow" aria-hidden="true">→</span><div><strong>{train.destination_station_name}</strong><span>{train.destination_station_code} · {train.arrival_at}</span></div></div><div className="train-result-details"><div className="train-result-detail"><span>Fare per passenger · {selectedClass?.class_name || "selected class"}</span><strong>{train.currency_code || "INR"} {Number(train.starting_fare || 0).toFixed(2)}</strong></div><div className="train-result-detail"><span>Estimated total · {passengerCount} passenger{passengerCount === 1 ? "" : "s"}</span><strong>{train.currency_code || "INR"} {total.toFixed(2)}</strong></div><div className="train-result-detail"><span>Seats available</span><strong>{availability}</strong></div></div><button className="book-train-button" type="button" onClick={() => onBook(train)}>Book ticket</button></article>;
 }
 
-createRoot(document.getElementById("root")).render(<React.StrictMode><App /></React.StrictMode>);
+const RootApp = new URLSearchParams(window.location.search).get("admin") === "1" ? AdminApp : App;
+createRoot(document.getElementById("root")).render(<React.StrictMode><RootApp /></React.StrictMode>);
