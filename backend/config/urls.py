@@ -40,6 +40,4 @@ urlpatterns = [
     path("api/bookings/<int:booking_id>/cancel", django_views.passenger_booking_cancel, name="booking-cancel"),
     path("", django_views.frontend, name="frontend"),
     re_path(r"^(?P<asset_path>assets/.+)$", django_views.frontend_asset, name="frontend-asset"),
-    path("", django_views.frontend, name="frontend"),
-    re_path(r"^(?P<asset_path>assets/.+)$", django_views.frontend_asset, name="frontend-asset"),
 ]
