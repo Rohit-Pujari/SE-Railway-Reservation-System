@@ -27,3 +27,93 @@
 .payment-fail-button:hover:not(:disabled) { border-color: var(--accent, #db7944); color: var(--accent, #db7944); }
 .payment-fail-button:disabled { cursor: not-allowed; opacity: .65; }
 @media (max-width: 760px) { .train-result-details { grid-template-columns: 1fr; } .booking-passenger-entry { grid-template-columns: 1fr; } .hero-visual { min-height: 210px; } }
+
+/* Booking, account, ticket history, and payment review stay separate from search. */
+.page-nav a[aria-current="page"] { color: var(--green); }
+.app-page-search .account-section,
+.app-page-booking .hero,
+.app-page-booking .account-section,
+.app-page-payment .hero,
+.app-page-payment .account-section,
+.app-page-account .hero,
+.app-page-account .search-panel,
+.app-page-tickets .hero,
+.app-page-tickets .search-panel,
+.app-page-tickets .account-section,
+.app-page-admin .hero,
+.app-page-admin .search-panel,
+.app-page-admin .account-section { display: none; }
+.app-page-booking .search-panel { margin-top: 42px; }
+.app-page-booking .search-panel > :not(.search-results),
+.app-page-booking .search-results > :not(.booking-panel):not(.form-message) { display: none; }
+.app-page-booking .search-results { margin-top: 0; padding-top: 0; border-top: 0; }
+.app-page-booking .booking-panel { margin-top: 0; padding: 30px; }
+.app-page-payment .search-panel { margin-top: 42px; }
+.app-page-payment .search-panel > :not(.payment-panel) { display: none; }
+.app-page-payment .payment-panel { margin-top: 0; padding: 30px; }
+.app-page-payment .payment-panel { color: #263a2f; background: #fff; }
+.app-page-payment .payment-panel .payment-reference { margin: 0; color: #738078; font-size: 11px; }
+.app-page-payment .payment-panel .payment-reference strong { margin-left: 8px; color: #173f34; letter-spacing: .08em; }
+.app-page-payment .payment-amount strong { color: #173f34; }
+.app-page-payment .payment-demo-note { color: #738078; }
+.app-page-payment .payment-fail-button { color: #263a2f; }
+.app-page-account .account-section { margin-top: 42px; }
+.results-actions { display: flex; align-items: center; gap: 16px; }
+.text-button, .back-link { padding: 8px 0; border: 0; background: transparent; color: #315b47; font-size: 11px; font-weight: 700; }
+.back-link { margin-bottom: 20px; }
+.text-button:hover, .back-link:hover { text-decoration: underline; }
+.ticket-history-page, .admin-review-page { margin: 42px 32px 60px; padding: 32px; border: 1px solid #e7e9e2; border-radius: 18px; background: #fff; box-shadow: 0 12px 35px rgb(31 50 41 / 5%); }
+.page-heading-row, .ticket-group-heading, .ticket-card-top, .approval-card-heading, .admin-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.page-heading-row { margin-bottom: 26px; }
+.page-heading-row h1 { margin: 6px 0; color: #1c352a; font-size: clamp(25px, 3vw, 36px); letter-spacing: -1.1px; }
+.page-heading-row p:not(.section-kicker) { margin: 5px 0 0; color: #718076; font-size: 12px; }
+.secondary-button { min-height: 40px; padding: 0 16px; border: 1px solid #dfe6dd; border-radius: 8px; background: #fff; color: #315b47; font-size: 11px; font-weight: 700; }
+.secondary-button:hover { background: #f2f6ef; }
+.ticket-group { margin-top: 28px; }
+.ticket-group-heading { justify-content: flex-start; margin-bottom: 12px; }
+.ticket-group-heading h2 { margin: 0; color: #263a2f; font-size: 17px; }
+.ticket-group-heading > span { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 50%; background: #eef3ea; color: #526e54; font-size: 10px; font-weight: 700; }
+.ticket-list, .approval-list { display: grid; gap: 12px; }
+.ticket-card, .approval-card { padding: 21px; border: 1px solid #e5e9e2; border-radius: 12px; background: #fcfdfa; }
+.ticket-card h3, .approval-card h2 { margin: 6px 0 0; color: #263a2f; font-size: 16px; }
+.ticket-card h3 small, .approval-card h2 small { color: #7c897f; font-size: 11px; font-weight: 600; }
+.ticket-status, .approval-label { padding: 6px 9px; border-radius: 99px; background: #edf3e8; color: #4d724d; font-size: 9px; font-weight: 800; letter-spacing: .06em; }
+.ticket-status-pending_payment { background: #fff4dd; color: #9a6816; }
+.ticket-status-payment_failed, .ticket-status-cancelled, .ticket-status-expired { background: #fae9e5; color: #a34b40; }
+.ticket-route, .approval-route { margin: 14px 0 10px; color: #385743; font-size: 13px; font-weight: 700; }
+.ticket-route span { padding: 0 6px; color: #9ba79c; }
+.ticket-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding: 12px 0; border-top: 1px solid #e8ece6; color: #718076; font-size: 10px; }
+.ticket-passengers { display: flex; flex-wrap: wrap; gap: 7px; }
+.ticket-passengers span { padding: 6px 9px; border-radius: 7px; background: #eff3ed; color: #526156; font-size: 10px; }
+.empty-inline, .loading-note { margin: 0; padding: 18px; border-radius: 10px; background: #f5f7f3; color: #768179; font-size: 11px; }
+.approval-card-heading { align-items: flex-start; }
+.approval-amount { color: #173f34; font-size: 19px; white-space: nowrap; }
+.approval-label { display: inline-block; background: #fff4dd; color: #986814; }
+.approval-route { margin: 14px 0; }
+.approval-card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 22px; margin: 0; padding: 16px 0; border-top: 1px solid #e8ece6; }
+.approval-card dl div { display: grid; gap: 4px; }
+.approval-card dt { color: #879189; font-size: 9px; }
+.approval-card dd { margin: 0; color: #394d40; font-size: 10px; overflow-wrap: anywhere; }
+.approval-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.approve-button, .reject-button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 8px; color: #fff; font-size: 10px; font-weight: 700; }
+.approve-button { background: #245b49; }
+.reject-button { background: #a34b40; }
+.approve-button:disabled, .reject-button:disabled { opacity: .55; cursor: not-allowed; }
+.approval-waiting { margin: 0; padding: 12px; border-radius: 8px; background: #fff4dd; color: #8d641e; font-size: 11px; }
+@media (max-width: 620px) {
+  .site-header { flex-wrap: wrap; gap: 8px; padding: 9px 0; }
+  .page-nav { gap: 8px; }
+  .page-nav > a { display: inline-flex; font-size: 10px; }
+  .page-nav > a:nth-of-type(2) { display: none; }
+  .top-nav.page-nav { width: 100%; justify-content: space-between; }
+  .page-nav .service-status { display: none; }
+  .app-page-booking .search-panel,
+  .app-page-payment .search-panel { margin: 25px 8px 35px; }
+  .app-page-booking .booking-panel,
+  .app-page-payment .payment-panel { padding: 20px 16px; }
+  .ticket-history-page, .admin-review-page { margin: 25px 8px 35px; padding: 20px 16px; }
+  .page-heading-row { align-items: flex-start; }
+  .approval-card dl { grid-template-columns: 1fr; }
+  .approval-card-heading { flex-direction: column; }
+  .admin-toolbar { align-items: flex-end; flex-direction: column; gap: 5px; }
+}

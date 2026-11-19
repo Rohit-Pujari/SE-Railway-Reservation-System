@@ -38,6 +38,9 @@ fi
 export DJANGO_HOST="$BACKEND_HOST"
 export DJANGO_PORT="$BACKEND_PORT"
 export DJANGO_API_TARGET="http://${BACKEND_HOST}:${BACKEND_PORT}"
+# Browser POSTs retain the frontend Origin through Vite's API proxy.
+# Trust only the local development origins; deployment settings remain explicit.
+export CSRF_TRUSTED_ORIGINS="${CSRF_TRUSTED_ORIGINS:-http://127.0.0.1:${FRONTEND_PORT},http://localhost:${FRONTEND_PORT},http://${FRONTEND_HOST}:${FRONTEND_PORT}}"
 
 BACKEND_PID=""
 FRONTEND_PID=""
@@ -66,12 +69,12 @@ trap 'exit 143' TERM
 
 printf 'Django API: http://%s:%s\n' "$BACKEND_HOST" "$BACKEND_PORT"
 printf 'React app:  http://%s:%s\n' "$FRONTEND_HOST" "$FRONTEND_PORT"
-printf 'MySQL must be running with the existing railway_reservation schema. Press Ctrl+C to stop both servers.\n'
+printf 'MariaDB/MySQL must be running with the existing railway_reservation schema. Press Ctrl+C to stop both servers.\n'
 
 "$ROOT_DIR/.venv/bin/python" -m backend.manage runserver "${BACKEND_HOST}:${BACKEND_PORT}" --noreload &
 BACKEND_PID=$!
 
-(cd "$ROOT_DIR/frontend" && "$ROOT_DIR/frontend/node_modules/.bin/vite" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT") &
+(cd "$ROOT_DIR/frontend" && "$ROOT_DIR/frontend/node_modules/.bin/vite" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort) &
 FRONTEND_PID=$!
 
 if wait -n "$BACKEND_PID" "$FRONTEND_PID"; then

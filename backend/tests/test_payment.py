@@ -162,69 +162,32 @@ class PaymentEndpointTests(unittest.TestCase):
         self.client = RailwayAPIClient()
 
     def test_anonymous_user_cannot_pay(self):
-        response = self.client.post("/api/bookings/41/payment", json={})
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(self.client.post("/api/bookings/41/payment", json={}).status_code, 401)
 
-    @patch("backend.app.django_views.process_payment")
-    def test_authenticated_user_can_submit_simulated_payment(self, process):
-        process.return_value = {
-            "payment_id": 801, "payment_status": "SUCCEEDED", "booking_status": "CONFIRMED",
-            "amount": 251.0, "currency_code": "INR", "pnr": "AB23456789CD", "replayed": False,
-        }
+    @patch("backend.app.django_views.request_payment_approval")
+    def test_passenger_requests_review_and_cannot_choose_success_or_amount(self, request):
+        request.return_value = {"payment_status": "INITIATED", "booking_status": "PENDING_PAYMENT"}
         set_session(self.client, user_id=7, role="PASSENGER")
         response = self.client.post("/api/bookings/41/payment", json={
-            "idempotency_key": "payment-key", "simulated_outcome": "SUCCESS",
+            "idempotency_key": "request-one", "simulated_outcome": "SUCCESS", "amount": 0,
         })
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()["booking_status"], "CONFIRMED")
-        process.assert_called_once_with(41, 7, "payment-key", "SUCCESS")
-
-    @patch("backend.app.django_views.process_payment")
-    def test_failed_payment_is_returned_for_retry(self, process):
-        process.return_value = {
-            "payment_id": 801, "payment_status": "FAILED", "booking_status": "PENDING_PAYMENT",
-            "amount": 251.0, "currency_code": "INR", "pnr": "AB23456789CD", "replayed": False,
-        }
-        set_session(self.client, user_id=7, role="PASSENGER")
-        response = self.client.post("/api/bookings/41/payment", json={
-            "idempotency_key": "payment-key", "simulated_outcome": "FAILURE", "amount": 0,
-        })
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()["payment_status"], "FAILED")
+        self.assertEqual(response.status_code, 202)
         self.assertEqual(response.json()["booking_status"], "PENDING_PAYMENT")
-        process.assert_called_once_with(41, 7, "payment-key", "FAILURE")
+        request.assert_called_once_with(41, 7, "request-one")
 
-    @patch("backend.app.django_views.process_payment")
-    def test_failed_payment_can_be_retried_and_confirmed(self, process):
-        process.side_effect = [
-            {
-                "payment_id": 801, "payment_status": "FAILED", "booking_status": "PENDING_PAYMENT",
-                "amount": 251.0, "currency_code": "INR", "pnr": "AB23456789CD", "replayed": False,
-            },
-            {
-                "payment_id": 802, "payment_status": "SUCCEEDED", "booking_status": "CONFIRMED",
-                "amount": 251.0, "currency_code": "INR", "pnr": "AB23456789CD", "replayed": False,
-            },
-        ]
+    @patch("backend.app.django_views.review_payment_approval")
+    def test_passenger_cannot_approve_payment(self, review):
         set_session(self.client, user_id=7, role="PASSENGER")
+        self.assertEqual(self.client.post("/api/admin/payments/1/review", json={"decision": "APPROVE"}).status_code, 403)
+        review.assert_not_called()
 
-        failed = self.client.post("/api/bookings/41/payment", json={
-            "idempotency_key": "attempt-one", "simulated_outcome": "FAILURE",
-        })
-        retried = self.client.post("/api/bookings/41/payment", json={
-            "idempotency_key": "attempt-two", "simulated_outcome": "SUCCESS",
-        })
-
-        self.assertEqual(failed.status_code, 201)
-        self.assertEqual(failed.json()["payment_status"], "FAILED")
-        self.assertEqual(failed.json()["booking_status"], "PENDING_PAYMENT")
-        self.assertEqual(retried.status_code, 201)
-        self.assertEqual(retried.json()["payment_status"], "SUCCEEDED")
-        self.assertEqual(retried.json()["booking_status"], "CONFIRMED")
-        self.assertEqual([call.args for call in process.call_args_list], [
-            (41, 7, "attempt-one", "FAILURE"),
-            (41, 7, "attempt-two", "SUCCESS"),
-        ])
+    @patch("backend.app.django_views.review_payment_approval")
+    def test_admin_can_review_payment(self, review):
+        set_session(self.client, user_id=8, role="ADMIN")
+        review.return_value = {"payment_status": "SUCCEEDED", "booking_status": "CONFIRMED"}
+        response = self.client.post("/api/admin/payments/1/review", json={"decision": "APPROVE"})
+        self.assertEqual(response.status_code, 200)
+        review.assert_called_once_with(1, 8, "APPROVE")
 
 
 if __name__ == "__main__":
