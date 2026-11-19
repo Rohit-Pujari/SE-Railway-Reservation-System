@@ -1,0 +1,334 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R] /Count 6 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3719 >>
+stream
+BT /F2 18 Tf 48 758 Td (USE CASE SPECIFICATIONS) Tj ET
+BT /F2 13 Tf 48 734 Td (Railway Reservation System) Tj ET
+BT /F1 9 Tf 48 721 Td (Document type: Software Engineering - Use Case Specifications  ) Tj ET
+BT /F1 9 Tf 48 708 Td (Version: 1.0 | Date: 19 November 2026  ) Tj ET
+BT /F1 9 Tf 48 695 Td (Related documents: Software Requirements Specification  Test Plan  System Validation Report) Tj ET
+BT /F2 13 Tf 48 653 Td (1. Introduction) Tj ET
+BT /F2 11 Tf 48 634 Td (1.1 Purpose) Tj ET
+BT /F1 9 Tf 48 621 Td (This document specifies the interactions between external actors and the Railway Reservation) Tj ET
+BT /F1 9 Tf 48 608 Td (System. It defines the system boundary, use-case model, normal flows, alternative flows,) Tj ET
+BT /F1 9 Tf 48 595 Td (exception handling, and requirement traceability. It describes intended system behavior; it) Tj ET
+BT /F1 9 Tf 48 582 Td (is not a record of successful end-to-end validation.) Tj ET
+BT /F2 11 Tf 48 554 Td (1.2 Scope) Tj ET
+BT /F1 9 Tf 48 541 Td (Passenger registration and authentication, train search, seat availability, booking,) Tj ET
+BT /F1 9 Tf 48 528 Td (Passenger Name Record \(PNR\), simulated payment, booking history, cancellation, pending) Tj ET
+BT /F1 9 Tf 48 515 Td (refund records, and administrator operations. Real payment settlement, bank refunds, and) Tj ET
+BT /F1 9 Tf 48 502 Td (externally delivered notifications are outside the implemented scope.) Tj ET
+BT /F2 13 Tf 48 469 Td (2. Actors) Tj ET
+BT /F1 9 Tf 48 456 Td (Actor / Description / Responsibilities) Tj ET
+BT /F1 9 Tf 48 443 Td (Passenger / Registered user booking railway journeys / Register, log in, search, book,) Tj ET
+BT /F1 9 Tf 48 430 Td (simulate payment, view/cancel own bookings) Tj ET
+BT /F1 9 Tf 48 417 Td (Administrator / Authorized railway operations user / Log in; manage stations, trains,) Tj ET
+BT /F1 9 Tf 48 404 Td (routes, schedules and inventory; inspect records) Tj ET
+BT /F1 9 Tf 48 391 Td (System clock \(supporting trigger\) / Time-based process/condition / Determines hold expiry) Tj ET
+BT /F1 9 Tf 48 378 Td (and date-dependent booking eligibility) Tj ET
+BT /F1 9 Tf 48 365 Td (MySQL database \(internal component, not an external actor\) / Persistent application data) Tj ET
+BT /F1 9 Tf 48 352 Td (store / Stores users, inventory, bookings and records) Tj ET
+BT /F1 9 Tf 48 330 Td (System boundary: React browser interface and Django backend constitute the application;) Tj ET
+BT /F1 9 Tf 48 317 Td (MySQL is an internal dependency. Simulated payment is an internal workflow rather than an) Tj ET
+BT /F1 9 Tf 48 304 Td (external payment-gateway actor.) Tj ET
+BT /F2 13 Tf 48 271 Td (3. Use-Case Diagram) Tj ET
+BT /F1 9 Tf 48 258 Td (The following UML-style diagrams show actor-to-use-case associations. They are separated for) Tj ET
+BT /F1 9 Tf 48 245 Td (readability.) Tj ET
+BT /F2 11 Tf 48 217 Td (3.1 Passenger) Tj ET
+BT /F1 9 Tf 48 204 Td (Refer to Documents/Use_Case_Diagram.svg for actor diagrams.) Tj ET
+BT /F2 11 Tf 48 176 Td (3.2 Administrator) Tj ET
+BT /F1 9 Tf 48 163 Td (Refer to Documents/Use_Case_Diagram.svg for actor diagrams.) Tj ET
+BT /F2 13 Tf 48 130 Td (4. Use-Case Summary) Tj ET
+BT /F1 9 Tf 48 117 Td (ID / Use case / Primary actor / Priority / Requirements) Tj ET
+BT /F1 9 Tf 48 104 Td (UC-01 / Register and sign in / Passenger / High / RRS-F-001-002) Tj ET
+BT /F1 9 Tf 48 91 Td (UC-02 / Search trains and check seats / Passenger / High / RRS-F-004-006) Tj ET
+BT /F1 9 Tf 48 78 Td (UC-03 / Reserve seats and generate PNR / Passenger / High / RRS-F-007-010) Tj ET
+BT /F1 9 Tf 48 65 Td (UC-04 / Confirm simulated payment / Passenger / High / RRS-F-011, RRS-F-015) Tj ET
+BT /F1 8 Tf 48 30 Td (Use Case Specifications - Page 1 of 6) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 4155 >>
+stream
+BT /F1 9 Tf 48 777 Td (UC-05 / View booking history / Passenger / High / RRS-F-012) Tj ET
+BT /F1 9 Tf 48 764 Td (UC-06 / Cancel booking and track refund / Passenger / High / RRS-F-013-014) Tj ET
+BT /F1 9 Tf 48 751 Td (UC-07 / Administrator authentication / Administrator / High / RRS-F-003) Tj ET
+BT /F1 9 Tf 48 738 Td (UC-08 / Manage railway master data / Administrator / High / RRS-F-016-017) Tj ET
+BT /F1 9 Tf 48 725 Td (UC-09 / Manage schedules and inventory / Administrator / High / RRS-F-018) Tj ET
+BT /F1 9 Tf 48 712 Td (UC-10 / Inspect booking and refund records / Administrator / Medium / RRS-F-019) Tj ET
+BT /F2 13 Tf 48 679 Td (5. Detailed Use-Case Specifications) Tj ET
+BT /F1 9 Tf 48 666 Td (Each use case follows a consistent template: ID, name, actors, goal, trigger, preconditions,) Tj ET
+BT /F1 9 Tf 48 653 Td (main success scenario, alternative/exception flows, postconditions, and related) Tj ET
+BT /F1 9 Tf 48 640 Td (requirements.) Tj ET
+BT /F2 11 Tf 48 612 Td (UC-01 - Passenger Registration and Sign-In) Tj ET
+BT /F1 9 Tf 48 599 Td (Primary actor: Passenger  ) Tj ET
+BT /F1 9 Tf 48 586 Td (Goal: Create an account or authenticate an existing passenger.  ) Tj ET
+BT /F1 9 Tf 48 573 Td (Trigger: Passenger chooses Register or Sign In.  ) Tj ET
+BT /F1 9 Tf 48 560 Td (Preconditions: Application is available; for sign-in, an active account exists.) Tj ET
+BT /F1 9 Tf 48 538 Td (Main success scenario) Tj ET
+BT /F1 9 Tf 48 525 Td (1. Passenger opens the registration form.) Tj ET
+BT /F1 9 Tf 48 512 Td (2. Passenger enters required account details.) Tj ET
+BT /F1 9 Tf 48 499 Td (3. System validates inputs and checks for duplicate account data.) Tj ET
+BT /F1 9 Tf 48 486 Td (4. System stores the account using a one-way password hash.) Tj ET
+BT /F1 9 Tf 48 473 Td (5. Passenger enters valid sign-in credentials.) Tj ET
+BT /F1 9 Tf 48 460 Td (6. System establishes an authenticated passenger session.) Tj ET
+BT /F1 9 Tf 48 438 Td (Alternative and exception flows: Invalid or duplicate registration data is rejected;) Tj ET
+BT /F1 9 Tf 48 425 Td (incorrect or inactive credentials deny access; missing authentication blocks protected) Tj ET
+BT /F1 9 Tf 48 412 Td (actions.  ) Tj ET
+BT /F1 9 Tf 48 399 Td (Postconditions: Passenger account exists and/or a valid session is established.  ) Tj ET
+BT /F1 9 Tf 48 386 Td (Requirements: RRS-F-001, RRS-F-002, RRS-SR-001-003.) Tj ET
+BT /F2 11 Tf 48 358 Td (UC-02 - Search Trains and Check Seat Availability) Tj ET
+BT /F1 9 Tf 48 345 Td (Primary actor: Passenger  ) Tj ET
+BT /F1 9 Tf 48 332 Td (Goal: Identify a valid journey and available seats.  ) Tj ET
+BT /F1 9 Tf 48 319 Td (Trigger: Passenger submits a journey search.  ) Tj ET
+BT /F1 9 Tf 48 306 Td (Preconditions: Station and schedule data exist.) Tj ET
+BT /F1 9 Tf 48 284 Td (Main success scenario) Tj ET
+BT /F1 9 Tf 48 271 Td (1. System displays station and travel-class options.) Tj ET
+BT /F1 9 Tf 48 258 Td (2. Passenger selects origin, destination and journey date.) Tj ET
+BT /F1 9 Tf 48 245 Td (3. System validates search criteria.) Tj ET
+BT /F1 9 Tf 48 232 Td (4. System retrieves matching train schedules.) Tj ET
+BT /F1 9 Tf 48 219 Td (5. Passenger selects a train and class.) Tj ET
+BT /F1 9 Tf 48 206 Td (6. System displays fare and available seats after accounting for confirmed and unexpired) Tj ET
+BT /F1 9 Tf 48 193 Td (held allocations.) Tj ET
+BT /F1 9 Tf 48 171 Td (Alternative and exception flows: No matching train produces an empty result; invalid) Tj ET
+BT /F1 9 Tf 48 158 Td (station, class or date produces a validation error. Past-date rejection is an acceptance) Tj ET
+BT /F1 9 Tf 48 145 Td (requirement that must be verified against the deployed backend.  ) Tj ET
+BT /F1 9 Tf 48 132 Td (Postconditions: An eligible train and class can be selected.  ) Tj ET
+BT /F1 9 Tf 48 119 Td (Requirements: RRS-F-004-006.) Tj ET
+BT /F2 11 Tf 48 91 Td (UC-03 - Reserve Seats and Generate PNR) Tj ET
+BT /F1 9 Tf 48 78 Td (Primary actor: Passenger  ) Tj ET
+BT /F1 9 Tf 48 65 Td (Goal: Create a held reservation with a unique Passenger Name Record \(PNR\).  ) Tj ET
+BT /F1 8 Tf 48 30 Td (Use Case Specifications - Page 2 of 6) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 4133 >>
+stream
+BT /F1 9 Tf 48 777 Td (Trigger: Passenger selects Book.  ) Tj ET
+BT /F1 9 Tf 48 764 Td (Preconditions: Passenger is authenticated; eligible schedule and inventory are available.) Tj ET
+BT /F1 9 Tf 48 742 Td (Main success scenario) Tj ET
+BT /F1 9 Tf 48 729 Td (1. Passenger supplies traveler details.) Tj ET
+BT /F1 9 Tf 48 716 Td (2. System validates traveler details and calculates the fare.) Tj ET
+BT /F1 9 Tf 48 703 Td (3. System checks and locks the necessary inventory for allocation.) Tj ET
+BT /F1 9 Tf 48 690 Td (4. System creates the booking, travelers and temporary seat holds atomically.) Tj ET
+BT /F1 9 Tf 48 677 Td (5. System generates a unique PNR and displays booking status.) Tj ET
+BT /F1 9 Tf 48 655 Td (Alternative and exception flows: Invalid traveler details are rejected; insufficient) Tj ET
+BT /F1 9 Tf 48 642 Td (inventory prevents booking; concurrent conflicts and database errors roll back the) Tj ET
+BT /F1 9 Tf 48 629 Td (transaction; repeated requests with the same idempotency key must not allocate seats twice. ) Tj ET
+BT /F1 9 Tf 48 607 Td (Postconditions: A held booking with a PNR exists, or no partial reservation persists.  ) Tj ET
+BT /F1 9 Tf 48 594 Td (Requirements: RRS-F-007-010, RRS-NF-003.) Tj ET
+BT /F2 11 Tf 48 566 Td (UC-04 - Confirm Simulated Payment) Tj ET
+BT /F1 9 Tf 48 553 Td (Primary actor: Passenger  ) Tj ET
+BT /F1 9 Tf 48 540 Td (Goal: Confirm an eligible held booking through the demo payment workflow.  ) Tj ET
+BT /F1 9 Tf 48 527 Td (Trigger: Passenger selects simulated payment confirmation.  ) Tj ET
+BT /F1 9 Tf 48 514 Td (Preconditions: Passenger owns a valid, unexpired held booking.) Tj ET
+BT /F1 9 Tf 48 492 Td (Main success scenario) Tj ET
+BT /F1 9 Tf 48 479 Td (1. Passenger opens payment confirmation for the held booking.) Tj ET
+BT /F1 9 Tf 48 466 Td (2. System validates ownership, booking state and hold validity.) Tj ET
+BT /F1 9 Tf 48 453 Td (3. System records the simulated payment result.) Tj ET
+BT /F1 9 Tf 48 440 Td (4. System confirms the booking and seat allocations consistently.) Tj ET
+BT /F1 9 Tf 48 427 Td (5. System creates applicable notification queue records.) Tj ET
+BT /F1 9 Tf 48 414 Td (6. System displays confirmed booking status and PNR.) Tj ET
+BT /F1 9 Tf 48 392 Td (Alternative and exception flows: Expired holds, unauthorized requests or invalid booking) Tj ET
+BT /F1 9 Tf 48 379 Td (states are rejected; retries must not duplicate payment records.  ) Tj ET
+BT /F1 9 Tf 48 366 Td (Postconditions: Booking is confirmed in the application. No real money transfer or) Tj ET
+BT /F1 9 Tf 48 353 Td (notification delivery is implied.  ) Tj ET
+BT /F1 9 Tf 48 340 Td (Requirements: RRS-F-011, RRS-F-015.) Tj ET
+BT /F2 11 Tf 48 312 Td (UC-05 - View Booking History) Tj ET
+BT /F1 9 Tf 48 299 Td (Primary actor: Passenger  ) Tj ET
+BT /F1 9 Tf 48 286 Td (Goal: Review previously created reservations and their current status.  ) Tj ET
+BT /F1 9 Tf 48 273 Td (Trigger: Passenger opens Booking History or searches own PNR.  ) Tj ET
+BT /F1 9 Tf 48 260 Td (Preconditions: Passenger is authenticated.) Tj ET
+BT /F1 9 Tf 48 238 Td (Main success scenario) Tj ET
+BT /F1 9 Tf 48 225 Td (1. Passenger opens booking history.) Tj ET
+BT /F1 9 Tf 48 212 Td (2. System identifies the authenticated account.) Tj ET
+BT /F1 9 Tf 48 199 Td (3. System returns only reservations owned by that account.) Tj ET
+BT /F1 9 Tf 48 186 Td (4. Passenger selects a reservation to view PNR, travelers and status.) Tj ET
+BT /F1 9 Tf 48 164 Td (Alternative and exception flows: No bookings yields an empty state; cross-user access is) Tj ET
+BT /F1 9 Tf 48 151 Td (denied.  ) Tj ET
+BT /F1 9 Tf 48 138 Td (Postconditions: No reservation data is modified.  ) Tj ET
+BT /F1 9 Tf 48 125 Td (Requirements: RRS-F-012, RRS-SR-002.) Tj ET
+BT /F2 11 Tf 48 97 Td (UC-06 - Cancel Booking and Track Refund) Tj ET
+BT /F1 9 Tf 48 84 Td (Primary actor: Passenger  ) Tj ET
+BT /F1 9 Tf 48 71 Td (Goal: Cancel an eligible booking and view resulting refund status.  ) Tj ET
+BT /F1 9 Tf 48 58 Td (Trigger: Passenger requests cancellation.  ) Tj ET
+BT /F1 8 Tf 48 30 Td (Use Case Specifications - Page 3 of 6) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 4094 >>
+stream
+BT /F1 9 Tf 48 777 Td (Preconditions: Passenger is authenticated, owns the booking and satisfies cancellation) Tj ET
+BT /F1 9 Tf 48 764 Td (rules.) Tj ET
+BT /F1 9 Tf 48 742 Td (Main success scenario) Tj ET
+BT /F1 9 Tf 48 729 Td (1. Passenger selects an eligible reservation.) Tj ET
+BT /F1 9 Tf 48 716 Td (2. System validates ownership and cancellation eligibility.) Tj ET
+BT /F1 9 Tf 48 703 Td (3. System calculates applicable cancellation charges.) Tj ET
+BT /F1 9 Tf 48 690 Td (4. System updates booking/cancellation records and releases eligible seats atomically.) Tj ET
+BT /F1 9 Tf 48 677 Td (5. System records pending refund information and shows updated status.) Tj ET
+BT /F1 9 Tf 48 655 Td (Alternative and exception flows: Unauthorized or ineligible cancellation is rejected; failed) Tj ET
+BT /F1 9 Tf 48 642 Td (transactions are rolled back; repeat cancellation must not duplicate releases or refunds.  ) Tj ET
+BT /F1 9 Tf 48 629 Td (Postconditions: Booking is cancelled and any pending refund is recorded. External bank) Tj ET
+BT /F1 9 Tf 48 616 Td (payout is not implemented.  ) Tj ET
+BT /F1 9 Tf 48 603 Td (Requirements: RRS-F-013-014, RRS-NF-003.) Tj ET
+BT /F2 11 Tf 48 575 Td (UC-07 - Administrator Authentication) Tj ET
+BT /F1 9 Tf 48 562 Td (Primary actor: Administrator  ) Tj ET
+BT /F1 9 Tf 48 549 Td (Goal: Access restricted railway administration functions.  ) Tj ET
+BT /F1 9 Tf 48 536 Td (Trigger: Administrator submits credentials.  ) Tj ET
+BT /F1 9 Tf 48 523 Td (Preconditions: Active administrator account exists.) Tj ET
+BT /F1 9 Tf 48 501 Td (Main success scenario) Tj ET
+BT /F1 9 Tf 48 488 Td (1. Administrator opens the admin sign-in page.) Tj ET
+BT /F1 9 Tf 48 475 Td (2. Administrator enters credentials.) Tj ET
+BT /F1 9 Tf 48 462 Td (3. System verifies identity and administrative role.) Tj ET
+BT /F1 9 Tf 48 449 Td (4. System establishes the authorized session and displays permitted functions.) Tj ET
+BT /F1 9 Tf 48 427 Td (Alternative and exception flows: Invalid credentials, disabled accounts and passenger-role) Tj ET
+BT /F1 9 Tf 48 414 Td (sessions are denied.  ) Tj ET
+BT /F1 9 Tf 48 401 Td (Postconditions: Administrator is authenticated with role-restricted access.  ) Tj ET
+BT /F1 9 Tf 48 388 Td (Requirements: RRS-F-003, RRS-SR-002.) Tj ET
+BT /F2 11 Tf 48 360 Td (UC-08 - Manage Railway Master Data) Tj ET
+BT /F1 9 Tf 48 347 Td (Primary actor: Administrator  ) Tj ET
+BT /F1 9 Tf 48 334 Td (Goal: Maintain trains, stations, routes and train-route assignments.  ) Tj ET
+BT /F1 9 Tf 48 321 Td (Trigger: Administrator opens the corresponding management function.  ) Tj ET
+BT /F1 9 Tf 48 308 Td (Preconditions: Authorized admin session exists.) Tj ET
+BT /F1 9 Tf 48 286 Td (Main success scenario) Tj ET
+BT /F1 9 Tf 48 273 Td (1. Administrator selects a train, station or route management action.) Tj ET
+BT /F1 9 Tf 48 260 Td (2. System presents current records.) Tj ET
+BT /F1 9 Tf 48 247 Td (3. Administrator enters create, update or deactivate details.) Tj ET
+BT /F1 9 Tf 48 234 Td (4. System validates references and dependencies.) Tj ET
+BT /F1 9 Tf 48 221 Td (5. System persists permitted changes and displays the updated records.) Tj ET
+BT /F1 9 Tf 48 199 Td (Alternative and exception flows: Invalid references, duplicate identifiers, dependency) Tj ET
+BT /F1 9 Tf 48 186 Td (violations or unauthorized changes are rejected.  ) Tj ET
+BT /F1 9 Tf 48 173 Td (Postconditions: Valid master-data changes are stored without breaking dependent bookings.  ) Tj ET
+BT /F1 9 Tf 48 160 Td (Requirements: RRS-F-016-017.) Tj ET
+BT /F2 11 Tf 48 132 Td (UC-09 - Manage Schedules and Seat Inventory) Tj ET
+BT /F1 9 Tf 48 119 Td (Primary actor: Administrator  ) Tj ET
+BT /F1 9 Tf 48 106 Td (Goal: Maintain schedule and inventory data safely.  ) Tj ET
+BT /F1 9 Tf 48 93 Td (Trigger: Administrator opens schedule or inventory management.  ) Tj ET
+BT /F1 9 Tf 48 80 Td (Preconditions: Authorized admin session and relevant train/route records exist.) Tj ET
+BT /F1 9 Tf 48 58 Td (Main success scenario) Tj ET
+BT /F1 8 Tf 48 30 Td (Use Case Specifications - Page 4 of 6) Tj ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 4294 >>
+stream
+BT /F1 9 Tf 48 777 Td (1. Administrator selects a train, route or schedule.) Tj ET
+BT /F1 9 Tf 48 764 Td (2. System displays existing schedules and inventory.) Tj ET
+BT /F1 9 Tf 48 751 Td (3. Administrator submits permitted schedule or seat changes.) Tj ET
+BT /F1 9 Tf 48 738 Td (4. System checks consistency and existing booking dependencies.) Tj ET
+BT /F1 9 Tf 48 725 Td (5. System commits valid updates and displays the result.) Tj ET
+BT /F1 9 Tf 48 703 Td (Alternative and exception flows: Invalid times, missing dependencies or unsafe reductions) Tj ET
+BT /F1 9 Tf 48 690 Td (affecting booked seats are rejected.  ) Tj ET
+BT /F1 9 Tf 48 677 Td (Postconditions: Schedules/inventory remain consistent with existing allocations.  ) Tj ET
+BT /F1 9 Tf 48 664 Td (Requirements: RRS-F-018.) Tj ET
+BT /F2 11 Tf 48 636 Td (UC-10 - Inspect Booking, Cancellation and Refund Records) Tj ET
+BT /F1 9 Tf 48 623 Td (Primary actor: Administrator  ) Tj ET
+BT /F1 9 Tf 48 610 Td (Goal: Inspect reservation operations for support and oversight.  ) Tj ET
+BT /F1 9 Tf 48 597 Td (Trigger: Administrator opens operational records.  ) Tj ET
+BT /F1 9 Tf 48 584 Td (Preconditions: Authorized admin session exists.) Tj ET
+BT /F1 9 Tf 48 562 Td (Main success scenario) Tj ET
+BT /F1 9 Tf 48 549 Td (1. Administrator opens the booking-management view.) Tj ET
+BT /F1 9 Tf 48 536 Td (2. System retrieves permitted booking summaries and details.) Tj ET
+BT /F1 9 Tf 48 523 Td (3. Administrator filters or selects a booking, cancellation or refund record.) Tj ET
+BT /F1 9 Tf 48 510 Td (4. System displays associated status and audit-relevant information.) Tj ET
+BT /F1 9 Tf 48 488 Td (Alternative and exception flows: Invalid filters return errors or empty results;) Tj ET
+BT /F1 9 Tf 48 475 Td (unauthorized requests are rejected.  ) Tj ET
+BT /F1 9 Tf 48 462 Td (Postconditions: Operational records remain unchanged by inspection.  ) Tj ET
+BT /F1 9 Tf 48 449 Td (Requirements: RRS-F-019, RRS-SR-002.) Tj ET
+BT /F2 13 Tf 48 416 Td (6. Use-Case Relationships and Business Rules) Tj ET
+BT /F1 9 Tf 48 403 Td (- Authentication: UC-03 through UC-06 require a passenger session; UC-08 through UC-10) Tj ET
+BT /F1 9 Tf 48 390 Td (require an administrator session.) Tj ET
+BT /F1 9 Tf 48 377 Td (- Booking dependency: UC-03 follows an eligible selection from UC-02; UC-04 requires an) Tj ET
+BT /F1 9 Tf 48 364 Td (unexpired hold from UC-03.) Tj ET
+BT /F1 9 Tf 48 351 Td (- Ownership: A passenger can view, pay for or cancel only their own reservation.) Tj ET
+BT /F1 9 Tf 48 338 Td (- Concurrency: Inventory locking and idempotency protect against overlapping allocations and) Tj ET
+BT /F1 9 Tf 48 325 Td (duplicate retries.) Tj ET
+BT /F1 9 Tf 48 312 Td (- Consistency: Reservation, payment and cancellation state changes should be atomic.) Tj ET
+BT /F1 9 Tf 48 299 Td (- Time: Expired holds cannot be confirmed; invalid or past journey dates must be rejected) Tj ET
+BT /F1 9 Tf 48 286 Td (according to requirements.) Tj ET
+BT /F1 9 Tf 48 273 Td (- Financial boundary: Payment is simulated and refunds are pending records, not settled) Tj ET
+BT /F1 9 Tf 48 260 Td (transfers.) Tj ET
+BT /F2 13 Tf 48 227 Td (7. Traceability to Test Plan) Tj ET
+BT /F1 9 Tf 48 214 Td (Use case / Test-plan coverage / Validation boundary) Tj ET
+BT /F1 9 Tf 48 201 Td (UC-01 / TC-01, TC-02; authentication unit tests / Live database authentication not fully) Tj ET
+BT /F1 9 Tf 48 188 Td (reverified) Tj ET
+BT /F1 9 Tf 48 175 Td (UC-02 / TC-03, TC-04 / Search benchmark and live inventory verification pending) Tj ET
+BT /F1 9 Tf 48 162 Td (UC-03 / TC-05, TC-06 / Transaction/concurrency integration pending) Tj ET
+BT /F1 9 Tf 48 149 Td (UC-04 / TC-07 / Simulated payment only) Tj ET
+BT /F1 9 Tf 48 136 Td (UC-05, UC-06 / TC-08, TC-09 / Live cancellation/refund integration pending) Tj ET
+BT /F1 9 Tf 48 123 Td (UC-07-UC-10 / TC-10; admin tests / Live database administrative workflows pending) Tj ET
+BT /F2 13 Tf 48 90 Td (8. Assumptions, Constraints and References) Tj ET
+BT /F1 9 Tf 48 77 Td (Assumptions: Current SRS in docs/SE_SRS.md is the requirement baseline; behavior that has) Tj ET
+BT /F1 9 Tf 48 64 Td (not been executed against a real MySQL instance remains unverified.) Tj ET
+BT /F1 8 Tf 48 30 Td (Use Case Specifications - Page 5 of 6) Tj ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 16 0 R >>
+endobj
+16 0 obj
+<< /Length 973 >>
+stream
+BT /F1 9 Tf 48 777 Td (Constraints: The documented implementation does not include a real payment gateway, external) Tj ET
+BT /F1 9 Tf 48 764 Td (refund settlement or email/SMS delivery. The system validation report remains conditional) Tj ET
+BT /F1 9 Tf 48 751 Td (where integration and cross-browser evidence is missing.) Tj ET
+BT /F1 9 Tf 48 729 Td (References: docs/SE_SRS.md, docs/SE_TEST_PLAN.md, docs/SYSTEM_VALIDATION_REPORT.md,) Tj ET
+BT /F1 9 Tf 48 716 Td (database/schema.sql, backend/tests/.) Tj ET
+BT /F1 9 Tf 48 694 Td (Format note: This is a standalone use-case-specification artifact, matching the reference) Tj ET
+BT /F1 9 Tf 48 681 Td (repository's separation of SRS, test plan, use-case specifications and use-case diagram.) Tj ET
+BT /F1 9 Tf 48 668 Td (Exact PDF typography from the other group's binary document has not been independently) Tj ET
+BT /F1 9 Tf 48 655 Td (verified.) Tj ET
+BT /F1 8 Tf 48 30 Td (Use Case Specifications - Page 6 of 6) Tj ET
+endstream
+endobj
+xref
+0 17
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000148 00000 n 
+0000000218 00000 n 
+0000000293 00000 n 
+0000000429 00000 n 
+0000004200 00000 n 
+0000004336 00000 n 
+0000008543 00000 n 
+0000008680 00000 n 
+0000012866 00000 n 
+0000013004 00000 n 
+0000017151 00000 n 
+0000017289 00000 n 
+0000021636 00000 n 
+0000021774 00000 n 
+trailer
+<< /Size 17 /Root 1 0 R >>
+startxref
+22799
+%%EOF
