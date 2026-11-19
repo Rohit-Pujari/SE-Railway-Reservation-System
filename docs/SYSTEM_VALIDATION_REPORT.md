@@ -2,7 +2,7 @@
 
 **Date:** 19 November 2026  
 **Overall result:** Conditional — core flows implemented and unit-tested; real-database integration excluded (no credentials).  
-**Commit SHA:** `167d56e` (branch `se-evaluation-complete`, PR #92)  
+**Evaluation evidence:** `se-evaluation-complete` branch; final implementation previously merged through PR #93. This document is maintained on `main`.  
 **Systems covered:** Django backend, React frontend, booking and simulated payment, cancellation and refunds, administrator management.
 
 ---
@@ -130,3 +130,52 @@ Payment remains **simulated**, as required. No Razorpay or real payment gateway 
 - `database/app_permissions.sql` — Required DB grants (unapplied, blocked)
 - `docs/test-reports/` — Test logs and coverage reports
 - `docs/demo/` — Demonstration package
+
+---
+
+## Appendix A — UML use-case actors and flows
+
+The diagrams and flows below are derived from the baseline SRS, Section 7. They describe intended system behavior, not proof of live database validation.
+
+### A.1 Passenger use-case diagram
+
+```mermaid
+flowchart LR
+  P[Passenger] --> R([Register / sign in])
+  P --> S([Search trains and seats])
+  P --> B([Enter traveler details and create booking / PNR])
+  P --> M([Confirm simulated payment])
+  P --> H([View booking history / PNR status])
+  P --> C([Cancel booking / view pending refund])
+  S -.-> B
+  B -.-> M
+  M -.-> H
+  H -.-> C
+```
+
+### A.2 Administrator use-case diagram
+
+```mermaid
+flowchart LR
+  A[Administrator] --> L([Administrator sign in])
+  A --> T([Manage trains and stations])
+  A --> R([Manage routes and schedules])
+  A --> I([Manage seat inventory])
+  A --> B([View bookings and cancellations])
+  A --> F([View pending refunds])
+```
+
+### A.3 Detailed use-case flows
+
+| Use case | Actor | Preconditions | Main flow | Alternative / exception | Postcondition | Requirement |
+|---|---|---|---|---|---|---|
+| UC-01 Register and sign in | Passenger | Browser and API available | Enter details → validate and hash password → create account → authenticate | Invalid/duplicate details or incorrect credentials rejected | Authenticated passenger session | RRS-F-001–002, SR-001–003 |
+| UC-02 Search trains and seats | Passenger | Origin, destination, valid travel date | Select stations/class → search → view schedules, fare and available seats | Invalid stations/classes or past dates rejected | Eligible schedule selected | RRS-F-004–006 |
+| UC-03 Create booking and PNR | Passenger | Signed in; eligible schedule | Enter travelers → validate details and fare → allocate held seats transactionally → issue PNR | Unavailable seats conflict; duplicate request key reused; rollback on failure | Held reservation and PNR | RRS-F-007–010 |
+| UC-04 Simulated payment | Passenger | Owns an unexpired held booking | Choose demo payment → validate owner/state → record simulated payment → confirm seats/booking → queue notifications | Expired hold or unauthorized access rejected; retry is idempotent | Confirmed booking; no money transferred | RRS-F-011, F-015 |
+| UC-05 Booking history/cancellation | Passenger | Authenticated owner | View PNR/history → request eligible cancellation → release seats → calculate charge and pending refund | Cross-account access or ineligible cancellation rejected | Cancellation and pending refund recorded | RRS-F-012–014 |
+| UC-06 Administrator login | Administrator | Active admin account | Submit credentials → validate role → establish admin session | Passenger or disabled administrator rejected | Authorized admin session | RRS-F-003, SR-002 |
+| UC-07 Railway data management | Administrator | Authorized admin session | Manage trains, stations, routes, assignments and schedules → validate dependencies → save | Invalid references or changes affecting existing bookings rejected | Consistent master data | RRS-F-016–018 |
+| UC-08 Inventory and record inspection | Administrator | Authorized admin session | Inspect/update permitted seat inventory → view bookings, cancellations and refunds | Unauthorized or conflicting inventory changes rejected | Safe inventory management and operational visibility | RRS-F-018–019 |
+
+**Validation boundary:** These are requirements-based flow descriptions. Unit tests and historical browser evidence appear in SV-01–SV-18; MySQL integration is excluded and WebKit is blocked.
