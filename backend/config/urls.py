@@ -12,6 +12,7 @@ urlpatterns = [
     path("api/logout", django_views.passenger_logout, name="logout"),
     path("api/admin/login", django_views.admin_login, name="admin-login"),
     path("api/admin/logout", django_views.admin_logout, name="admin-logout"),
+    path("api/admin/session", django_views.admin_session, name="admin-session"),
     path("api/admin/dashboard", django_views.admin_dashboard_data, name="admin-dashboard"),
     path("api/admin/cancellations", django_views.admin_cancellation_records, name="admin-cancellation-records"),
     path("api/admin/bookings/<int:booking_id>", django_views.admin_booking_detail, name="admin-booking-detail"),

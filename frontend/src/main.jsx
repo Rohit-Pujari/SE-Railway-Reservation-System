@@ -10,6 +10,18 @@ function csrfCookie() {
   return document.cookie.split(";").map((item) => item.trim()).find((item) => item.startsWith("csrftoken="))?.slice(10) || "";
 }
 
+async function refreshCsrfToken() {
+  const response = await fetch(`${API}/csrf`, {
+    headers: { Accept: "application/json" },
+    credentials: "same-origin",
+  });
+  if (!response.ok) throw new Error("Could not prepare a secure request. Refresh the page and try again.");
+  const data = await response.json().catch(() => ({}));
+  const token = csrfCookie() || data.csrfToken || "";
+  if (!token) throw new Error("The browser did not accept the security cookie. Enable cookies and refresh the page.");
+  return token;
+}
+
 async function api(path, options = {}) {
   const method = (options.method || "GET").toUpperCase();
   const headers = { Accept: "application/json", ...options.headers };
@@ -17,8 +29,14 @@ async function api(path, options = {}) {
     headers["Content-Type"] = "application/json";
     options.body = JSON.stringify(options.body);
   }
-  if (!["GET", "HEAD", "OPTIONS", "TRACE"].includes(method)) headers["X-CSRFToken"] = csrfCookie();
-  const response = await fetch(`${API}${path}`, { ...options, method, headers, credentials: "same-origin" });
+  const needsCsrf = !["GET", "HEAD", "OPTIONS", "TRACE"].includes(method);
+  if (needsCsrf) headers["X-CSRFToken"] = csrfCookie() || await refreshCsrfToken();
+  const requestOptions = { ...options, method, headers, credentials: "same-origin" };
+  let response = await fetch(`${API}${path}`, requestOptions);
+  if (needsCsrf && response.status === 403 && response.headers.get("content-type")?.includes("text/html")) {
+    headers["X-CSRFToken"] = await refreshCsrfToken();
+    response = await fetch(`${API}${path}`, requestOptions);
+  }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.message || "The request could not be completed.");
   return data;

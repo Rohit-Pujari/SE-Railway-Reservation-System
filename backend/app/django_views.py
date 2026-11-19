@@ -141,8 +141,8 @@ def passenger_login(request):
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
-            "SELECT user_id, full_name, email, password_hash FROM users "
-            "WHERE email = %s AND account_status = 'ACTIVE' AND role = 'PASSENGER' LIMIT 1",
+            "SELECT user_id, full_name, email, password_hash, role FROM users "
+            "WHERE email = %s AND account_status = 'ACTIVE' LIMIT 1",
             (email.strip().lower(),),
         )
         user = cursor.fetchone()
@@ -159,12 +159,17 @@ def passenger_login(request):
                 connection.close()
             except Exception:
                 pass
-    if not user or not check_password_hash(user["password_hash"], password):
+    if (not user or user["role"] not in {"PASSENGER", "ADMIN"}
+            or not check_password_hash(user["password_hash"], password)):
         return Response({"status": "error", "message": "Invalid email or password."}, status=401)
     request.session.flush()
     request.session["user_id"] = user["user_id"]
-    request.session["role"] = "PASSENGER"
-    return Response({"status": "ok", "message": "Login successful.", "user": {
+    request.session["role"] = user["role"]
+    if user["role"] == "ADMIN":
+        return Response({"status": "ok", "message": "Administrator login successful.", "role": "ADMIN", "admin": {
+            "user_id": user["user_id"], "email": user["email"],
+        }})
+    return Response({"status": "ok", "message": "Login successful.", "role": "PASSENGER", "user": {
         "user_id": user["user_id"], "full_name": user["full_name"], "email": user["email"],
     }})
 
@@ -254,6 +259,14 @@ def admin_login(request):
 def admin_logout(request):
     request.session.flush()
     return Response({"status": "ok", "message": "Administrator logged out."})
+
+
+@endpoint(["GET"])
+def admin_session(request):
+    if request.session.get("role") != "ADMIN" or not request.session.get("user_id"):
+        return Response({"status": "unauthenticated", "authenticated": False}, status=401)
+    return Response({"status": "ok", "authenticated": True,
+                     "admin": {"user_id": request.session["user_id"]}})
 
 
 @endpoint(["GET"])
