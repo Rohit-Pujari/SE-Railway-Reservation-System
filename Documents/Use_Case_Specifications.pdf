@@ -3,7 +3,7 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [5 0 R] /Count 1 >>
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R] /Count 10 >>
 endobj
 3 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
@@ -15,27 +15,598 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 547 >>
+<< /Length 3084 >>
 stream
-0.24 0.42 0.21 rg BT /F2 18 Tf 42 790 Td (USE CASE SPECIFICATION) Tj ET
-0.32 0.22 0.46 rg BT /F2 11 Tf 42 763 Td (Railway Reservation System) Tj ET
-0.65 0.65 0.65 RG 42 733 m 553 733 l S
-0 0 0 rg BT /F1 9 Tf 42 713 Td (Use-case specification aligned with the reference group's table format. Actor\(s\), Goal,) Tj ET
-0 0 0 rg BT /F1 9 Tf 42 699 Td (Pre-condition, Main Flow, Alternate Flow and Post-condition are presented in individual sections.) Tj ET
-BT /F1 8 Tf 42 28 Td (Railway Reservation System | USE CASE SPECIFICATION | Page 1 of 1) Tj ET
+0.25 0.43 0.20 rg BT /F2 19 Tf 90 790 Td (USE CASE SPECIFICATION) Tj ET
+0.38 0.20 0.45 rg BT /F2 11 Tf 90 763 Td (Railway Reservation System) Tj ET
+0.89 0.46 0.08 rg 40 700 515 30 re f
+1 1 1 rg BT /F2 11 Tf 50 710 Td (UC-01 - Passenger Registration and Sign-In) Tj ET
+0.97 0.92 0.86 rg 40 652 120 34 re f
+1 1 1 rg 160 652 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 652 515 34 re S 160 652 m 160 686 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 667 Td (Actor\(s\)) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 668 Td (Passenger) Tj ET
+0.97 0.92 0.86 rg 40 618 120 34 re f
+1 1 1 rg 160 618 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 618 515 34 re S 160 618 m 160 652 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 633 Td (Goal) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 634 Td (Create an account or authenticate an existing passenger.) Tj ET
+0.97 0.92 0.86 rg 40 584 120 34 re f
+1 1 1 rg 160 584 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 584 515 34 re S 160 584 m 160 618 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 599 Td (Pre-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 600 Td (Application is available; for sign-in, an active account exists.) Tj ET
+0.97 0.92 0.86 rg 40 550 120 34 re f
+1 1 1 rg 160 550 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 550 515 34 re S 160 550 m 160 584 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 565 Td (Trigger) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 566 Td (Passenger chooses Register or Sign In.) Tj ET
+0.97 0.92 0.86 rg 40 484 120 66 re f
+1 1 1 rg 160 484 395 66 re f
+0.65 0.65 0.65 RG 0.6 w 40 484 515 66 re S 160 484 m 160 550 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 531 Td (Main Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 532 Td (1. Passenger opens the registration form. 2. Passenger enters required account details. 3.) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 520 Td (System validates inputs and checks for duplicate account data. 4. System stores the account) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 508 Td (using a one-way password hash. 5. Passenger enters valid sign-in credentials. 6. System) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 496 Td (establishes an authenticated passenger session.) Tj ET
+0.97 0.92 0.86 rg 40 442 120 42 re f
+1 1 1 rg 160 442 395 42 re f
+0.65 0.65 0.65 RG 0.6 w 40 442 515 42 re S 160 442 m 160 484 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 465 Td (Alternate Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 466 Td (Invalid or duplicate registration data is rejected; incorrect or inactive credentials deny) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 454 Td (access; missing authentication blocks protected actions.) Tj ET
+0.97 0.92 0.86 rg 40 408 120 34 re f
+1 1 1 rg 160 408 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 408 515 34 re S 160 408 m 160 442 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 423 Td (Post-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 424 Td (Passenger account exists and/or a valid session is established.) Tj ET
+0.97 0.92 0.86 rg 40 374 120 34 re f
+1 1 1 rg 160 374 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 374 515 34 re S 160 374 m 160 408 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 389 Td (Requirements) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 390 Td (RRS-F-001, RRS-F-002, RRS-SR-001-003.) Tj ET
+0 0 0 rg BT /F1 8 Tf 490 24 Td (UC 1 of 10) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 3125 >>
+stream
+0.25 0.43 0.20 rg BT /F2 19 Tf 90 790 Td (USE CASE SPECIFICATION) Tj ET
+0.38 0.20 0.45 rg BT /F2 11 Tf 90 763 Td (Railway Reservation System) Tj ET
+0.89 0.46 0.08 rg 40 700 515 30 re f
+1 1 1 rg BT /F2 11 Tf 50 710 Td (UC-02 - Search Trains and Check Seat Availability) Tj ET
+0.97 0.92 0.86 rg 40 652 120 34 re f
+1 1 1 rg 160 652 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 652 515 34 re S 160 652 m 160 686 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 667 Td (Actor\(s\)) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 668 Td (Passenger) Tj ET
+0.97 0.92 0.86 rg 40 618 120 34 re f
+1 1 1 rg 160 618 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 618 515 34 re S 160 618 m 160 652 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 633 Td (Goal) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 634 Td (Identify a valid journey and available seats.) Tj ET
+0.97 0.92 0.86 rg 40 584 120 34 re f
+1 1 1 rg 160 584 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 584 515 34 re S 160 584 m 160 618 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 599 Td (Pre-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 600 Td (Station and schedule data exist.) Tj ET
+0.97 0.92 0.86 rg 40 550 120 34 re f
+1 1 1 rg 160 550 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 550 515 34 re S 160 550 m 160 584 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 565 Td (Trigger) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 566 Td (Passenger submits a journey search.) Tj ET
+0.97 0.92 0.86 rg 40 484 120 66 re f
+1 1 1 rg 160 484 395 66 re f
+0.65 0.65 0.65 RG 0.6 w 40 484 515 66 re S 160 484 m 160 550 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 531 Td (Main Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 532 Td (1. System displays station and travel-class options. 2. Passenger selects origin, destination) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 520 Td (and journey date. 3. System validates search criteria. 4. System retrieves matching train) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 508 Td (schedules. 5. Passenger selects a train and class. 6. System displays fare and available) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 496 Td (seats after accounting for confirmed and unexpired held allocations.) Tj ET
+0.97 0.92 0.86 rg 40 430 120 54 re f
+1 1 1 rg 160 430 395 54 re f
+0.65 0.65 0.65 RG 0.6 w 40 430 515 54 re S 160 430 m 160 484 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 465 Td (Alternate Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 466 Td (No matching train produces an empty result; invalid station, class or date produces a) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 454 Td (validation error. Past-date rejection is an acceptance requirement that must be verified) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 442 Td (against the deployed backend.) Tj ET
+0.97 0.92 0.86 rg 40 396 120 34 re f
+1 1 1 rg 160 396 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 396 515 34 re S 160 396 m 160 430 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 411 Td (Post-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 412 Td (An eligible train and class can be selected.) Tj ET
+0.97 0.92 0.86 rg 40 362 120 34 re f
+1 1 1 rg 160 362 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 362 515 34 re S 160 362 m 160 396 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 377 Td (Requirements) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 378 Td (RRS-F-004-006.) Tj ET
+0 0 0 rg BT /F1 8 Tf 490 24 Td (UC 2 of 10) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 3195 >>
+stream
+0.25 0.43 0.20 rg BT /F2 19 Tf 90 790 Td (USE CASE SPECIFICATION) Tj ET
+0.38 0.20 0.45 rg BT /F2 11 Tf 90 763 Td (Railway Reservation System) Tj ET
+0.89 0.46 0.08 rg 40 700 515 30 re f
+1 1 1 rg BT /F2 11 Tf 50 710 Td (UC-03 - Reserve Seats and Generate PNR) Tj ET
+0.97 0.92 0.86 rg 40 652 120 34 re f
+1 1 1 rg 160 652 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 652 515 34 re S 160 652 m 160 686 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 667 Td (Actor\(s\)) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 668 Td (Passenger) Tj ET
+0.97 0.92 0.86 rg 40 618 120 34 re f
+1 1 1 rg 160 618 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 618 515 34 re S 160 618 m 160 652 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 633 Td (Goal) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 634 Td (Create a held reservation with a unique Passenger Name Record \(PNR\).) Tj ET
+0.97 0.92 0.86 rg 40 584 120 34 re f
+1 1 1 rg 160 584 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 584 515 34 re S 160 584 m 160 618 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 599 Td (Pre-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 600 Td (Passenger is authenticated; eligible schedule and inventory are available.) Tj ET
+0.97 0.92 0.86 rg 40 550 120 34 re f
+1 1 1 rg 160 550 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 550 515 34 re S 160 550 m 160 584 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 565 Td (Trigger) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 566 Td (Passenger selects Book.) Tj ET
+0.97 0.92 0.86 rg 40 484 120 66 re f
+1 1 1 rg 160 484 395 66 re f
+0.65 0.65 0.65 RG 0.6 w 40 484 515 66 re S 160 484 m 160 550 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 531 Td (Main Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 532 Td (1. Passenger supplies traveler details. 2. System validates traveler details and calculates) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 520 Td (the fare. 3. System checks and locks the necessary inventory for allocation. 4. System) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 508 Td (creates the booking, travelers and temporary seat holds atomically. 5. System generates a) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 496 Td (unique PNR and displays booking status.) Tj ET
+0.97 0.92 0.86 rg 40 430 120 54 re f
+1 1 1 rg 160 430 395 54 re f
+0.65 0.65 0.65 RG 0.6 w 40 430 515 54 re S 160 430 m 160 484 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 465 Td (Alternate Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 466 Td (Invalid traveler details are rejected; insufficient inventory prevents booking; concurrent) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 454 Td (conflicts and database errors roll back the transaction; repeated requests with the same) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 442 Td (idempotency key must not allocate seats twice.) Tj ET
+0.97 0.92 0.86 rg 40 396 120 34 re f
+1 1 1 rg 160 396 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 396 515 34 re S 160 396 m 160 430 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 411 Td (Post-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 412 Td (A held booking with a PNR exists, or no partial reservation persists.) Tj ET
+0.97 0.92 0.86 rg 40 362 120 34 re f
+1 1 1 rg 160 362 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 362 515 34 re S 160 362 m 160 396 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 377 Td (Requirements) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 378 Td (RRS-F-007-010, RRS-NF-003.) Tj ET
+0 0 0 rg BT /F1 8 Tf 490 24 Td (UC 3 of 10) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 3147 >>
+stream
+0.25 0.43 0.20 rg BT /F2 19 Tf 90 790 Td (USE CASE SPECIFICATION) Tj ET
+0.38 0.20 0.45 rg BT /F2 11 Tf 90 763 Td (Railway Reservation System) Tj ET
+0.89 0.46 0.08 rg 40 700 515 30 re f
+1 1 1 rg BT /F2 11 Tf 50 710 Td (UC-04 - Confirm Simulated Payment) Tj ET
+0.97 0.92 0.86 rg 40 652 120 34 re f
+1 1 1 rg 160 652 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 652 515 34 re S 160 652 m 160 686 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 667 Td (Actor\(s\)) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 668 Td (Passenger) Tj ET
+0.97 0.92 0.86 rg 40 618 120 34 re f
+1 1 1 rg 160 618 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 618 515 34 re S 160 618 m 160 652 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 633 Td (Goal) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 634 Td (Confirm an eligible held booking through the demo payment workflow.) Tj ET
+0.97 0.92 0.86 rg 40 584 120 34 re f
+1 1 1 rg 160 584 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 584 515 34 re S 160 584 m 160 618 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 599 Td (Pre-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 600 Td (Passenger owns a valid, unexpired held booking.) Tj ET
+0.97 0.92 0.86 rg 40 550 120 34 re f
+1 1 1 rg 160 550 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 550 515 34 re S 160 550 m 160 584 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 565 Td (Trigger) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 566 Td (Passenger selects simulated payment confirmation.) Tj ET
+0.97 0.92 0.86 rg 40 484 120 66 re f
+1 1 1 rg 160 484 395 66 re f
+0.65 0.65 0.65 RG 0.6 w 40 484 515 66 re S 160 484 m 160 550 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 531 Td (Main Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 532 Td (1. Passenger opens payment confirmation for the held booking. 2. System validates ownership,) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 520 Td (booking state and hold validity. 3. System records the simulated payment result. 4. System) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 508 Td (confirms the booking and seat allocations consistently. 5. System creates applicable) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 496 Td (notification queue records. 6. System displays confirmed booking status and PNR.) Tj ET
+0.97 0.92 0.86 rg 40 442 120 42 re f
+1 1 1 rg 160 442 395 42 re f
+0.65 0.65 0.65 RG 0.6 w 40 442 515 42 re S 160 442 m 160 484 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 465 Td (Alternate Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 466 Td (Expired holds, unauthorized requests or invalid booking states are rejected; retries must not) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 454 Td (duplicate payment records.) Tj ET
+0.97 0.92 0.86 rg 40 400 120 42 re f
+1 1 1 rg 160 400 395 42 re f
+0.65 0.65 0.65 RG 0.6 w 40 400 515 42 re S 160 400 m 160 442 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 423 Td (Post-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 424 Td (Booking is confirmed in the application. No real money transfer or notification delivery is) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 412 Td (implied.) Tj ET
+0.97 0.92 0.86 rg 40 366 120 34 re f
+1 1 1 rg 160 366 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 366 515 34 re S 160 366 m 160 400 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 381 Td (Requirements) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 382 Td (RRS-F-011, RRS-F-015.) Tj ET
+0 0 0 rg BT /F1 8 Tf 490 24 Td (UC 4 of 10) Tj ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 2735 >>
+stream
+0.25 0.43 0.20 rg BT /F2 19 Tf 90 790 Td (USE CASE SPECIFICATION) Tj ET
+0.38 0.20 0.45 rg BT /F2 11 Tf 90 763 Td (Railway Reservation System) Tj ET
+0.89 0.46 0.08 rg 40 700 515 30 re f
+1 1 1 rg BT /F2 11 Tf 50 710 Td (UC-05 - View Booking History) Tj ET
+0.97 0.92 0.86 rg 40 652 120 34 re f
+1 1 1 rg 160 652 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 652 515 34 re S 160 652 m 160 686 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 667 Td (Actor\(s\)) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 668 Td (Passenger) Tj ET
+0.97 0.92 0.86 rg 40 618 120 34 re f
+1 1 1 rg 160 618 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 618 515 34 re S 160 618 m 160 652 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 633 Td (Goal) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 634 Td (Review previously created reservations and their current status.) Tj ET
+0.97 0.92 0.86 rg 40 584 120 34 re f
+1 1 1 rg 160 584 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 584 515 34 re S 160 584 m 160 618 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 599 Td (Pre-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 600 Td (Passenger is authenticated.) Tj ET
+0.97 0.92 0.86 rg 40 550 120 34 re f
+1 1 1 rg 160 550 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 550 515 34 re S 160 550 m 160 584 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 565 Td (Trigger) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 566 Td (Passenger opens Booking History or searches own PNR.) Tj ET
+0.97 0.92 0.86 rg 40 496 120 54 re f
+1 1 1 rg 160 496 395 54 re f
+0.65 0.65 0.65 RG 0.6 w 40 496 515 54 re S 160 496 m 160 550 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 531 Td (Main Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 532 Td (1. Passenger opens booking history. 2. System identifies the authenticated account. 3. System) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 520 Td (returns only reservations owned by that account. 4. Passenger selects a reservation to view) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 508 Td (PNR, travelers and status.) Tj ET
+0.97 0.92 0.86 rg 40 462 120 34 re f
+1 1 1 rg 160 462 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 462 515 34 re S 160 462 m 160 496 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 477 Td (Alternate Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 478 Td (No bookings yields an empty state; cross-user access is denied.) Tj ET
+0.97 0.92 0.86 rg 40 428 120 34 re f
+1 1 1 rg 160 428 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 428 515 34 re S 160 428 m 160 462 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 443 Td (Post-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 444 Td (No reservation data is modified.) Tj ET
+0.97 0.92 0.86 rg 40 394 120 34 re f
+1 1 1 rg 160 394 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 394 515 34 re S 160 394 m 160 428 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 409 Td (Requirements) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 410 Td (RRS-F-012, RRS-SR-002.) Tj ET
+0 0 0 rg BT /F1 8 Tf 490 24 Td (UC 5 of 10) Tj ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 16 0 R >>
+endobj
+16 0 obj
+<< /Length 3159 >>
+stream
+0.25 0.43 0.20 rg BT /F2 19 Tf 90 790 Td (USE CASE SPECIFICATION) Tj ET
+0.38 0.20 0.45 rg BT /F2 11 Tf 90 763 Td (Railway Reservation System) Tj ET
+0.89 0.46 0.08 rg 40 700 515 30 re f
+1 1 1 rg BT /F2 11 Tf 50 710 Td (UC-06 - Cancel Booking and Track Refund) Tj ET
+0.97 0.92 0.86 rg 40 652 120 34 re f
+1 1 1 rg 160 652 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 652 515 34 re S 160 652 m 160 686 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 667 Td (Actor\(s\)) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 668 Td (Passenger) Tj ET
+0.97 0.92 0.86 rg 40 618 120 34 re f
+1 1 1 rg 160 618 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 618 515 34 re S 160 618 m 160 652 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 633 Td (Goal) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 634 Td (Cancel an eligible booking and view resulting refund status.) Tj ET
+0.97 0.92 0.86 rg 40 584 120 34 re f
+1 1 1 rg 160 584 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 584 515 34 re S 160 584 m 160 618 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 599 Td (Pre-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 600 Td (Passenger is authenticated, owns the booking and satisfies cancellation rules.) Tj ET
+0.97 0.92 0.86 rg 40 550 120 34 re f
+1 1 1 rg 160 550 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 550 515 34 re S 160 550 m 160 584 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 565 Td (Trigger) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 566 Td (Passenger requests cancellation.) Tj ET
+0.97 0.92 0.86 rg 40 484 120 66 re f
+1 1 1 rg 160 484 395 66 re f
+0.65 0.65 0.65 RG 0.6 w 40 484 515 66 re S 160 484 m 160 550 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 531 Td (Main Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 532 Td (1. Passenger selects an eligible reservation. 2. System validates ownership and cancellation) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 520 Td (eligibility. 3. System calculates applicable cancellation charges. 4. System updates) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 508 Td (booking/cancellation records and releases eligible seats atomically. 5. System records) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 496 Td (pending refund information and shows updated status.) Tj ET
+0.97 0.92 0.86 rg 40 442 120 42 re f
+1 1 1 rg 160 442 395 42 re f
+0.65 0.65 0.65 RG 0.6 w 40 442 515 42 re S 160 442 m 160 484 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 465 Td (Alternate Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 466 Td (Unauthorized or ineligible cancellation is rejected; failed transactions are rolled back;) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 454 Td (repeat cancellation must not duplicate releases or refunds.) Tj ET
+0.97 0.92 0.86 rg 40 400 120 42 re f
+1 1 1 rg 160 400 395 42 re f
+0.65 0.65 0.65 RG 0.6 w 40 400 515 42 re S 160 400 m 160 442 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 423 Td (Post-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 424 Td (Booking is cancelled and any pending refund is recorded. External bank payout is not) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 412 Td (implemented.) Tj ET
+0.97 0.92 0.86 rg 40 366 120 34 re f
+1 1 1 rg 160 366 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 366 515 34 re S 160 366 m 160 400 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 381 Td (Requirements) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 382 Td (RRS-F-013-014, RRS-NF-003.) Tj ET
+0 0 0 rg BT /F1 8 Tf 490 24 Td (UC 6 of 10) Tj ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 18 0 R >>
+endobj
+18 0 obj
+<< /Length 2770 >>
+stream
+0.25 0.43 0.20 rg BT /F2 19 Tf 90 790 Td (USE CASE SPECIFICATION) Tj ET
+0.38 0.20 0.45 rg BT /F2 11 Tf 90 763 Td (Railway Reservation System) Tj ET
+0.89 0.46 0.08 rg 40 700 515 30 re f
+1 1 1 rg BT /F2 11 Tf 50 710 Td (UC-07 - Administrator Authentication) Tj ET
+0.97 0.92 0.86 rg 40 652 120 34 re f
+1 1 1 rg 160 652 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 652 515 34 re S 160 652 m 160 686 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 667 Td (Actor\(s\)) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 668 Td (Administrator) Tj ET
+0.97 0.92 0.86 rg 40 618 120 34 re f
+1 1 1 rg 160 618 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 618 515 34 re S 160 618 m 160 652 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 633 Td (Goal) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 634 Td (Access restricted railway administration functions.) Tj ET
+0.97 0.92 0.86 rg 40 584 120 34 re f
+1 1 1 rg 160 584 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 584 515 34 re S 160 584 m 160 618 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 599 Td (Pre-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 600 Td (Active administrator account exists.) Tj ET
+0.97 0.92 0.86 rg 40 550 120 34 re f
+1 1 1 rg 160 550 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 550 515 34 re S 160 550 m 160 584 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 565 Td (Trigger) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 566 Td (Administrator submits credentials.) Tj ET
+0.97 0.92 0.86 rg 40 496 120 54 re f
+1 1 1 rg 160 496 395 54 re f
+0.65 0.65 0.65 RG 0.6 w 40 496 515 54 re S 160 496 m 160 550 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 531 Td (Main Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 532 Td (1. Administrator opens the admin sign-in page. 2. Administrator enters credentials. 3. System) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 520 Td (verifies identity and administrative role. 4. System establishes the authorized session and) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 508 Td (displays permitted functions.) Tj ET
+0.97 0.92 0.86 rg 40 462 120 34 re f
+1 1 1 rg 160 462 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 462 515 34 re S 160 462 m 160 496 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 477 Td (Alternate Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 478 Td (Invalid credentials, disabled accounts and passenger-role sessions are denied.) Tj ET
+0.97 0.92 0.86 rg 40 428 120 34 re f
+1 1 1 rg 160 428 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 428 515 34 re S 160 428 m 160 462 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 443 Td (Post-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 444 Td (Administrator is authenticated with role-restricted access.) Tj ET
+0.97 0.92 0.86 rg 40 394 120 34 re f
+1 1 1 rg 160 394 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 394 515 34 re S 160 394 m 160 428 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 409 Td (Requirements) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 410 Td (RRS-F-003, RRS-SR-002.) Tj ET
+0 0 0 rg BT /F1 8 Tf 490 24 Td (UC 7 of 10) Tj ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 20 0 R >>
+endobj
+20 0 obj
+<< /Length 2985 >>
+stream
+0.25 0.43 0.20 rg BT /F2 19 Tf 90 790 Td (USE CASE SPECIFICATION) Tj ET
+0.38 0.20 0.45 rg BT /F2 11 Tf 90 763 Td (Railway Reservation System) Tj ET
+0.89 0.46 0.08 rg 40 700 515 30 re f
+1 1 1 rg BT /F2 11 Tf 50 710 Td (UC-08 - Manage Railway Master Data) Tj ET
+0.97 0.92 0.86 rg 40 652 120 34 re f
+1 1 1 rg 160 652 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 652 515 34 re S 160 652 m 160 686 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 667 Td (Actor\(s\)) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 668 Td (Administrator) Tj ET
+0.97 0.92 0.86 rg 40 618 120 34 re f
+1 1 1 rg 160 618 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 618 515 34 re S 160 618 m 160 652 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 633 Td (Goal) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 634 Td (Maintain trains, stations, routes and train-route assignments.) Tj ET
+0.97 0.92 0.86 rg 40 584 120 34 re f
+1 1 1 rg 160 584 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 584 515 34 re S 160 584 m 160 618 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 599 Td (Pre-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 600 Td (Authorized admin session exists.) Tj ET
+0.97 0.92 0.86 rg 40 550 120 34 re f
+1 1 1 rg 160 550 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 550 515 34 re S 160 550 m 160 584 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 565 Td (Trigger) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 566 Td (Administrator opens the corresponding management function.) Tj ET
+0.97 0.92 0.86 rg 40 484 120 66 re f
+1 1 1 rg 160 484 395 66 re f
+0.65 0.65 0.65 RG 0.6 w 40 484 515 66 re S 160 484 m 160 550 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 531 Td (Main Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 532 Td (1. Administrator selects a train, station or route management action. 2. System presents) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 520 Td (current records. 3. Administrator enters create, update or deactivate details. 4. System) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 508 Td (validates references and dependencies. 5. System persists permitted changes and displays the) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 496 Td (updated records.) Tj ET
+0.97 0.92 0.86 rg 40 442 120 42 re f
+1 1 1 rg 160 442 395 42 re f
+0.65 0.65 0.65 RG 0.6 w 40 442 515 42 re S 160 442 m 160 484 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 465 Td (Alternate Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 466 Td (Invalid references, duplicate identifiers, dependency violations or unauthorized changes are) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 454 Td (rejected.) Tj ET
+0.97 0.92 0.86 rg 40 408 120 34 re f
+1 1 1 rg 160 408 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 408 515 34 re S 160 408 m 160 442 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 423 Td (Post-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 424 Td (Valid master-data changes are stored without breaking dependent bookings.) Tj ET
+0.97 0.92 0.86 rg 40 374 120 34 re f
+1 1 1 rg 160 374 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 374 515 34 re S 160 374 m 160 408 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 389 Td (Requirements) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 390 Td (RRS-F-016-017.) Tj ET
+0 0 0 rg BT /F1 8 Tf 490 24 Td (UC 8 of 10) Tj ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 22 0 R >>
+endobj
+22 0 obj
+<< /Length 2939 >>
+stream
+0.25 0.43 0.20 rg BT /F2 19 Tf 90 790 Td (USE CASE SPECIFICATION) Tj ET
+0.38 0.20 0.45 rg BT /F2 11 Tf 90 763 Td (Railway Reservation System) Tj ET
+0.89 0.46 0.08 rg 40 700 515 30 re f
+1 1 1 rg BT /F2 11 Tf 50 710 Td (UC-09 - Manage Schedules and Seat Inventory) Tj ET
+0.97 0.92 0.86 rg 40 652 120 34 re f
+1 1 1 rg 160 652 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 652 515 34 re S 160 652 m 160 686 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 667 Td (Actor\(s\)) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 668 Td (Administrator) Tj ET
+0.97 0.92 0.86 rg 40 618 120 34 re f
+1 1 1 rg 160 618 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 618 515 34 re S 160 618 m 160 652 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 633 Td (Goal) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 634 Td (Maintain schedule and inventory data safely.) Tj ET
+0.97 0.92 0.86 rg 40 584 120 34 re f
+1 1 1 rg 160 584 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 584 515 34 re S 160 584 m 160 618 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 599 Td (Pre-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 600 Td (Authorized admin session and relevant train/route records exist.) Tj ET
+0.97 0.92 0.86 rg 40 550 120 34 re f
+1 1 1 rg 160 550 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 550 515 34 re S 160 550 m 160 584 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 565 Td (Trigger) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 566 Td (Administrator opens schedule or inventory management.) Tj ET
+0.97 0.92 0.86 rg 40 484 120 66 re f
+1 1 1 rg 160 484 395 66 re f
+0.65 0.65 0.65 RG 0.6 w 40 484 515 66 re S 160 484 m 160 550 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 531 Td (Main Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 532 Td (1. Administrator selects a train, route or schedule. 2. System displays existing schedules) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 520 Td (and inventory. 3. Administrator submits permitted schedule or seat changes. 4. System checks) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 508 Td (consistency and existing booking dependencies. 5. System commits valid updates and displays) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 496 Td (the result.) Tj ET
+0.97 0.92 0.86 rg 40 450 120 34 re f
+1 1 1 rg 160 450 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 450 515 34 re S 160 450 m 160 484 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 465 Td (Alternate Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 466 Td (Invalid times, missing dependencies or unsafe reductions affecting booked seats are rejected.) Tj ET
+0.97 0.92 0.86 rg 40 416 120 34 re f
+1 1 1 rg 160 416 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 416 515 34 re S 160 416 m 160 450 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 431 Td (Post-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 432 Td (Schedules/inventory remain consistent with existing allocations.) Tj ET
+0.97 0.92 0.86 rg 40 382 120 34 re f
+1 1 1 rg 160 382 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 382 515 34 re S 160 382 m 160 416 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 397 Td (Requirements) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 398 Td (RRS-F-018.) Tj ET
+0 0 0 rg BT /F1 8 Tf 490 24 Td (UC 9 of 10) Tj ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 24 0 R >>
+endobj
+24 0 obj
+<< /Length 2840 >>
+stream
+0.25 0.43 0.20 rg BT /F2 19 Tf 90 790 Td (USE CASE SPECIFICATION) Tj ET
+0.38 0.20 0.45 rg BT /F2 11 Tf 90 763 Td (Railway Reservation System) Tj ET
+0.89 0.46 0.08 rg 40 700 515 30 re f
+1 1 1 rg BT /F2 11 Tf 50 710 Td (UC-10 - Inspect Booking, Cancellation and Refund Records) Tj ET
+0.97 0.92 0.86 rg 40 652 120 34 re f
+1 1 1 rg 160 652 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 652 515 34 re S 160 652 m 160 686 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 667 Td (Actor\(s\)) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 668 Td (Administrator) Tj ET
+0.97 0.92 0.86 rg 40 618 120 34 re f
+1 1 1 rg 160 618 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 618 515 34 re S 160 618 m 160 652 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 633 Td (Goal) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 634 Td (Inspect reservation operations for support and oversight.) Tj ET
+0.97 0.92 0.86 rg 40 584 120 34 re f
+1 1 1 rg 160 584 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 584 515 34 re S 160 584 m 160 618 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 599 Td (Pre-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 600 Td (Authorized admin session exists.) Tj ET
+0.97 0.92 0.86 rg 40 550 120 34 re f
+1 1 1 rg 160 550 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 550 515 34 re S 160 550 m 160 584 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 565 Td (Trigger) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 566 Td (Administrator opens operational records.) Tj ET
+0.97 0.92 0.86 rg 40 496 120 54 re f
+1 1 1 rg 160 496 395 54 re f
+0.65 0.65 0.65 RG 0.6 w 40 496 515 54 re S 160 496 m 160 550 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 531 Td (Main Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 532 Td (1. Administrator opens the booking-management view. 2. System retrieves permitted booking) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 520 Td (summaries and details. 3. Administrator filters or selects a booking, cancellation or refund) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 508 Td (record. 4. System displays associated status and audit-relevant information.) Tj ET
+0.97 0.92 0.86 rg 40 462 120 34 re f
+1 1 1 rg 160 462 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 462 515 34 re S 160 462 m 160 496 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 477 Td (Alternate Flow) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 478 Td (Invalid filters return errors or empty results; unauthorized requests are rejected.) Tj ET
+0.97 0.92 0.86 rg 40 428 120 34 re f
+1 1 1 rg 160 428 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 428 515 34 re S 160 428 m 160 462 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 443 Td (Post-condition) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 444 Td (Operational records remain unchanged by inspection.) Tj ET
+0.97 0.92 0.86 rg 40 394 120 34 re f
+1 1 1 rg 160 394 395 34 re f
+0.65 0.65 0.65 RG 0.6 w 40 394 515 34 re S 160 394 m 160 428 l S
+0.38 0.22 0.45 rg BT /F2 9 Tf 47 409 Td (Requirements) Tj ET
+0 0 0 rg BT /F1 8.5 Tf 167 410 Td (RRS-F-019, RRS-SR-002.) Tj ET
+0 0 0 rg BT /F1 8 Tf 490 24 Td (UC 10 of 10) Tj ET
 endstream
 endobj
 xref
-0 7
+0 25
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000115 00000 n 
-0000000185 00000 n 
-0000000260 00000 n 
-0000000396 00000 n 
+0000000177 00000 n 
+0000000247 00000 n 
+0000000322 00000 n 
+0000000458 00000 n 
+0000003594 00000 n 
+0000003730 00000 n 
+0000006907 00000 n 
+0000007044 00000 n 
+0000010292 00000 n 
+0000010430 00000 n 
+0000013630 00000 n 
+0000013768 00000 n 
+0000016556 00000 n 
+0000016694 00000 n 
+0000019906 00000 n 
+0000020044 00000 n 
+0000022867 00000 n 
+0000023005 00000 n 
+0000026043 00000 n 
+0000026181 00000 n 
+0000029173 00000 n 
+0000029311 00000 n 
 trailer
-<< /Size 7 /Root 1 0 R >>
+<< /Size 25 /Root 1 0 R >>
 startxref
-994
+32204
 %%EOF
