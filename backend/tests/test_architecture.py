@@ -77,7 +77,7 @@ class DjangoReactArchitectureTests(unittest.TestCase):
         self.assertEqual(settings.SECURE_REFERRER_POLICY, "same-origin")
         self.assertEqual(settings.X_FRAME_OPTIONS, "DENY")
         self.assertIn("django.middleware.clickjacking.XFrameOptionsMiddleware", settings.MIDDLEWARE)
-        self.assertEqual(len(urlpatterns), 36)
+        self.assertEqual(len(urlpatterns), 37)
 
     def test_security_headers_are_added_to_api_responses(self):
         response = APIClient().get("/api/health")

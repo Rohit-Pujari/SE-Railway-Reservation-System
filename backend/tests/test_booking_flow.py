@@ -19,6 +19,7 @@ class PassengerBookingFlowTests(unittest.TestCase):
             "full_name": "Test Passenger",
             "email": "passenger@example.com",
             "password_hash": "stored-password-hash",
+            "role": "PASSENGER",
         }
         self.passengers = [{
             "passenger_name": "Ananya Rao",
