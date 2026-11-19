@@ -34,6 +34,9 @@ def validate_availability(schedule_id, source_station_id, destination_station_id
         raise SeatAvailabilityValidationError("Journey date must use YYYY-MM-DD format.") from None
     if parsed_date.isoformat() != journey_date:
         raise SeatAvailabilityValidationError("Journey date must use YYYY-MM-DD format.")
+    today = date.today()
+    if parsed_date < today:
+        raise SeatAvailabilityValidationError("Journey date cannot be in the past.")
     return schedule, source, destination, parsed_date, travel_class
 
 

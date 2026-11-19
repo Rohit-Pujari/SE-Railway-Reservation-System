@@ -89,7 +89,7 @@ class BookingRequestValidationTests(unittest.TestCase):
             "schedule_id": 9,
             "source_station_id": 1,
             "destination_station_id": 3,
-            "journey_date": "2026-11-15",
+            "journey_date": "2026-11-20",
             "class_id": 2,
             "passengers": valid_passengers(),
             "idempotency_key": "request-1",
@@ -106,7 +106,7 @@ class BookingRequestValidationTests(unittest.TestCase):
 class BookingTransactionTests(unittest.TestCase):
     def create(self, connection, passengers=None):
         return create_booking(
-            7, 9, 1, 3, "2026-11-15", 2,
+            7, 9, 1, 3, "2026-11-20", 2,
             passengers or valid_passengers(), "request-1",
             connection_factory=lambda: connection,
         )
@@ -301,7 +301,7 @@ class BookingEndpointTests(unittest.TestCase):
             "schedule_id": 9,
             "source_station_id": 1,
             "destination_station_id": 3,
-            "journey_date": "2026-11-15",
+            "journey_date": "2026-11-20",
             "class_id": 2,
             "passengers": valid_passengers(1),
             "idempotency_key": "request-1",

@@ -6,7 +6,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from backend.tests.drf_client import RailwayAPIClient
-from backend.app.booking import BookingUnavailableError
+from backend.app.booking import BookingRequestError, BookingUnavailableError, create_booking
 
 
 class PassengerBookingFlowTests(unittest.TestCase):
@@ -123,30 +123,30 @@ class PassengerBookingFlowTests(unittest.TestCase):
             # 2. Search trains for the selected route/date/class.
             search_response = self.client.get(
                 "/api/trains/search?source_station_id=1&destination_station_id=2"
-                "&journey_date=2026-11-15&class_id=3"
+                "&journey_date=2026-11-20&class_id=3"
             )
             self.assertEqual(search_response.status_code, 200)
             self.assertEqual(search_response.json()["count"], 1)
             train = search_response.json()["trains"][0]
             self.assertEqual(train["schedule_id"], 9)
             self.assertEqual(train["train_number"], "12028")
-            search.assert_called_once_with("1", "2", "2026-11-15", "3")
+            search.assert_called_once_with("1", "2", "2026-11-20", "3")
 
             # 3. Check inventory for the chosen schedule and class.
             seat_response = self.client.get(
                 "/api/seats/availability?schedule_id=9&source_station_id=1"
-                "&destination_station_id=2&journey_date=2026-11-15&class_id=3"
+                "&destination_station_id=2&journey_date=2026-11-20&class_id=3"
             )
             self.assertEqual(seat_response.status_code, 200)
             self.assertEqual(seat_response.json()["available_seats"], 18)
-            availability.assert_called_once_with("9", "1", "2", "2026-11-15", "3")
+            availability.assert_called_once_with("9", "1", "2", "2026-11-20", "3")
 
             # 4. Submit passenger details with the selected train/class.
             booking_response = self.client.post("/api/bookings", json={
                 "schedule_id": 9,
                 "source_station_id": 1,
                 "destination_station_id": 2,
-                "journey_date": "2026-11-15",
+                "journey_date": "2026-11-20",
                 "class_id": 3,
                 "passengers": self.passengers,
                 "idempotency_key": "flow-test-request-001",
@@ -158,7 +158,7 @@ class PassengerBookingFlowTests(unittest.TestCase):
             self.assertEqual(booking["pnr"], "AB23456789CD")
             self.assertEqual(len(booking["pnr"]), 12)
             create_booking.assert_called_once_with(
-                7, 9, 1, 2, "2026-11-15", 3,
+                7, 9, 1, 2, "2026-11-20", 3,
                 self.passengers, "flow-test-request-001",
             )
 
@@ -200,7 +200,7 @@ class PassengerBookingFlowTests(unittest.TestCase):
                 "schedule_id": 9,
                 "source_station_id": 1,
                 "destination_station_id": 2,
-                "journey_date": "2026-11-15",
+                "journey_date": "2026-11-20",
                 "class_id": 3,
                 "passengers": self.passengers,
                 "idempotency_key": "no-seat-request-001",
@@ -208,13 +208,40 @@ class PassengerBookingFlowTests(unittest.TestCase):
         self.assertEqual(response.status_code, 409)
         self.assertIn("Only 0 seats remain.", response.json()["message"])
         create_booking.assert_called_once_with(
-            7, 9, 1, 2, "2026-11-15", 3,
+            7, 9, 1, 2, "2026-11-20", 3,
             self.passengers, "no-seat-request-001",
         )
 
     def test_anonymous_passenger_cannot_pay_for_a_booking(self):
         response = self.client.post("/api/bookings/501/pay", json={})
         self.assertEqual(response.status_code, 401)
+
+    def test_rejects_past_journey_date(self):
+        from datetime import date, timedelta
+        yesterday = (date.today() - timedelta(days=1)).isoformat()
+        with self.assertRaisesRegex(BookingRequestError, "Journey date cannot be in the past"):
+            create_booking(
+                7, 9, 1, 2, yesterday, 3,
+                self.passengers, "past-date-request-001",
+                connection_factory=lambda: MagicMock(),
+            )
+
+    def test_does_not_reject_today_or_future_date_for_date_validation(self):
+        from datetime import date, timedelta
+        today = date.today().isoformat()
+        tomorrow = (date.today() + timedelta(days=1)).isoformat()
+        for journey_date in (today, tomorrow):
+            with self.subTest(journey_date=journey_date):
+                # Date validation should pass; any later failure is DB-related,
+                # not a past-date rejection.
+                try:
+                    create_booking(
+                        7, 9, 1, 2, journey_date, 3,
+                        self.passengers, "date-boundary-request",
+                        connection_factory=lambda: MagicMock(),
+                    )
+                except BookingRequestError as exc:
+                    self.assertNotIn("cannot be in the past", str(exc))
 
 
 if __name__ == "__main__":

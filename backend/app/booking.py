@@ -43,6 +43,9 @@ def _validate_request(user_id, schedule_id, source_station_id, destination_stati
         raise BookingRequestError("Journey date must use YYYY-MM-DD format.") from None
     if parsed_date.isoformat() != journey_date:
         raise BookingRequestError("Journey date must use YYYY-MM-DD format.")
+    today = date.today()
+    if parsed_date < today:
+        raise BookingRequestError("Journey date cannot be in the past.")
     if not isinstance(idempotency_key, str) or not idempotency_key.strip() or len(idempotency_key) > 128:
         raise BookingRequestError("A valid booking request key is required.")
     return user, schedule, source, destination, parsed_date, travel_class, idempotency_key.strip()

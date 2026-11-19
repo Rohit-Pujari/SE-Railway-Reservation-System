@@ -37,13 +37,13 @@ def validate_passengers(passengers):
                 f"Passenger {index} name must be between 1 and {NAME_MAX_LENGTH} characters."
             )
         if isinstance(age, bool):
-            raise PassengerDetailsValidationError(f"Passenger {index} age must be between 0 and 120.")
+            raise PassengerDetailsValidationError(f"Passenger {index} age must be between 1 and 120.")
         try:
             parsed_age = int(age)
         except (TypeError, ValueError):
             raise PassengerDetailsValidationError(f"Passenger {index} age must be a whole number.") from None
-        if str(age).strip() != str(parsed_age) or not 0 <= parsed_age <= 120:
-            raise PassengerDetailsValidationError(f"Passenger {index} age must be between 0 and 120.")
+        if str(age).strip() != str(parsed_age) or not 1 <= parsed_age <= 120:
+            raise PassengerDetailsValidationError(f"Passenger {index} age must be between 1 and 120.")
 
         if gender is not None:
             if not isinstance(gender, str) or len(gender.strip()) > 30:
