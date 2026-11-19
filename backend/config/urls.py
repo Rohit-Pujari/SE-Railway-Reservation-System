@@ -13,8 +13,6 @@ urlpatterns = [
     path("api/admin/login", django_views.admin_login, name="admin-login"),
     path("api/admin/logout", django_views.admin_logout, name="admin-logout"),
     path("api/admin/session", django_views.admin_session, name="admin-session"),
-    path("api/admin/payments/pending", django_views.admin_payment_queue, name="admin-payment-queue"),
-    path("api/admin/payments/<int:payment_id>/review", django_views.admin_review_payment, name="admin-payment-review"),
     path("api/travel-classes", django_views.travel_classes, name="travel-classes"),
     path("api/seats/availability", django_views.seat_availability, name="seat-availability"),
     path("api/stations", django_views.stations, name="stations"),
@@ -23,7 +21,7 @@ urlpatterns = [
     path("api/bookings/history", django_views.passenger_booking_history, name="booking-history"),
     path("api/bookings/<int:booking_id>/passengers", django_views.booking_passenger_details, name="booking-passengers"),
     path("api/bookings/<int:booking_id>/fare", django_views.booking_fare, name="booking-fare"),
-    path("api/bookings/<int:booking_id>/payment", django_views.booking_payment, name="booking-payment"),
+    path("api/bookings/<int:booking_id>/pay", django_views.passenger_booking_pay, name="booking-pay"),
     path("", django_views.frontend, name="frontend"),
     re_path(r"^(?P<asset_path>assets/.+)$", django_views.frontend_asset, name="frontend-asset"),
 ]
