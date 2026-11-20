@@ -1,0 +1,340 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Length 3866 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(Software Test Plan \(STP\)) Tj
+T*
+() Tj
+T*
+(1. Introduction) Tj
+T*
+(Purpose: verify the SRS functional, non-functional and security requirements through unit, API,) Tj
+T*
+(system, browser and acceptance testing. Scope: passenger registration, authentication, search,) Tj
+T*
+(booking, simulated payment, cancellation, admin management and recovery. Exclusions: real payment) Tj
+T*
+(settlement, real refund transfers, provider email/SMS delivery and production availability) Tj
+T*
+(certification. Reference: Documents/Software_Requirements_Specification.md,) Tj
+T*
+(Documents/Software_Architecture_and_Design.md.) Tj
+T*
+() Tj
+T*
+(2. Test items) Tj
+T*
+(React frontend, Django API and services, MySQL schema and transactional behavior, session/CSRF) Tj
+T*
+(protection, admin controls, CI pipeline and recovery procedures.) Tj
+T*
+() Tj
+T*
+(3. Features to be tested) Tj
+T*
+(SRS F-001 020; NF-001 005; SR-001 005. High-priority scenarios: authorization, search and inventory,) Tj
+T*
+(atomic booking and PNR creation, payment confirmation, cancellation/refund persistence,) Tj
+T*
+(administrator permissions and safe database outage handling.) Tj
+T*
+() Tj
+T*
+(4. Features not to be tested) Tj
+T*
+(Real gateway settlement, actual SMS/email delivery, bank-side refund settlement, hardware devices,) Tj
+T*
+(production failover and long-term uptime are not implemented or are out of scope. Do not record them) Tj
+T*
+(as passed.) Tj
+T*
+() Tj
+T*
+(5. Test approach / strategy) Tj
+T*
+(- Unit: service validation, fare/refund calculations, error branches and rollback behavior using) Tj
+T*
+(isolated/mocked dependencies.) Tj
+T*
+(- Integration: run API and database operations on a dedicated disposable MySQL instance to verify) Tj
+T*
+(schema, constraints and transaction isolation.) Tj
+T*
+(- System: execute complete passenger and admin journeys via browser/API.) Tj
+T*
+(- Regression: run backend suite, frontend production build and browser suite on PRs.) Tj
+T*
+(- Performance: execute train-search benchmark with representative MySQL data and document P95) Tj
+T*
+(latency.) Tj
+T*
+(- Acceptance: demonstrate critical use cases and verify evidence against SRS IDs.) Tj
+T*
+() Tj
+T*
+(Entry: stable build, configured test database, dummy accounts/trains/schedules and clean test data.) Tj
+T*
+(Exit: all planned critical cases executed; zero open critical defects; any unexecuted cases) Tj
+T*
+(explicitly marked; deviations approved. Do not infer test pass from source code alone.) Tj
+T*
+() Tj
+T*
+(5.1 Security validation) Tj
+T*
+(Verify password hashing and redaction; passenger ownership and admin RBAC; CSRF rejection; input) Tj
+T*
+(validation and SQL parameterization; production cookie/HTTPS configuration. Test) Tj
+T*
+(negative/unauthorized paths without using real customer data.) Tj
+T*
+() Tj
+T*
+(6. Test environment) Tj
+T*
+(Python 3.10+, Node.js 20+, MySQL 8.0.16+, React/Vite and Django REST Framework. Tools: Python) Tj
+T*
+(unittest, compileall, npm build, Playwright, train-search benchmark, GitHub Actions. Test data:) Tj
+T*
+(dummy users \(passenger/admin\), stations, routes, schedules, fares, seats, bookings. Automated unit) Tj
+T*
+(tests use mocked database calls; separately run database integration tests for actual SQL) Tj
+T*
+(correctness.) Tj
+T*
+() Tj
+T*
+(7. Test schedule) Tj
+T*
+(Design and traceability: before freeze. Automated regression: each PR and final release candidate.) Tj
+T*
+(Integration and performance tests: final evaluation environment. Manual acceptance and video) Tj
+T*
+(capture: after stable release candidate. Actual dates and assignees are to be recorded by the team.) Tj
+T*
+() Tj
+T*
+(8. Test deliverables) Tj
+T*
+(This plan, test cases and scripts, test dataset, CI execution logs, defect log, unit/system) Tj
+T*
+(validation report, line and branch coverage reports, final test summary and sprint videos. See) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 4574 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(docs/SE_EVALUATION_TRACKER.md for evidence requirements.) Tj
+T*
+() Tj
+T*
+(9. Roles and responsibilities) Tj
+T*
+(Developer: implement and unit-test assigned features. Reviewer/repository owner: review PRs and) Tj
+T*
+(approve merges. Test owner: execute acceptance and collect logs. Team: maintain traceability, defect) Tj
+T*
+(register, sprint videos and final sign-off. Individual names must be filled from the actual project) Tj
+T*
+(board.) Tj
+T*
+() Tj
+T*
+(10. Risks and mitigation) Tj
+T*
+(Mocked database tests can miss SQL integration failures: use disposable MySQL integration) Tj
+T*
+(environment. Browser automation may not prove accessibility: supplement manual checks. Concurrent) Tj
+T*
+(booking races are hard to reproduce: run deterministic lock/rollback tests. CI pass may be stale:) Tj
+T*
+(attach logs from the exact final commit.) Tj
+T*
+() Tj
+T*
+(11. Assumptions and dependencies) Tj
+T*
+(MySQL schema and required migration scripts are installed; dummy data is available; production-like) Tj
+T*
+(environment is isolated from real users; external providers remain simulated.) Tj
+T*
+() Tj
+T*
+(12. Suspension and resumption) Tj
+T*
+(Suspend if test database unavailable, critical booking corruption occurs or a blocking build failure) Tj
+T*
+(prevents core scenarios. Resume after environment recovery, defect fix and successful smoke test.) Tj
+T*
+() Tj
+T*
+(13. Test cases and requirements traceability) Tj
+T*
+(|  ID  |  SRS reference  |  Test procedure  |  Expected result  |  Execution  |) Tj
+T*
+(| --- | --- | --- | --- | --- |) Tj
+T*
+(|  TC-01  |  F-001, SR-001  |  Register valid and duplicate/invalid passenger accounts  |  Valid) Tj
+T*
+(account created with hashed password; invalid rejected  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-02  |  F-002 003, SR-002 003  |  Login/logout; access admin API as passenger; mutate without) Tj
+T*
+(CSRF  |  Valid session works; forbidden/CSRF requests rejected  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-03  |  F-004 005  |  Search by stations/date and invalid input  |  Matching schedules) Tj
+T*
+(returned; bad input rejected  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-04  |  F-006, F-010  |  Hold seat, query availability, attempt overlapping allocation  | ) Tj
+T*
+(Held/confirmed seat unavailable; no double booking  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-05  |  F-007 009, NF-003  |  Book travelers and inspect PNR, fare, allocation; inject write) Tj
+T*
+(failure  |  All rows commit or all roll back  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-06  |  F-009 010  |  Retry identical booking request and conflicting idempotency key  |  No) Tj
+T*
+(duplicate booking; conflict rejected  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-07  |  F-011, F-015  |  Pay held booking twice; retry expired hold  |  Single simulated) Tj
+T*
+(confirmation; expired hold rejected  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-08  |  F-012, SR-002  |  Query own and another user's booking history/status  |  Only) Tj
+T*
+(authorized records returned  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-09  |  F-013 014  |  Cancel confirmed booking and inspect allocations/refund rows  |  Seats) Tj
+T*
+(released, cancellation and pending refund recorded atomically  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-10  |  F-016 019  |  Use admin train/route/schedule/seat endpoints as admin/passenger  | ) Tj
+T*
+(Authorized updates succeed; unauthorized denied  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-11  |  F-020, NF-002  |  Stop test database, call health endpoint, restart and retry  |  503) Tj
+T*
+(during outage; recovery on reconnect  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-12  |  NF-004 005  |  Run frontend build and Playwright browser suite  |  Build and supported) Tj
+T*
+(browser smoke checks pass  |  Pending final-run evidence  |) Tj
+T*
+(|  TC-13  |  SR-004 005  |  Review SQL parameters and production settings  |  No interpolated user) Tj
+T*
+(values; secure settings documented  |  Pending review  |) Tj
+T*
+(|  TC-14  |  NF-001  |  Benchmark train search with representative data  |  P95   3 seconds  | ) Tj
+T*
+(Pending measurement  |) Tj
+T*
+() Tj
+T*
+(14. Test metrics and reporting) Tj
+T*
+(Record total/planned/executed/passed/failed/skipped test cases, high-priority requirement coverage,) Tj
+T*
+(open defects by severity, line coverage and branch coverage. Evidence must include commit SHA,) Tj
+T*
+(command, environment, timestamp, outcome and links to CI artifacts. No execution counts or coverage) Tj
+T*
+(percentages are asserted in this plan.) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 957 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+() Tj
+T*
+() Tj
+T*
+(QA lead: __________  Developer/reviewer: __________  Product owner/evaluator: __________) Tj
+T*
+() Tj
+T*
+(16. Commands) Tj
+T*
+(bash) Tj
+T*
+(cd frontend && npm ci && npm run build && cd ..) Tj
+T*
+(uv run --active python -m compileall -q backend) Tj
+T*
+(uv run --active python -m unittest discover -s backend/tests -v) Tj
+T*
+(From frontend after installing Playwright dependencies:) Tj
+T*
+(npx playwright test) Tj
+T*
+(After installing coverage.py into the active test environment:) Tj
+T*
+(uv run --active python -m coverage run --branch -m unittest discover -s backend/tests) Tj
+T*
+(uv run --active python -m coverage report -m) Tj
+T*
+(uv run --active python -m coverage json -o docs/coverage.json) Tj
+T*
+(Against a configured disposable MySQL database with representative records:) Tj
+T*
+(uv run python scripts/benchmark_train_search.py --source 1 --destination 2 --date YYYY-MM-DD) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000195 00000 n 
+0000004113 00000 n 
+0000004239 00000 n 
+0000008865 00000 n 
+0000008991 00000 n 
+0000009999 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+10125
+%%EOF

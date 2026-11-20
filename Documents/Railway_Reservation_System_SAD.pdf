@@ -1,0 +1,396 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Length 3349 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(Software Architecture and Design Specification \(SAD\)) Tj
+T*
+() Tj
+T*
+(1. Introduction) Tj
+T*
+(This document describes the architecture, design decisions, component interfaces and security) Tj
+T*
+(controls of the coursework reservation system. Audience: developers, testers and evaluators. Related) Tj
+T*
+(documents: Documents/Software_Requirements_Specification.md, Documents/Software_Test_Plan.md,) Tj
+T*
+(docs/PROJECT_DOCUMENTATION.md.) Tj
+T*
+() Tj
+T*
+(2. Architecture) Tj
+T*
+(2.1 Goals, stakeholders and constraints) Tj
+T*
+(Goals: correct seat allocation, transaction consistency, maintainable modules, secure) Tj
+T*
+(passenger/admin access and a usable booking workflow. Stakeholders: passengers, administrators,) Tj
+T*
+(developers and evaluators. Constraints: existing MySQL schema, simulated payments, local development) Tj
+T*
+(environment, no guaranteed production failover.) Tj
+T*
+() Tj
+T*
+(2.2 UML component diagram) Tj
+T*
+() Tj
+T*
+(mermaid) Tj
+T*
+(flowchart TB) Tj
+T*
+(User[Passenger or Administrator] --> UI[React / Vite user interface]) Tj
+T*
+(UI --> API[Django REST Framework API]) Tj
+T*
+(API --> Auth[Session, CSRF and role checks]) Tj
+T*
+(API --> Search[Train search and seat availability]) Tj
+T*
+(API --> Booking[Booking and fare]) Tj
+T*
+(API --> Payment[Simulated payment]) Tj
+T*
+(API --> Cancel[Cancellation and pending refunds]) Tj
+T*
+(API --> Admin[Administrator management]) Tj
+T*
+(Search --> DB[\(MySQL / InnoDB\)]) Tj
+T*
+(Booking --> DB) Tj
+T*
+(Payment --> DB) Tj
+T*
+(Cancel --> DB) Tj
+T*
+(Admin --> DB) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(See Documents/Component_Diagram.dot for the editable diagram source.) Tj
+T*
+() Tj
+T*
+(2.3 Component descriptions) Tj
+T*
+(|  Component  |  Responsibility  |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(|  React frontend  |  Forms, search, booking steps, passenger history and admin dashboard  |) Tj
+T*
+(|  Django API views  |  HTTP parsing, session/role enforcement, error-to-response mapping  |) Tj
+T*
+(|  Search and availability  |  Schedules, fares, occupancy and overlapping segment checks  |) Tj
+T*
+(|  Booking service  |  Lock inventory, create PNR, passenger rows and temporary seat holds  |) Tj
+T*
+(|  Payment service  |  Verify holds and atomically confirm booking and seats; queue notifications  |) Tj
+T*
+(|  Cancellation/refund services  |  Release allocations, record cancellations and pending refunds  |) Tj
+T*
+(|  Admin services  |  Manage trains, stations, routes, schedules, inventory and record views  |) Tj
+T*
+(|  MySQL/InnoDB  |  Durable rows, foreign keys, unique constraints, transactions and locks  |) Tj
+T*
+() Tj
+T*
+(2.4 Architecture pattern and rationale) Tj
+T*
+(Layered modular monolith: React presentation, Django HTTP boundary, feature-specific domain) Tj
+T*
+(services, and MySQL persistence. This limits operational complexity relative to microservices and) Tj
+T*
+(keeps transaction boundaries within one database. Feature modules are separated by responsibility;) Tj
+T*
+(shared input primitives live in backend/app/validation.py.) Tj
+T*
+() Tj
+T*
+(2.5 Technology stack and data stores) Tj
+T*
+(React 19, Vite, Django 5.2, Django REST Framework, Python 3.10+, MySQL 8.0.16+ and) Tj
+T*
+(mysql-connector-python. The schema is versioned in database/schema.sql and database/migrations/, not) Tj
+T*
+(generated through Django ORM migrations.) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 3024 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(2.6 Risks and mitigation) Tj
+T*
+(|  Risk  |  Mitigation / limitation  |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(|  Concurrent users double-book a seat  |  Inventory row locks, overlapping-segment checks, atomic) Tj
+T*
+(commit  |) Tj
+T*
+(|  Browser retries create duplicates  |  Idempotency and unique PNR handling  |) Tj
+T*
+(|  Payment fails after booking hold  |  Pending state and safe retry/expiry handling  |) Tj
+T*
+(|  Database unavailable  |  Controlled errors and DB health endpoint; no automatic failover  |) Tj
+T*
+(|  Secrets exposed  |  Environment-based secrets, production HTTPS and secure cookies  |) Tj
+T*
+(|  Scope misunderstood  |  Label payment as simulated, refunds as pending, notifications as queued ) Tj
+T*
+(|) Tj
+T*
+() Tj
+T*
+(2.7 Traceability) Tj
+T*
+(SRS F-001 003 maps to authentication/views; F-004 006 to search/availability; F-007 010 to) Tj
+T*
+(booking/fare; F-011 and F-015 to payment; F-012 014 to history/cancellation/refunds; F-016 019 to) Tj
+T*
+(admin services; F-020 to health endpoints. SRS security requirements map to Django settings,) Tj
+T*
+(authorization checks, parameterized SQL and transaction services.) Tj
+T*
+() Tj
+T*
+(2.8 Security architecture \(STRIDE\)) Tj
+T*
+(- Spoofing: authenticated sessions, hashed passwords, administrator role validation.) Tj
+T*
+(- Tampering: CSRF validation, parameterized SQL, input validation, InnoDB transactions.) Tj
+T*
+(- Repudiation: booking, payment, cancellation and refund records; full security audit log not) Tj
+T*
+(established.) Tj
+T*
+(- Information disclosure: passenger ownership checks, HttpOnly cookies, HTTPS deployment) Tj
+T*
+(requirement.) Tj
+T*
+(- Denial of service: validation and bounded search results; rate limiting is not established.) Tj
+T*
+(- Elevation of privilege: server-side role checks; public registration cannot create admin accounts.) Tj
+T*
+() Tj
+T*
+(3. Detailed design) Tj
+T*
+(3.1 Booking and confirmation sequence) Tj
+T*
+(mermaid) Tj
+T*
+(sequenceDiagram) Tj
+T*
+(actor P as Passenger) Tj
+T*
+(participant UI as React) Tj
+T*
+(participant API as Django API) Tj
+T*
+(participant B as Booking service) Tj
+T*
+(participant Pay as Payment service) Tj
+T*
+(participant DB as MySQL) Tj
+T*
+(P->>UI: Select train and enter passengers) Tj
+T*
+(UI->>API: POST /api/bookings) Tj
+T*
+(API->>B: Validate request) Tj
+T*
+(B->>DB: BEGIN; lock inventory; create booking, passengers and HELD seats) Tj
+T*
+(DB-->>B: Commit PNR) Tj
+T*
+(B-->>API: Pending booking and PNR) Tj
+T*
+(API-->>UI: Pending confirmation) Tj
+T*
+(P->>UI: Confirm simulated payment) Tj
+T*
+(UI->>API: POST /api/bookings/{id}/pay) Tj
+T*
+(API->>Pay: Validate ownership and active holds) Tj
+T*
+(Pay->>DB: BEGIN; lock booking/seats; record payment; confirm seats and booking; queue notifications) Tj
+T*
+(DB-->>Pay: Commit) Tj
+T*
+(Pay-->>UI: Confirmed booking) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(3.2 Cancellation sequence) Tj
+T*
+(mermaid) Tj
+T*
+(sequenceDiagram) Tj
+T*
+(actor P as Passenger) Tj
+T*
+(participant UI as React) Tj
+T*
+(participant API as Django API) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2657 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(participant C as Cancellation service) Tj
+T*
+(participant DB as MySQL) Tj
+T*
+(P->>UI: Cancel eligible booking) Tj
+T*
+(UI->>API: POST /api/bookings/{id}/cancel) Tj
+T*
+(API->>C: Check session, ownership and rules) Tj
+T*
+(C->>DB: BEGIN; lock booking and allocations) Tj
+T*
+(C->>DB: Create cancellation/items and pending refunds) Tj
+T*
+(C->>DB: Release seats; set booking CANCELLED; COMMIT) Tj
+T*
+(DB-->>C: Cancellation record) Tj
+T*
+(C-->>API: Charges, refund and status) Tj
+T*
+(API-->>UI: Cancellation result) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(3.3 API interfaces) Tj
+T*
+(|  Component  |  Method and route  |  Result / error handling  |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(|  Search  |  GET /api/trains/search  |  Schedule options; validation errors for invalid query  |) Tj
+T*
+(|  Booking  |  POST /api/bookings  |  Pending booking and PNR; validation/availability/conflict) Tj
+T*
+(errors  |) Tj
+T*
+(|  Payment  |  POST /api/bookings/{id}/pay  |  Simulated confirmation; unauthorized, invalid or) Tj
+T*
+(expired hold errors  |) Tj
+T*
+(|  Cancellation  |  POST /api/bookings/{id}/cancel  |  Cancellation and refund details;) Tj
+T*
+(eligibility/ownership errors  |) Tj
+T*
+(|  Admin  |  PATCH /api/admin/trains/{id}  |  Updated train; role, validation and duplicate errors ) Tj
+T*
+(|) Tj
+T*
+(|  Operations  |  GET /api/health/db  |  200 on connection, 503 when database unavailable  |) Tj
+T*
+() Tj
+T*
+(3.4 Error handling, logging and monitoring) Tj
+T*
+(Views map expected domain failures to controlled HTTP errors. Database outages return) Tj
+T*
+(service-unavailable responses without raw SQL exception details. /api/health and /api/health/db) Tj
+T*
+(support basic checks; production alerting, audit retention and automated failover have not been) Tj
+T*
+(established.) Tj
+T*
+() Tj
+T*
+(3.5 User experience) Tj
+T*
+(Passenger screens cover authentication, train search, booking, simulated payment, status/history and) Tj
+T*
+(cancellation. Admin screens cover operations and record inspection. Automated browser checks exist;) Tj
+T*
+(accessibility certification is not claimed.) Tj
+T*
+() Tj
+T*
+(3.6 Architecture decisions and open issues) Tj
+T*
+(Use the existing schema, preserve row-lock ordering, keep transactions inside services, and avoid) Tj
+T*
+(duplicated business logic in views. Open limitations: real gateway integration, provider delivery,) Tj
+T*
+(production monitoring, live database integration tests and formal performance measurements.) Tj
+T*
+() Tj
+T*
+(4. References) Tj
+T*
+(docs/ARCHITECTURE_DECISIONS.md, docs/PROJECT_DOCUMENTATION.md, database/SCHEMA_REVIEW.md,) Tj
+T*
+(backend/config/urls.py, backend/app/.) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000195 00000 n 
+0000003596 00000 n 
+0000003722 00000 n 
+0000006798 00000 n 
+0000006924 00000 n 
+0000009633 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+9759
+%%EOF

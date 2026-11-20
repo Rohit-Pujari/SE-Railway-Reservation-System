@@ -1,0 +1,394 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Length 4214 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(Software Requirements Specification \(SRS\)) Tj
+T*
+() Tj
+T*
+(1. Introduction) Tj
+T*
+(1.1 Purpose and scope) Tj
+T*
+(This specification defines the passenger reservation and railway administration workflows delivered) Tj
+T*
+(by the React, Django REST Framework and MySQL application. The project uses simulated payments and) Tj
+T*
+(queued notifications; it does not transfer real money or deliver SMS/email through a provider.) Tj
+T*
+(1.2 Audience and definitions) Tj
+T*
+(Audience: passengers, administrators, developers, testers and evaluators. PNR = Passenger Name) Tj
+T*
+(Record; API = Application Programming Interface; CSRF = Cross-Site Request Forgery; RBAC =) Tj
+T*
+(Role-Based Access Control; RTM = Requirements Traceability Matrix; NFR = Non-Functional Requirement.) Tj
+T*
+() Tj
+T*
+(2. Overall description) Tj
+T*
+(The browser frontend calls Django API endpoints, whose feature services use parameterized SQL) Tj
+T*
+(against an InnoDB MySQL database. Passengers authenticate and manage their own reservations.) Tj
+T*
+(Administrators manage railway data and view operational records. External payment and notification) Tj
+T*
+(providers are outside the current implementation.) Tj
+T*
+(Dependencies: Python 3.10+, Node.js 20+, MySQL 8.0.16+, configured environment and schema. A real) Tj
+T*
+(MySQL integration deployment is not validated by mocked unit tests.) Tj
+T*
+() Tj
+T*
+(3. External interfaces) Tj
+T*
+(- Passenger and admin web interfaces: React/Vite.) Tj
+T*
+(- JSON HTTP API: Django REST Framework under /api.) Tj
+T*
+(- Persistent store: MySQL via mysql-connector-python; schema is in database/schema.sql.) Tj
+T*
+(- Security: session cookies, CSRF tokens, role checks, password hashing, HTTPS required for) Tj
+T*
+(production.) Tj
+T*
+(- External services: payment is simulated; notification and refund records are persisted but) Tj
+T*
+(provider delivery/settlement is not included.) Tj
+T*
+() Tj
+T*
+(4. Functional requirements) Tj
+T*
+(Each FR is stated as a testable behavior. IDs are stable for the accompanying test plan.) Tj
+T*
+(|  ID  |  Priority  |  Requirement  |  Acceptance evidence  |) Tj
+T*
+(| --- | --- | --- | --- |) Tj
+T*
+(|  RRS-F-001  |  High  |  Register a passenger with validated inputs and hashed password.  |  Valid) Tj
+T*
+(registration succeeds; invalid/duplicate data is rejected.  |) Tj
+T*
+(|  RRS-F-002  |  High  |  Authenticate an active passenger and end the session on logout.  | ) Tj
+T*
+(Login/logout and unauthorized access tests.  |) Tj
+T*
+(|  RRS-F-003  |  High  |  Authenticate an active administrator separately from passengers.  | ) Tj
+T*
+(Passenger cannot access admin endpoints.  |) Tj
+T*
+(|  RRS-F-004  |  High  |  Return selectable stations and travel classes.  |  Catalog endpoints) Tj
+T*
+(return valid options.  |) Tj
+T*
+(|  RRS-F-005  |  High  |  Search train schedules by origin, destination and journey date.  | ) Tj
+T*
+(Matching routes returned; invalid queries rejected.  |) Tj
+T*
+(|  RRS-F-006  |  High  |  Show available seats for a selected schedule and class.  |  Confirmed and) Tj
+T*
+(unexpired held allocations are excluded.  |) Tj
+T*
+(|  RRS-F-007  |  High  |  Collect and validate passenger details for a booking.  |  Missing/invalid) Tj
+T*
+(traveler data rejected.  |) Tj
+T*
+(|  RRS-F-008  |  High  |  Calculate and preserve a fare snapshot for a reservation.  |  Fare) Tj
+T*
+(returned and persisted consistently.  |) Tj
+T*
+(|  RRS-F-009  |  High  |  Create a booking with a unique PNR and temporary seat holds.  |  Booking,) Tj
+T*
+(travelers and holds commit atomically.  |) Tj
+T*
+(|  RRS-F-010  |  High  |  Prevent duplicate bookings from request retries and overlapping seat) Tj
+T*
+(allocation.  |  Idempotency and inventory-lock tests pass.  |) Tj
+T*
+(|  RRS-F-011  |  High  |  Confirm an eligible held booking using simulated payment.  |  Booking and) Tj
+T*
+(seat statuses become CONFIRMED together.  |) Tj
+T*
+(|  RRS-F-012  |  High  |  Display passenger booking history and PNR status.  |  Only bookings owned) Tj
+T*
+(by signed-in user appear.  |) Tj
+T*
+(|  RRS-F-013  |  High  |  Cancel an eligible booking and release its seats.  |  Booking, allocations) Tj
+T*
+(and cancellation rows update together.  |) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 3997 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(|  RRS-F-014  |  High  |  Calculate cancellation charges and persist pending refunds.  | ) Tj
+T*
+(Passenger-level cancellation/refund rows exist.  |) Tj
+T*
+(|  RRS-F-015  |  Medium  |  Queue booking notification records when confirmed.  |  Email/SMS queue) Tj
+T*
+(rows are created where applicable; no delivery claim.  |) Tj
+T*
+(|  RRS-F-016  |  High  |  Let administrators create, edit, deactivate or safely remove trains.  | ) Tj
+T*
+(Role checks and dependency-preserving removal tests.  |) Tj
+T*
+(|  RRS-F-017  |  High  |  Let administrators manage stations, routes and train-route assignments.  |) Tj
+T*
+(Validation and dependency checks prevent invalid updates.  |) Tj
+T*
+(|  RRS-F-018  |  High  |  Let administrators manage schedules and seat inventory.  |  Existing) Tj
+T*
+(bookings are protected from unsafe changes.  |) Tj
+T*
+(|  RRS-F-019  |  Medium  |  Let administrators inspect bookings, cancellations and refunds.  | ) Tj
+T*
+(Protected detail and search endpoints return scoped records.  |) Tj
+T*
+(|  RRS-F-020  |  Medium  |  Expose application and database health endpoints.  |  API health and) Tj
+T*
+(database outage/recovery tests.  |) Tj
+T*
+() Tj
+T*
+(5. Non-functional requirements) Tj
+T*
+(These are evaluation targets, not assertions that production metrics have been measured.) Tj
+T*
+(|  ID  |  Category  |  Measurable requirement / verification  |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(|  RRS-NF-001  |  Performance  |  Train search P95 latency at or below 3 seconds under a documented) Tj
+T*
+(representative load; run scripts/benchmark_train_search.py against a test MySQL database.  |) Tj
+T*
+(|  RRS-NF-002  |  Availability  |  Target 99.5% monthly availability excluding announced) Tj
+T*
+(maintenance; verify with operational uptime measurements \(not yet established\).  |) Tj
+T*
+(|  RRS-NF-003  |  Reliability  |  Booking, payment and cancellation multi-row changes are atomic;) Tj
+T*
+(inject failures and verify rollback and idempotent retries.  |) Tj
+T*
+(|  RRS-NF-004  |  Compatibility  |  Main screens render in Chrome, Firefox, Edge and Safari; execute) Tj
+T*
+(Playwright browser suite and record results.  |) Tj
+T*
+(|  RRS-NF-005  |  Maintainability  |  Backend unit suite, Python compilation and frontend build) Tj
+T*
+(complete successfully on every reviewed PR; inspect GitHub Actions logs.  |) Tj
+T*
+() Tj
+T*
+(5.1 Security objectives) Tj
+T*
+(- SO-01: Prevent unauthorized access to passenger reservations and administrative operations.) Tj
+T*
+(- SO-02: Protect credentials and transactional integrity against disclosure, forgery and concurrent) Tj
+T*
+(updates.) Tj
+T*
+() Tj
+T*
+(5.2 Security requirements) Tj
+T*
+(|  ID  |  Requirement  |  Acceptance test  |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(|  RRS-SR-001  |  Store passwords using a one-way password hash; never return hashes in API) Tj
+T*
+(responses.  |  Registration/authentication tests and response inspection.  |) Tj
+T*
+(|  RRS-SR-002  |  Require an authenticated session and enforce passenger ownership/admin RBAC.  | ) Tj
+T*
+(Unauthorized and cross-user endpoint tests.  |) Tj
+T*
+(|  RRS-SR-003  |  Enforce CSRF checks on state-changing browser requests.  |  Missing/invalid CSRF) Tj
+T*
+(token tests.  |) Tj
+T*
+(|  RRS-SR-004  |  Use parameterized SQL and validate IDs and request fields.  |  Input validation) Tj
+T*
+(and source review.  |) Tj
+T*
+(|  RRS-SR-005  |  Use secure cookies and HTTPS for production; never commit secrets.  | ) Tj
+T*
+(Configuration review of production deployment.  |) Tj
+T*
+() Tj
+T*
+(6. Quality attributes and acceptance) Tj
+T*
+(High-priority FRs must be demonstrated, security tests must pass, critical defects must be resolved,) Tj
+T*
+(and the RTM must identify execution evidence. Tests with mocked database access are not substitutes) Tj
+T*
+(for real database integration testing.) Tj
+T*
+() Tj
+T*
+(7. UML use-case diagrams) Tj
+T*
+(7.1 Passenger) Tj
+T*
+(mermaid) Tj
+T*
+(flowchart LR) Tj
+T*
+(P[Passenger] --> A\([Register / Sign in]\)) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2504 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(P --> B\([Search trains and seats]\)) Tj
+T*
+(P --> C\([Create booking and PNR]\)) Tj
+T*
+(P --> D\([Simulated payment]\)) Tj
+T*
+(P --> E\([View booking history / status]\)) Tj
+T*
+(P --> F\([Cancel booking / view refund]\)) Tj
+T*
+() Tj
+T*
+(7.2 Administrator) Tj
+T*
+(mermaid) Tj
+T*
+(flowchart LR) Tj
+T*
+(A[Administrator] --> B\([Sign in]\)) Tj
+T*
+(A --> C\([Manage trains and stations]\)) Tj
+T*
+(A --> D\([Manage routes and schedules]\)) Tj
+T*
+(A --> E\([Manage seat inventory]\)) Tj
+T*
+(A --> F\([View bookings and cancellations]\)) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(8. Requirements traceability matrix \(RTM\)) Tj
+T*
+(|  Requirements  |  Module / API  |  Test references  |  Status  |) Tj
+T*
+(| --- | --- | --- | --- |) Tj
+T*
+(|  F-001 003, SR-001 003  |  Registration, auth and Django views  |  TC-01, TC-02, backend auth) Tj
+T*
+(tests  |  Automated coverage present; rerun required  |) Tj
+T*
+(|  F-004 006, NF-001  |  Search and availability  |  TC-03, TC-04, benchmark script  |  Performance) Tj
+T*
+(measurement pending  |) Tj
+T*
+(|  F-007 010, NF-003  |  Booking, fare and allocation  |  TC-05, TC-06, booking tests  |  Automated) Tj
+T*
+(coverage present  |) Tj
+T*
+(|  F-011, F-015  |  Booking payment  |  TC-07, payment tests  |  Simulated only  |) Tj
+T*
+(|  F-012 014  |  History, cancellation and refunds  |  TC-08, TC-09, cancellation tests  | ) Tj
+T*
+(Automated coverage present  |) Tj
+T*
+(|  F-016 019  |  Admin modules  |  TC-10, admin tests  |  Automated coverage present  |) Tj
+T*
+(|  F-020, NF-002  |  Health and recovery  |  TC-11, recovery tests  |  Availability measurement) Tj
+T*
+(pending  |) Tj
+T*
+(|  NF-004, NF-005  |  Frontend and CI  |  TC-12, build and browser suite  |  Latest run verification) Tj
+T*
+(pending  |) Tj
+T*
+(|  SR-004 005  |  SQL services and settings  |  TC-13, source/configuration review  |  Deployment) Tj
+T*
+(verification pending  |) Tj
+T*
+() Tj
+T*
+(9. Deviations and limitations) Tj
+T*
+(Real payment processing, bank refunds, email/SMS delivery and production high availability are not) Tj
+T*
+(implemented. The original SRS/SAD should be compared with this current-state baseline and any scope) Tj
+T*
+(changes explained during the demo. Requirements here reflect code/documentation reviewed, not) Tj
+T*
+(independently executed acceptance tests.) Tj
+T*
+() Tj
+T*
+(10. References) Tj
+T*
+(README.md, docs/PROJECT_DOCUMENTATION.md, docs/ARCHITECTURE_DECISIONS.md, database/schema.sql,) Tj
+T*
+(backend/tests/, frontend/tests/.) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000195 00000 n 
+0000004461 00000 n 
+0000004587 00000 n 
+0000008636 00000 n 
+0000008762 00000 n 
+0000011318 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+11444
+%%EOF

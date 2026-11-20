@@ -1,0 +1,2307 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R 29 0 R 31 0 R 33 0 R 35 0 R 37 0 R 39 0 R] /Count 18 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Length 5248 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(Detailed Test Cases   Railway Reservation System) Tj
+T*
+() Tj
+T*
+(Test cases are planned, not recorded as executed. Fill Actual Result and Test Result only after) Tj
+T*
+(manual execution. Use seeded disposable records and adapt inputs to each endpoint. Each functional) Tj
+T*
+(requirement has eight unit/integration/system scenarios.) Tj
+T*
+() Tj
+T*
+(RRS-F-001: Register a passenger with validated inputs and hashed password.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-001-01  |  RRS-F-001  |  Valid request: Register a passenger with validated inputs and hashed) Tj
+T*
+(password.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned status) Tj
+T*
+(and persisted records. 2. Compare response and database state with expected behavior.  |  Valid data) Tj
+T*
+(and an authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Valid registration succeeds; invalid/duplicate data is rejected.  |  Not executed  |  Not executed ) Tj
+T*
+(|) Tj
+T*
+(|  UT-001-02  |  RRS-F-001  |  Missing required field: Register a passenger with validated inputs) Tj
+T*
+(and hashed password.  |  Remove one required input  |  1. Submit the request without a required) Tj
+T*
+(field and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Required field omitted  |  Request is rejected with a validation response; requirement: Valid) Tj
+T*
+(registration succeeds; invalid/duplicate data is rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-001-03  |  RRS-F-001  |  Invalid identifier: Register a passenger with validated inputs and) Tj
+T*
+(hashed password.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid) Tj
+T*
+(reference and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identifier 999999 or malformed value  |  Request is rejected without changing existing records;) Tj
+T*
+(requirement: Valid registration succeeds; invalid/duplicate data is rejected.  |  Not executed  | ) Tj
+T*
+(Not executed  |) Tj
+T*
+(|  ST-001-04  |  RRS-F-001  |  Unauthorized request: Register a passenger with validated inputs and) Tj
+T*
+(hashed password.  |  No authenticated session  |  1. Call the protected endpoint without a valid) Tj
+T*
+(session and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Missing session cookie  |  Protected operations are denied; no records change; requirement: Valid) Tj
+T*
+(registration succeeds; invalid/duplicate data is rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-001-05  |  RRS-F-001  |  Wrong user or role: Register a passenger with validated inputs and) Tj
+T*
+(hashed password.  |  Sign in with a different passenger or non-admin account  |  1. Access or modify) Tj
+T*
+(a record owned by another user and inspect response. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Another account's record identifier  |  Ownership or administrator access) Tj
+T*
+(restrictions are enforced; requirement: Valid registration succeeds; invalid/duplicate data is) Tj
+T*
+(rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-001-06  |  RRS-F-001  |  Boundary input: Register a passenger with validated inputs and hashed) Tj
+T*
+(password.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect) Tj
+T*
+(validation and database state. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely according to) Tj
+T*
+(module validation; requirement: Valid registration succeeds; invalid/duplicate data is rejected.  | ) Tj
+T*
+(Not executed  |  Not executed  |) Tj
+T*
+(|  ST-001-07  |  RRS-F-001  |  Repeat request: Register a passenger with validated inputs and hashed) Tj
+T*
+(password.  |  Use an identical request twice  |  1. Execute the same request twice; inspect records) Tj
+T*
+(and return values. 2. Compare response and database state with expected behavior.  |  Identical) Tj
+T*
+(request payload  |  Repeated requests do not create unintended duplicate effects; requirement: Valid) Tj
+T*
+(registration succeeds; invalid/duplicate data is rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-001-08  |  RRS-F-001  |  Database error or rollback: Register a passenger with validated) Tj
+T*
+(inputs and hashed password.  |  Use an isolated test database and inject a failed write  |  1.) Tj
+T*
+(Trigger a database failure during operation; inspect persisted state. 2. Compare response and) Tj
+T*
+(database state with expected behavior.  |  Simulated write failure  |  Operation fails safely) Tj
+T*
+(without partial inconsistent writes; requirement: Valid registration succeeds; invalid/duplicate) Tj
+T*
+(data is rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-002: Authenticate an active passenger and end the session on logout.) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 5591 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-002-01  |  RRS-F-002  |  Valid request: Authenticate an active passenger and end the session) Tj
+T*
+(on logout.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned status) Tj
+T*
+(and persisted records. 2. Compare response and database state with expected behavior.  |  Valid data) Tj
+T*
+(and an authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Login/logout and unauthorized access tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-002-02  |  RRS-F-002  |  Missing required field: Authenticate an active passenger and end the) Tj
+T*
+(session on logout.  |  Remove one required input  |  1. Submit the request without a required field) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Required) Tj
+T*
+(field omitted  |  Request is rejected with a validation response; requirement: Login/logout and) Tj
+T*
+(unauthorized access tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-002-03  |  RRS-F-002  |  Invalid identifier: Authenticate an active passenger and end the) Tj
+T*
+(session on logout.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid) Tj
+T*
+(reference and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identifier 999999 or malformed value  |  Request is rejected without changing existing records;) Tj
+T*
+(requirement: Login/logout and unauthorized access tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-002-04  |  RRS-F-002  |  Unauthorized request: Authenticate an active passenger and end the) Tj
+T*
+(session on logout.  |  No authenticated session  |  1. Call the protected endpoint without a valid) Tj
+T*
+(session and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Missing session cookie  |  Protected operations are denied; no records change; requirement:) Tj
+T*
+(Login/logout and unauthorized access tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-002-05  |  RRS-F-002  |  Wrong user or role: Authenticate an active passenger and end the) Tj
+T*
+(session on logout.  |  Sign in with a different passenger or non-admin account  |  1. Access or) Tj
+T*
+(modify a record owned by another user and inspect response. 2. Compare response and database state) Tj
+T*
+(with expected behavior.  |  Another account's record identifier  |  Ownership or administrator) Tj
+T*
+(access restrictions are enforced; requirement: Login/logout and unauthorized access tests.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+(|  UT-002-06  |  RRS-F-002  |  Boundary input: Authenticate an active passenger and end the session) Tj
+T*
+(on logout.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect) Tj
+T*
+(validation and database state. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely according to) Tj
+T*
+(module validation; requirement: Login/logout and unauthorized access tests.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+(|  ST-002-07  |  RRS-F-002  |  Repeat request: Authenticate an active passenger and end the session) Tj
+T*
+(on logout.  |  Use an identical request twice  |  1. Execute the same request twice; inspect records) Tj
+T*
+(and return values. 2. Compare response and database state with expected behavior.  |  Identical) Tj
+T*
+(request payload  |  Repeated requests do not create unintended duplicate effects; requirement:) Tj
+T*
+(Login/logout and unauthorized access tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-002-08  |  RRS-F-002  |  Database error or rollback: Authenticate an active passenger and end) Tj
+T*
+(the session on logout.  |  Use an isolated test database and inject a failed write  |  1. Trigger a) Tj
+T*
+(database failure during operation; inspect persisted state. 2. Compare response and database state) Tj
+T*
+(with expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Login/logout and unauthorized access tests.  |  Not executed  | ) Tj
+T*
+(Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-003: Authenticate an active administrator separately from passengers.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-003-01  |  RRS-F-003  |  Valid request: Authenticate an active administrator separately from) Tj
+T*
+(passengers.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned status) Tj
+T*
+(and persisted records. 2. Compare response and database state with expected behavior.  |  Valid data) Tj
+T*
+(and an authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Passenger cannot access admin endpoints.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-003-02  |  RRS-F-003  |  Missing required field: Authenticate an active administrator) Tj
+T*
+(separately from passengers.  |  Remove one required input  |  1. Submit the request without a) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 5562 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(required field and inspect response. 2. Compare response and database state with expected behavior. ) Tj
+T*
+(|  Required field omitted  |  Request is rejected with a validation response; requirement: Passenger) Tj
+T*
+(cannot access admin endpoints.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-003-03  |  RRS-F-003  |  Invalid identifier: Authenticate an active administrator separately) Tj
+T*
+(from passengers.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid) Tj
+T*
+(reference and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identifier 999999 or malformed value  |  Request is rejected without changing existing records;) Tj
+T*
+(requirement: Passenger cannot access admin endpoints.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-003-04  |  RRS-F-003  |  Unauthorized request: Authenticate an active administrator separately) Tj
+T*
+(from passengers.  |  No authenticated session  |  1. Call the protected endpoint without a valid) Tj
+T*
+(session and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Missing session cookie  |  Protected operations are denied; no records change; requirement:) Tj
+T*
+(Passenger cannot access admin endpoints.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-003-05  |  RRS-F-003  |  Wrong user or role: Authenticate an active administrator separately) Tj
+T*
+(from passengers.  |  Sign in with a different passenger or non-admin account  |  1. Access or modify) Tj
+T*
+(a record owned by another user and inspect response. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Another account's record identifier  |  Ownership or administrator access) Tj
+T*
+(restrictions are enforced; requirement: Passenger cannot access admin endpoints.  |  Not executed  |) Tj
+T*
+(Not executed  |) Tj
+T*
+(|  UT-003-06  |  RRS-F-003  |  Boundary input: Authenticate an active administrator separately from) Tj
+T*
+(passengers.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect) Tj
+T*
+(validation and database state. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely according to) Tj
+T*
+(module validation; requirement: Passenger cannot access admin endpoints.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+(|  ST-003-07  |  RRS-F-003  |  Repeat request: Authenticate an active administrator separately from) Tj
+T*
+(passengers.  |  Use an identical request twice  |  1. Execute the same request twice; inspect) Tj
+T*
+(records and return values. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identical request payload  |  Repeated requests do not create unintended duplicate effects;) Tj
+T*
+(requirement: Passenger cannot access admin endpoints.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-003-08  |  RRS-F-003  |  Database error or rollback: Authenticate an active administrator) Tj
+T*
+(separately from passengers.  |  Use an isolated test database and inject a failed write  |  1.) Tj
+T*
+(Trigger a database failure during operation; inspect persisted state. 2. Compare response and) Tj
+T*
+(database state with expected behavior.  |  Simulated write failure  |  Operation fails safely) Tj
+T*
+(without partial inconsistent writes; requirement: Passenger cannot access admin endpoints.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-004: Return selectable stations and travel classes.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-004-01  |  RRS-F-004  |  Valid request: Return selectable stations and travel classes.  | ) Tj
+T*
+(Prepared valid test record  |  1. Submit a valid request and inspect returned status and persisted) Tj
+T*
+(records. 2. Compare response and database state with expected behavior.  |  Valid data and an) Tj
+T*
+(authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Catalog endpoints return valid options.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-004-02  |  RRS-F-004  |  Missing required field: Return selectable stations and travel) Tj
+T*
+(classes.  |  Remove one required input  |  1. Submit the request without a required field and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Required field) Tj
+T*
+(omitted  |  Request is rejected with a validation response; requirement: Catalog endpoints return) Tj
+T*
+(valid options.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-004-03  |  RRS-F-004  |  Invalid identifier: Return selectable stations and travel classes.  |) Tj
+T*
+(Use an unknown or malformed identifier  |  1. Submit request with an invalid reference and inspect) Tj
+T*
+(response. 2. Compare response and database state with expected behavior.  |  Identifier 999999 or) Tj
+T*
+(malformed value  |  Request is rejected without changing existing records; requirement: Catalog) Tj
+T*
+(endpoints return valid options.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-004-04  |  RRS-F-004  |  Unauthorized request: Return selectable stations and travel classes. ) Tj
+T*
+(|  No authenticated session  |  1. Call the protected endpoint without a valid session and inspect) Tj
+T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 5414 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(response. 2. Compare response and database state with expected behavior.  |  Missing session cookie ) Tj
+T*
+(|  Protected operations are denied; no records change; requirement: Catalog endpoints return valid) Tj
+T*
+(options.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-004-05  |  RRS-F-004  |  Wrong user or role: Return selectable stations and travel classes.  |) Tj
+T*
+(Sign in with a different passenger or non-admin account  |  1. Access or modify a record owned by) Tj
+T*
+(another user and inspect response. 2. Compare response and database state with expected behavior.  |) Tj
+T*
+(Another account's record identifier  |  Ownership or administrator access restrictions are enforced;) Tj
+T*
+(requirement: Catalog endpoints return valid options.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-004-06  |  RRS-F-004  |  Boundary input: Return selectable stations and travel classes.  | ) Tj
+T*
+(Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect validation and) Tj
+T*
+(database state. 2. Compare response and database state with expected behavior.  |  Empty string,) Tj
+T*
+(zero or out-of-range value as appropriate  |  Boundary is handled safely according to module) Tj
+T*
+(validation; requirement: Catalog endpoints return valid options.  |  Not executed  |  Not executed ) Tj
+T*
+(|) Tj
+T*
+(|  ST-004-07  |  RRS-F-004  |  Repeat request: Return selectable stations and travel classes.  | ) Tj
+T*
+(Use an identical request twice  |  1. Execute the same request twice; inspect records and return) Tj
+T*
+(values. 2. Compare response and database state with expected behavior.  |  Identical request payload) Tj
+T*
+(|  Repeated requests do not create unintended duplicate effects; requirement: Catalog endpoints) Tj
+T*
+(return valid options.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-004-08  |  RRS-F-004  |  Database error or rollback: Return selectable stations and travel) Tj
+T*
+(classes.  |  Use an isolated test database and inject a failed write  |  1. Trigger a database) Tj
+T*
+(failure during operation; inspect persisted state. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Catalog endpoints return valid options.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-005: Search train schedules by origin, destination and journey date.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-005-01  |  RRS-F-005  |  Valid request: Search train schedules by origin, destination and) Tj
+T*
+(journey date.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned) Tj
+T*
+(status and persisted records. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Valid data and an authorized session where required  |  Expected behavior occurs without an error;) Tj
+T*
+(requirement: Matching routes returned; invalid queries rejected.  |  Not executed  |  Not executed ) Tj
+T*
+(|) Tj
+T*
+(|  UT-005-02  |  RRS-F-005  |  Missing required field: Search train schedules by origin, destination) Tj
+T*
+(and journey date.  |  Remove one required input  |  1. Submit the request without a required field) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Required) Tj
+T*
+(field omitted  |  Request is rejected with a validation response; requirement: Matching routes) Tj
+T*
+(returned; invalid queries rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-005-03  |  RRS-F-005  |  Invalid identifier: Search train schedules by origin, destination and) Tj
+T*
+(journey date.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid) Tj
+T*
+(reference and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identifier 999999 or malformed value  |  Request is rejected without changing existing records;) Tj
+T*
+(requirement: Matching routes returned; invalid queries rejected.  |  Not executed  |  Not executed ) Tj
+T*
+(|) Tj
+T*
+(|  ST-005-04  |  RRS-F-005  |  Unauthorized request: Search train schedules by origin, destination) Tj
+T*
+(and journey date.  |  No authenticated session  |  1. Call the protected endpoint without a valid) Tj
+T*
+(session and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Missing session cookie  |  Protected operations are denied; no records change; requirement: Matching) Tj
+T*
+(routes returned; invalid queries rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-005-05  |  RRS-F-005  |  Wrong user or role: Search train schedules by origin, destination and) Tj
+T*
+(journey date.  |  Sign in with a different passenger or non-admin account  |  1. Access or modify a) Tj
+T*
+(record owned by another user and inspect response. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Another account's record identifier  |  Ownership or administrator access) Tj
+T*
+(restrictions are enforced; requirement: Matching routes returned; invalid queries rejected.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 5540 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(|  UT-005-06  |  RRS-F-005  |  Boundary input: Search train schedules by origin, destination and) Tj
+T*
+(journey date.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect) Tj
+T*
+(validation and database state. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely according to) Tj
+T*
+(module validation; requirement: Matching routes returned; invalid queries rejected.  |  Not executed) Tj
+T*
+(|  Not executed  |) Tj
+T*
+(|  ST-005-07  |  RRS-F-005  |  Repeat request: Search train schedules by origin, destination and) Tj
+T*
+(journey date.  |  Use an identical request twice  |  1. Execute the same request twice; inspect) Tj
+T*
+(records and return values. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identical request payload  |  Repeated requests do not create unintended duplicate effects;) Tj
+T*
+(requirement: Matching routes returned; invalid queries rejected.  |  Not executed  |  Not executed ) Tj
+T*
+(|) Tj
+T*
+(|  IT-005-08  |  RRS-F-005  |  Database error or rollback: Search train schedules by origin,) Tj
+T*
+(destination and journey date.  |  Use an isolated test database and inject a failed write  |  1.) Tj
+T*
+(Trigger a database failure during operation; inspect persisted state. 2. Compare response and) Tj
+T*
+(database state with expected behavior.  |  Simulated write failure  |  Operation fails safely) Tj
+T*
+(without partial inconsistent writes; requirement: Matching routes returned; invalid queries) Tj
+T*
+(rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-006: Show available seats for a selected schedule and class.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-006-01  |  RRS-F-006  |  Valid request: Show available seats for a selected schedule and) Tj
+T*
+(class.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned status and) Tj
+T*
+(persisted records. 2. Compare response and database state with expected behavior.  |  Valid data and) Tj
+T*
+(an authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Confirmed and unexpired held allocations are excluded.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-006-02  |  RRS-F-006  |  Missing required field: Show available seats for a selected schedule) Tj
+T*
+(and class.  |  Remove one required input  |  1. Submit the request without a required field and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Required field) Tj
+T*
+(omitted  |  Request is rejected with a validation response; requirement: Confirmed and unexpired) Tj
+T*
+(held allocations are excluded.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-006-03  |  RRS-F-006  |  Invalid identifier: Show available seats for a selected schedule and) Tj
+T*
+(class.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid reference) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Identifier) Tj
+T*
+(999999 or malformed value  |  Request is rejected without changing existing records; requirement:) Tj
+T*
+(Confirmed and unexpired held allocations are excluded.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-006-04  |  RRS-F-006  |  Unauthorized request: Show available seats for a selected schedule) Tj
+T*
+(and class.  |  No authenticated session  |  1. Call the protected endpoint without a valid session) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Missing) Tj
+T*
+(session cookie  |  Protected operations are denied; no records change; requirement: Confirmed and) Tj
+T*
+(unexpired held allocations are excluded.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-006-05  |  RRS-F-006  |  Wrong user or role: Show available seats for a selected schedule and) Tj
+T*
+(class.  |  Sign in with a different passenger or non-admin account  |  1. Access or modify a record) Tj
+T*
+(owned by another user and inspect response. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Another account's record identifier  |  Ownership or administrator access restrictions) Tj
+T*
+(are enforced; requirement: Confirmed and unexpired held allocations are excluded.  |  Not executed ) Tj
+T*
+(|  Not executed  |) Tj
+T*
+(|  UT-006-06  |  RRS-F-006  |  Boundary input: Show available seats for a selected schedule and) Tj
+T*
+(class.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect) Tj
+T*
+(validation and database state. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely according to) Tj
+T*
+(module validation; requirement: Confirmed and unexpired held allocations are excluded.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+(|  ST-006-07  |  RRS-F-006  |  Repeat request: Show available seats for a selected schedule and) Tj
+T*
+(class.  |  Use an identical request twice  |  1. Execute the same request twice; inspect records and) Tj
+T*
+(return values. 2. Compare response and database state with expected behavior.  |  Identical request) Tj
+T*
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 5337 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(payload  |  Repeated requests do not create unintended duplicate effects; requirement: Confirmed and) Tj
+T*
+(unexpired held allocations are excluded.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-006-08  |  RRS-F-006  |  Database error or rollback: Show available seats for a selected) Tj
+T*
+(schedule and class.  |  Use an isolated test database and inject a failed write  |  1. Trigger a) Tj
+T*
+(database failure during operation; inspect persisted state. 2. Compare response and database state) Tj
+T*
+(with expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Confirmed and unexpired held allocations are excluded.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-007: Collect and validate passenger details for a booking.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-007-01  |  RRS-F-007  |  Valid request: Collect and validate passenger details for a booking. ) Tj
+T*
+(|  Prepared valid test record  |  1. Submit a valid request and inspect returned status and) Tj
+T*
+(persisted records. 2. Compare response and database state with expected behavior.  |  Valid data and) Tj
+T*
+(an authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Missing/invalid traveler data rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-007-02  |  RRS-F-007  |  Missing required field: Collect and validate passenger details for a) Tj
+T*
+(booking.  |  Remove one required input  |  1. Submit the request without a required field and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Required field) Tj
+T*
+(omitted  |  Request is rejected with a validation response; requirement: Missing/invalid traveler) Tj
+T*
+(data rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-007-03  |  RRS-F-007  |  Invalid identifier: Collect and validate passenger details for a) Tj
+T*
+(booking.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid reference) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Identifier) Tj
+T*
+(999999 or malformed value  |  Request is rejected without changing existing records; requirement:) Tj
+T*
+(Missing/invalid traveler data rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-007-04  |  RRS-F-007  |  Unauthorized request: Collect and validate passenger details for a) Tj
+T*
+(booking.  |  No authenticated session  |  1. Call the protected endpoint without a valid session and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Missing session) Tj
+T*
+(cookie  |  Protected operations are denied; no records change; requirement: Missing/invalid traveler) Tj
+T*
+(data rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-007-05  |  RRS-F-007  |  Wrong user or role: Collect and validate passenger details for a) Tj
+T*
+(booking.  |  Sign in with a different passenger or non-admin account  |  1. Access or modify a) Tj
+T*
+(record owned by another user and inspect response. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Another account's record identifier  |  Ownership or administrator access) Tj
+T*
+(restrictions are enforced; requirement: Missing/invalid traveler data rejected.  |  Not executed  | ) Tj
+T*
+(Not executed  |) Tj
+T*
+(|  UT-007-06  |  RRS-F-007  |  Boundary input: Collect and validate passenger details for a booking.) Tj
+T*
+(|  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect validation and) Tj
+T*
+(database state. 2. Compare response and database state with expected behavior.  |  Empty string,) Tj
+T*
+(zero or out-of-range value as appropriate  |  Boundary is handled safely according to module) Tj
+T*
+(validation; requirement: Missing/invalid traveler data rejected.  |  Not executed  |  Not executed ) Tj
+T*
+(|) Tj
+T*
+(|  ST-007-07  |  RRS-F-007  |  Repeat request: Collect and validate passenger details for a booking.) Tj
+T*
+(|  Use an identical request twice  |  1. Execute the same request twice; inspect records and return) Tj
+T*
+(values. 2. Compare response and database state with expected behavior.  |  Identical request payload) Tj
+T*
+(|  Repeated requests do not create unintended duplicate effects; requirement: Missing/invalid) Tj
+T*
+(traveler data rejected.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-007-08  |  RRS-F-007  |  Database error or rollback: Collect and validate passenger details) Tj
+T*
+(for a booking.  |  Use an isolated test database and inject a failed write  |  1. Trigger a database) Tj
+T*
+(failure during operation; inspect persisted state. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Missing/invalid traveler data rejected.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-008: Calculate and preserve a fare snapshot for a reservation.) Tj
+T*
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 5435 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-008-01  |  RRS-F-008  |  Valid request: Calculate and preserve a fare snapshot for a) Tj
+T*
+(reservation.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned) Tj
+T*
+(status and persisted records. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Valid data and an authorized session where required  |  Expected behavior occurs without an error;) Tj
+T*
+(requirement: Fare returned and persisted consistently.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-008-02  |  RRS-F-008  |  Missing required field: Calculate and preserve a fare snapshot for a) Tj
+T*
+(reservation.  |  Remove one required input  |  1. Submit the request without a required field and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Required field) Tj
+T*
+(omitted  |  Request is rejected with a validation response; requirement: Fare returned and persisted) Tj
+T*
+(consistently.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-008-03  |  RRS-F-008  |  Invalid identifier: Calculate and preserve a fare snapshot for a) Tj
+T*
+(reservation.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid) Tj
+T*
+(reference and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identifier 999999 or malformed value  |  Request is rejected without changing existing records;) Tj
+T*
+(requirement: Fare returned and persisted consistently.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-008-04  |  RRS-F-008  |  Unauthorized request: Calculate and preserve a fare snapshot for a) Tj
+T*
+(reservation.  |  No authenticated session  |  1. Call the protected endpoint without a valid session) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Missing) Tj
+T*
+(session cookie  |  Protected operations are denied; no records change; requirement: Fare returned) Tj
+T*
+(and persisted consistently.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-008-05  |  RRS-F-008  |  Wrong user or role: Calculate and preserve a fare snapshot for a) Tj
+T*
+(reservation.  |  Sign in with a different passenger or non-admin account  |  1. Access or modify a) Tj
+T*
+(record owned by another user and inspect response. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Another account's record identifier  |  Ownership or administrator access) Tj
+T*
+(restrictions are enforced; requirement: Fare returned and persisted consistently.  |  Not executed ) Tj
+T*
+(|  Not executed  |) Tj
+T*
+(|  UT-008-06  |  RRS-F-008  |  Boundary input: Calculate and preserve a fare snapshot for a) Tj
+T*
+(reservation.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect) Tj
+T*
+(validation and database state. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely according to) Tj
+T*
+(module validation; requirement: Fare returned and persisted consistently.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+(|  ST-008-07  |  RRS-F-008  |  Repeat request: Calculate and preserve a fare snapshot for a) Tj
+T*
+(reservation.  |  Use an identical request twice  |  1. Execute the same request twice; inspect) Tj
+T*
+(records and return values. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identical request payload  |  Repeated requests do not create unintended duplicate effects;) Tj
+T*
+(requirement: Fare returned and persisted consistently.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-008-08  |  RRS-F-008  |  Database error or rollback: Calculate and preserve a fare snapshot) Tj
+T*
+(for a reservation.  |  Use an isolated test database and inject a failed write  |  1. Trigger a) Tj
+T*
+(database failure during operation; inspect persisted state. 2. Compare response and database state) Tj
+T*
+(with expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Fare returned and persisted consistently.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-009: Create a booking with a unique PNR and temporary seat holds.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-009-01  |  RRS-F-009  |  Valid request: Create a booking with a unique PNR and temporary seat) Tj
+T*
+(holds.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned status and) Tj
+T*
+(persisted records. 2. Compare response and database state with expected behavior.  |  Valid data and) Tj
+T*
+(an authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Booking, travelers and holds commit atomically.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-009-02  |  RRS-F-009  |  Missing required field: Create a booking with a unique PNR and) Tj
+T*
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 5520 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(temporary seat holds.  |  Remove one required input  |  1. Submit the request without a required) Tj
+T*
+(field and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Required field omitted  |  Request is rejected with a validation response; requirement: Booking,) Tj
+T*
+(travelers and holds commit atomically.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-009-03  |  RRS-F-009  |  Invalid identifier: Create a booking with a unique PNR and temporary) Tj
+T*
+(seat holds.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid) Tj
+T*
+(reference and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identifier 999999 or malformed value  |  Request is rejected without changing existing records;) Tj
+T*
+(requirement: Booking, travelers and holds commit atomically.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-009-04  |  RRS-F-009  |  Unauthorized request: Create a booking with a unique PNR and) Tj
+T*
+(temporary seat holds.  |  No authenticated session  |  1. Call the protected endpoint without a) Tj
+T*
+(valid session and inspect response. 2. Compare response and database state with expected behavior. ) Tj
+T*
+(|  Missing session cookie  |  Protected operations are denied; no records change; requirement:) Tj
+T*
+(Booking, travelers and holds commit atomically.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-009-05  |  RRS-F-009  |  Wrong user or role: Create a booking with a unique PNR and temporary) Tj
+T*
+(seat holds.  |  Sign in with a different passenger or non-admin account  |  1. Access or modify a) Tj
+T*
+(record owned by another user and inspect response. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Another account's record identifier  |  Ownership or administrator access) Tj
+T*
+(restrictions are enforced; requirement: Booking, travelers and holds commit atomically.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+(|  UT-009-06  |  RRS-F-009  |  Boundary input: Create a booking with a unique PNR and temporary seat) Tj
+T*
+(holds.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect) Tj
+T*
+(validation and database state. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely according to) Tj
+T*
+(module validation; requirement: Booking, travelers and holds commit atomically.  |  Not executed  | ) Tj
+T*
+(Not executed  |) Tj
+T*
+(|  ST-009-07  |  RRS-F-009  |  Repeat request: Create a booking with a unique PNR and temporary seat) Tj
+T*
+(holds.  |  Use an identical request twice  |  1. Execute the same request twice; inspect records and) Tj
+T*
+(return values. 2. Compare response and database state with expected behavior.  |  Identical request) Tj
+T*
+(payload  |  Repeated requests do not create unintended duplicate effects; requirement: Booking,) Tj
+T*
+(travelers and holds commit atomically.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-009-08  |  RRS-F-009  |  Database error or rollback: Create a booking with a unique PNR and) Tj
+T*
+(temporary seat holds.  |  Use an isolated test database and inject a failed write  |  1. Trigger a) Tj
+T*
+(database failure during operation; inspect persisted state. 2. Compare response and database state) Tj
+T*
+(with expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Booking, travelers and holds commit atomically.  |  Not executed ) Tj
+T*
+(|  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-010: Prevent duplicate bookings from request retries and overlapping seat) Tj
+T*
+(allocation.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-010-01  |  RRS-F-010  |  Valid request: Prevent duplicate bookings from request retries and) Tj
+T*
+(overlapping seat allocation.  |  Prepared valid test record  |  1. Submit a valid request and) Tj
+T*
+(inspect returned status and persisted records. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Valid data and an authorized session where required  |  Expected behavior occurs) Tj
+T*
+(without an error; requirement: Idempotency and inventory-lock tests pass.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+(|  UT-010-02  |  RRS-F-010  |  Missing required field: Prevent duplicate bookings from request) Tj
+T*
+(retries and overlapping seat allocation.  |  Remove one required input  |  1. Submit the request) Tj
+T*
+(without a required field and inspect response. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Required field omitted  |  Request is rejected with a validation response;) Tj
+T*
+(requirement: Idempotency and inventory-lock tests pass.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-010-03  |  RRS-F-010  |  Invalid identifier: Prevent duplicate bookings from request retries) Tj
+T*
+(and overlapping seat allocation.  |  Use an unknown or malformed identifier  |  1. Submit request) Tj
+T*
+(with an invalid reference and inspect response. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Identifier 999999 or malformed value  |  Request is rejected without changing existing) Tj
+T*
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 5550 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(records; requirement: Idempotency and inventory-lock tests pass.  |  Not executed  |  Not executed ) Tj
+T*
+(|) Tj
+T*
+(|  ST-010-04  |  RRS-F-010  |  Unauthorized request: Prevent duplicate bookings from request retries) Tj
+T*
+(and overlapping seat allocation.  |  No authenticated session  |  1. Call the protected endpoint) Tj
+T*
+(without a valid session and inspect response. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Missing session cookie  |  Protected operations are denied; no records change;) Tj
+T*
+(requirement: Idempotency and inventory-lock tests pass.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-010-05  |  RRS-F-010  |  Wrong user or role: Prevent duplicate bookings from request retries) Tj
+T*
+(and overlapping seat allocation.  |  Sign in with a different passenger or non-admin account  |  1.) Tj
+T*
+(Access or modify a record owned by another user and inspect response. 2. Compare response and) Tj
+T*
+(database state with expected behavior.  |  Another account's record identifier  |  Ownership or) Tj
+T*
+(administrator access restrictions are enforced; requirement: Idempotency and inventory-lock tests) Tj
+T*
+(pass.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-010-06  |  RRS-F-010  |  Boundary input: Prevent duplicate bookings from request retries and) Tj
+T*
+(overlapping seat allocation.  |  Use a boundary or invalid-range value  |  1. Submit the boundary) Tj
+T*
+(input and inspect validation and database state. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Empty string, zero or out-of-range value as appropriate  |  Boundary is) Tj
+T*
+(handled safely according to module validation; requirement: Idempotency and inventory-lock tests) Tj
+T*
+(pass.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-010-07  |  RRS-F-010  |  Repeat request: Prevent duplicate bookings from request retries and) Tj
+T*
+(overlapping seat allocation.  |  Use an identical request twice  |  1. Execute the same request) Tj
+T*
+(twice; inspect records and return values. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Identical request payload  |  Repeated requests do not create unintended duplicate) Tj
+T*
+(effects; requirement: Idempotency and inventory-lock tests pass.  |  Not executed  |  Not executed ) Tj
+T*
+(|) Tj
+T*
+(|  IT-010-08  |  RRS-F-010  |  Database error or rollback: Prevent duplicate bookings from request) Tj
+T*
+(retries and overlapping seat allocation.  |  Use an isolated test database and inject a failed write) Tj
+T*
+(|  1. Trigger a database failure during operation; inspect persisted state. 2. Compare response and) Tj
+T*
+(database state with expected behavior.  |  Simulated write failure  |  Operation fails safely) Tj
+T*
+(without partial inconsistent writes; requirement: Idempotency and inventory-lock tests pass.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-011: Confirm an eligible held booking using simulated payment.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-011-01  |  RRS-F-011  |  Valid request: Confirm an eligible held booking using simulated) Tj
+T*
+(payment.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned status) Tj
+T*
+(and persisted records. 2. Compare response and database state with expected behavior.  |  Valid data) Tj
+T*
+(and an authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Booking and seat statuses become CONFIRMED together.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-011-02  |  RRS-F-011  |  Missing required field: Confirm an eligible held booking using) Tj
+T*
+(simulated payment.  |  Remove one required input  |  1. Submit the request without a required field) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Required) Tj
+T*
+(field omitted  |  Request is rejected with a validation response; requirement: Booking and seat) Tj
+T*
+(statuses become CONFIRMED together.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-011-03  |  RRS-F-011  |  Invalid identifier: Confirm an eligible held booking using simulated) Tj
+T*
+(payment.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid reference) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Identifier) Tj
+T*
+(999999 or malformed value  |  Request is rejected without changing existing records; requirement:) Tj
+T*
+(Booking and seat statuses become CONFIRMED together.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-011-04  |  RRS-F-011  |  Unauthorized request: Confirm an eligible held booking using) Tj
+T*
+(simulated payment.  |  No authenticated session  |  1. Call the protected endpoint without a valid) Tj
+T*
+(session and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Missing session cookie  |  Protected operations are denied; no records change; requirement: Booking) Tj
+T*
+(and seat statuses become CONFIRMED together.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-011-05  |  RRS-F-011  |  Wrong user or role: Confirm an eligible held booking using simulated) Tj
+T*
+(payment.  |  Sign in with a different passenger or non-admin account  |  1. Access or modify a) Tj
+T*
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Length 5553 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(record owned by another user and inspect response. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Another account's record identifier  |  Ownership or administrator access) Tj
+T*
+(restrictions are enforced; requirement: Booking and seat statuses become CONFIRMED together.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+(|  UT-011-06  |  RRS-F-011  |  Boundary input: Confirm an eligible held booking using simulated) Tj
+T*
+(payment.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect) Tj
+T*
+(validation and database state. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely according to) Tj
+T*
+(module validation; requirement: Booking and seat statuses become CONFIRMED together.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+(|  ST-011-07  |  RRS-F-011  |  Repeat request: Confirm an eligible held booking using simulated) Tj
+T*
+(payment.  |  Use an identical request twice  |  1. Execute the same request twice; inspect records) Tj
+T*
+(and return values. 2. Compare response and database state with expected behavior.  |  Identical) Tj
+T*
+(request payload  |  Repeated requests do not create unintended duplicate effects; requirement:) Tj
+T*
+(Booking and seat statuses become CONFIRMED together.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-011-08  |  RRS-F-011  |  Database error or rollback: Confirm an eligible held booking using) Tj
+T*
+(simulated payment.  |  Use an isolated test database and inject a failed write  |  1. Trigger a) Tj
+T*
+(database failure during operation; inspect persisted state. 2. Compare response and database state) Tj
+T*
+(with expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Booking and seat statuses become CONFIRMED together.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-012: Display passenger booking history and PNR status.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-012-01  |  RRS-F-012  |  Valid request: Display passenger booking history and PNR status.  | ) Tj
+T*
+(Prepared valid test record  |  1. Submit a valid request and inspect returned status and persisted) Tj
+T*
+(records. 2. Compare response and database state with expected behavior.  |  Valid data and an) Tj
+T*
+(authorized session where required  |  Expected behavior occurs without an error; requirement: Only) Tj
+T*
+(bookings owned by signed-in user appear.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-012-02  |  RRS-F-012  |  Missing required field: Display passenger booking history and PNR) Tj
+T*
+(status.  |  Remove one required input  |  1. Submit the request without a required field and inspect) Tj
+T*
+(response. 2. Compare response and database state with expected behavior.  |  Required field omitted ) Tj
+T*
+(|  Request is rejected with a validation response; requirement: Only bookings owned by signed-in) Tj
+T*
+(user appear.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-012-03  |  RRS-F-012  |  Invalid identifier: Display passenger booking history and PNR status.) Tj
+T*
+(|  Use an unknown or malformed identifier  |  1. Submit request with an invalid reference and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Identifier) Tj
+T*
+(999999 or malformed value  |  Request is rejected without changing existing records; requirement:) Tj
+T*
+(Only bookings owned by signed-in user appear.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-012-04  |  RRS-F-012  |  Unauthorized request: Display passenger booking history and PNR) Tj
+T*
+(status.  |  No authenticated session  |  1. Call the protected endpoint without a valid session and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Missing session) Tj
+T*
+(cookie  |  Protected operations are denied; no records change; requirement: Only bookings owned by) Tj
+T*
+(signed-in user appear.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-012-05  |  RRS-F-012  |  Wrong user or role: Display passenger booking history and PNR status.) Tj
+T*
+(|  Sign in with a different passenger or non-admin account  |  1. Access or modify a record owned by) Tj
+T*
+(another user and inspect response. 2. Compare response and database state with expected behavior.  |) Tj
+T*
+(Another account's record identifier  |  Ownership or administrator access restrictions are enforced;) Tj
+T*
+(requirement: Only bookings owned by signed-in user appear.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-012-06  |  RRS-F-012  |  Boundary input: Display passenger booking history and PNR status.  | ) Tj
+T*
+(Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect validation and) Tj
+T*
+(database state. 2. Compare response and database state with expected behavior.  |  Empty string,) Tj
+T*
+(zero or out-of-range value as appropriate  |  Boundary is handled safely according to module) Tj
+T*
+(validation; requirement: Only bookings owned by signed-in user appear.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+(|  ST-012-07  |  RRS-F-012  |  Repeat request: Display passenger booking history and PNR status.  | ) Tj
+T*
+ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 22 0 R >>
+endobj
+24 0 obj
+<< /Length 5555 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(Use an identical request twice  |  1. Execute the same request twice; inspect records and return) Tj
+T*
+(values. 2. Compare response and database state with expected behavior.  |  Identical request payload) Tj
+T*
+(|  Repeated requests do not create unintended duplicate effects; requirement: Only bookings owned by) Tj
+T*
+(signed-in user appear.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-012-08  |  RRS-F-012  |  Database error or rollback: Display passenger booking history and PNR) Tj
+T*
+(status.  |  Use an isolated test database and inject a failed write  |  1. Trigger a database) Tj
+T*
+(failure during operation; inspect persisted state. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Only bookings owned by signed-in user appear.  |  Not executed  | ) Tj
+T*
+(Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-013: Cancel an eligible booking and release its seats.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-013-01  |  RRS-F-013  |  Valid request: Cancel an eligible booking and release its seats.  | ) Tj
+T*
+(Prepared valid test record  |  1. Submit a valid request and inspect returned status and persisted) Tj
+T*
+(records. 2. Compare response and database state with expected behavior.  |  Valid data and an) Tj
+T*
+(authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Booking, allocations and cancellation rows update together.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-013-02  |  RRS-F-013  |  Missing required field: Cancel an eligible booking and release its) Tj
+T*
+(seats.  |  Remove one required input  |  1. Submit the request without a required field and inspect) Tj
+T*
+(response. 2. Compare response and database state with expected behavior.  |  Required field omitted ) Tj
+T*
+(|  Request is rejected with a validation response; requirement: Booking, allocations and) Tj
+T*
+(cancellation rows update together.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-013-03  |  RRS-F-013  |  Invalid identifier: Cancel an eligible booking and release its seats.) Tj
+T*
+(|  Use an unknown or malformed identifier  |  1. Submit request with an invalid reference and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Identifier) Tj
+T*
+(999999 or malformed value  |  Request is rejected without changing existing records; requirement:) Tj
+T*
+(Booking, allocations and cancellation rows update together.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-013-04  |  RRS-F-013  |  Unauthorized request: Cancel an eligible booking and release its) Tj
+T*
+(seats.  |  No authenticated session  |  1. Call the protected endpoint without a valid session and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Missing session) Tj
+T*
+(cookie  |  Protected operations are denied; no records change; requirement: Booking, allocations and) Tj
+T*
+(cancellation rows update together.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-013-05  |  RRS-F-013  |  Wrong user or role: Cancel an eligible booking and release its seats.) Tj
+T*
+(|  Sign in with a different passenger or non-admin account  |  1. Access or modify a record owned by) Tj
+T*
+(another user and inspect response. 2. Compare response and database state with expected behavior.  |) Tj
+T*
+(Another account's record identifier  |  Ownership or administrator access restrictions are enforced;) Tj
+T*
+(requirement: Booking, allocations and cancellation rows update together.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+(|  UT-013-06  |  RRS-F-013  |  Boundary input: Cancel an eligible booking and release its seats.  | ) Tj
+T*
+(Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect validation and) Tj
+T*
+(database state. 2. Compare response and database state with expected behavior.  |  Empty string,) Tj
+T*
+(zero or out-of-range value as appropriate  |  Boundary is handled safely according to module) Tj
+T*
+(validation; requirement: Booking, allocations and cancellation rows update together.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+(|  ST-013-07  |  RRS-F-013  |  Repeat request: Cancel an eligible booking and release its seats.  | ) Tj
+T*
+(Use an identical request twice  |  1. Execute the same request twice; inspect records and return) Tj
+T*
+(values. 2. Compare response and database state with expected behavior.  |  Identical request payload) Tj
+T*
+(|  Repeated requests do not create unintended duplicate effects; requirement: Booking, allocations) Tj
+T*
+(and cancellation rows update together.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-013-08  |  RRS-F-013  |  Database error or rollback: Cancel an eligible booking and release) Tj
+T*
+(its seats.  |  Use an isolated test database and inject a failed write  |  1. Trigger a database) Tj
+T*
+(failure during operation; inspect persisted state. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Booking, allocations and cancellation rows update together.  | ) Tj
+T*
+(Not executed  |  Not executed  |) Tj
+T*
+ET
+endstream
+endobj
+25 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 24 0 R >>
+endobj
+26 0 obj
+<< /Length 5372 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+() Tj
+T*
+(RRS-F-014: Calculate cancellation charges and persist pending refunds.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-014-01  |  RRS-F-014  |  Valid request: Calculate cancellation charges and persist pending) Tj
+T*
+(refunds.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned status) Tj
+T*
+(and persisted records. 2. Compare response and database state with expected behavior.  |  Valid data) Tj
+T*
+(and an authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Passenger-level cancellation/refund rows exist.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-014-02  |  RRS-F-014  |  Missing required field: Calculate cancellation charges and persist) Tj
+T*
+(pending refunds.  |  Remove one required input  |  1. Submit the request without a required field) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Required) Tj
+T*
+(field omitted  |  Request is rejected with a validation response; requirement: Passenger-level) Tj
+T*
+(cancellation/refund rows exist.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-014-03  |  RRS-F-014  |  Invalid identifier: Calculate cancellation charges and persist) Tj
+T*
+(pending refunds.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid) Tj
+T*
+(reference and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identifier 999999 or malformed value  |  Request is rejected without changing existing records;) Tj
+T*
+(requirement: Passenger-level cancellation/refund rows exist.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-014-04  |  RRS-F-014  |  Unauthorized request: Calculate cancellation charges and persist) Tj
+T*
+(pending refunds.  |  No authenticated session  |  1. Call the protected endpoint without a valid) Tj
+T*
+(session and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Missing session cookie  |  Protected operations are denied; no records change; requirement:) Tj
+T*
+(Passenger-level cancellation/refund rows exist.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-014-05  |  RRS-F-014  |  Wrong user or role: Calculate cancellation charges and persist) Tj
+T*
+(pending refunds.  |  Sign in with a different passenger or non-admin account  |  1. Access or modify) Tj
+T*
+(a record owned by another user and inspect response. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Another account's record identifier  |  Ownership or administrator access) Tj
+T*
+(restrictions are enforced; requirement: Passenger-level cancellation/refund rows exist.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+(|  UT-014-06  |  RRS-F-014  |  Boundary input: Calculate cancellation charges and persist pending) Tj
+T*
+(refunds.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect) Tj
+T*
+(validation and database state. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely according to) Tj
+T*
+(module validation; requirement: Passenger-level cancellation/refund rows exist.  |  Not executed  | ) Tj
+T*
+(Not executed  |) Tj
+T*
+(|  ST-014-07  |  RRS-F-014  |  Repeat request: Calculate cancellation charges and persist pending) Tj
+T*
+(refunds.  |  Use an identical request twice  |  1. Execute the same request twice; inspect records) Tj
+T*
+(and return values. 2. Compare response and database state with expected behavior.  |  Identical) Tj
+T*
+(request payload  |  Repeated requests do not create unintended duplicate effects; requirement:) Tj
+T*
+(Passenger-level cancellation/refund rows exist.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-014-08  |  RRS-F-014  |  Database error or rollback: Calculate cancellation charges and) Tj
+T*
+(persist pending refunds.  |  Use an isolated test database and inject a failed write  |  1. Trigger) Tj
+T*
+(a database failure during operation; inspect persisted state. 2. Compare response and database state) Tj
+T*
+(with expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Passenger-level cancellation/refund rows exist.  |  Not executed ) Tj
+T*
+(|  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-015: Queue booking notification records when confirmed.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-015-01  |  RRS-F-015  |  Valid request: Queue booking notification records when confirmed.  | ) Tj
+T*
+(Prepared valid test record  |  1. Submit a valid request and inspect returned status and persisted) Tj
+T*
+(records. 2. Compare response and database state with expected behavior.  |  Valid data and an) Tj
+T*
+(authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+ET
+endstream
+endobj
+27 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 26 0 R >>
+endobj
+28 0 obj
+<< /Length 5485 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(Email/SMS queue rows are created where applicable; no delivery claim.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+(|  UT-015-02  |  RRS-F-015  |  Missing required field: Queue booking notification records when) Tj
+T*
+(confirmed.  |  Remove one required input  |  1. Submit the request without a required field and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Required field) Tj
+T*
+(omitted  |  Request is rejected with a validation response; requirement: Email/SMS queue rows are) Tj
+T*
+(created where applicable; no delivery claim.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-015-03  |  RRS-F-015  |  Invalid identifier: Queue booking notification records when) Tj
+T*
+(confirmed.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid) Tj
+T*
+(reference and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identifier 999999 or malformed value  |  Request is rejected without changing existing records;) Tj
+T*
+(requirement: Email/SMS queue rows are created where applicable; no delivery claim.  |  Not executed ) Tj
+T*
+(|  Not executed  |) Tj
+T*
+(|  ST-015-04  |  RRS-F-015  |  Unauthorized request: Queue booking notification records when) Tj
+T*
+(confirmed.  |  No authenticated session  |  1. Call the protected endpoint without a valid session) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Missing) Tj
+T*
+(session cookie  |  Protected operations are denied; no records change; requirement: Email/SMS queue) Tj
+T*
+(rows are created where applicable; no delivery claim.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-015-05  |  RRS-F-015  |  Wrong user or role: Queue booking notification records when) Tj
+T*
+(confirmed.  |  Sign in with a different passenger or non-admin account  |  1. Access or modify a) Tj
+T*
+(record owned by another user and inspect response. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Another account's record identifier  |  Ownership or administrator access) Tj
+T*
+(restrictions are enforced; requirement: Email/SMS queue rows are created where applicable; no) Tj
+T*
+(delivery claim.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-015-06  |  RRS-F-015  |  Boundary input: Queue booking notification records when confirmed.  |) Tj
+T*
+(Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect validation and) Tj
+T*
+(database state. 2. Compare response and database state with expected behavior.  |  Empty string,) Tj
+T*
+(zero or out-of-range value as appropriate  |  Boundary is handled safely according to module) Tj
+T*
+(validation; requirement: Email/SMS queue rows are created where applicable; no delivery claim.  | ) Tj
+T*
+(Not executed  |  Not executed  |) Tj
+T*
+(|  ST-015-07  |  RRS-F-015  |  Repeat request: Queue booking notification records when confirmed.  |) Tj
+T*
+(Use an identical request twice  |  1. Execute the same request twice; inspect records and return) Tj
+T*
+(values. 2. Compare response and database state with expected behavior.  |  Identical request payload) Tj
+T*
+(|  Repeated requests do not create unintended duplicate effects; requirement: Email/SMS queue rows) Tj
+T*
+(are created where applicable; no delivery claim.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-015-08  |  RRS-F-015  |  Database error or rollback: Queue booking notification records when) Tj
+T*
+(confirmed.  |  Use an isolated test database and inject a failed write  |  1. Trigger a database) Tj
+T*
+(failure during operation; inspect persisted state. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Email/SMS queue rows are created where applicable; no delivery) Tj
+T*
+(claim.  |  Not executed  |  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-016: Let administrators create, edit, deactivate or safely remove trains.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-016-01  |  RRS-F-016  |  Valid request: Let administrators create, edit, deactivate or safely) Tj
+T*
+(remove trains.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned) Tj
+T*
+(status and persisted records. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Valid data and an authorized session where required  |  Expected behavior occurs without an error;) Tj
+T*
+(requirement: Role checks and dependency-preserving removal tests.  |  Not executed  |  Not executed ) Tj
+T*
+(|) Tj
+T*
+(|  UT-016-02  |  RRS-F-016  |  Missing required field: Let administrators create, edit, deactivate) Tj
+T*
+(or safely remove trains.  |  Remove one required input  |  1. Submit the request without a required) Tj
+T*
+(field and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Required field omitted  |  Request is rejected with a validation response; requirement: Role checks) Tj
+T*
+(and dependency-preserving removal tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-016-03  |  RRS-F-016  |  Invalid identifier: Let administrators create, edit, deactivate or) Tj
+T*
+ET
+endstream
+endobj
+29 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 28 0 R >>
+endobj
+30 0 obj
+<< /Length 5444 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(safely remove trains.  |  Use an unknown or malformed identifier  |  1. Submit request with an) Tj
+T*
+(invalid reference and inspect response. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Identifier 999999 or malformed value  |  Request is rejected without changing existing) Tj
+T*
+(records; requirement: Role checks and dependency-preserving removal tests.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+(|  ST-016-04  |  RRS-F-016  |  Unauthorized request: Let administrators create, edit, deactivate or) Tj
+T*
+(safely remove trains.  |  No authenticated session  |  1. Call the protected endpoint without a) Tj
+T*
+(valid session and inspect response. 2. Compare response and database state with expected behavior. ) Tj
+T*
+(|  Missing session cookie  |  Protected operations are denied; no records change; requirement: Role) Tj
+T*
+(checks and dependency-preserving removal tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-016-05  |  RRS-F-016  |  Wrong user or role: Let administrators create, edit, deactivate or) Tj
+T*
+(safely remove trains.  |  Sign in with a different passenger or non-admin account  |  1. Access or) Tj
+T*
+(modify a record owned by another user and inspect response. 2. Compare response and database state) Tj
+T*
+(with expected behavior.  |  Another account's record identifier  |  Ownership or administrator) Tj
+T*
+(access restrictions are enforced; requirement: Role checks and dependency-preserving removal tests. ) Tj
+T*
+(|  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-016-06  |  RRS-F-016  |  Boundary input: Let administrators create, edit, deactivate or safely) Tj
+T*
+(remove trains.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and) Tj
+T*
+(inspect validation and database state. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely) Tj
+T*
+(according to module validation; requirement: Role checks and dependency-preserving removal tests.  |) Tj
+T*
+(Not executed  |  Not executed  |) Tj
+T*
+(|  ST-016-07  |  RRS-F-016  |  Repeat request: Let administrators create, edit, deactivate or safely) Tj
+T*
+(remove trains.  |  Use an identical request twice  |  1. Execute the same request twice; inspect) Tj
+T*
+(records and return values. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identical request payload  |  Repeated requests do not create unintended duplicate effects;) Tj
+T*
+(requirement: Role checks and dependency-preserving removal tests.  |  Not executed  |  Not executed ) Tj
+T*
+(|) Tj
+T*
+(|  IT-016-08  |  RRS-F-016  |  Database error or rollback: Let administrators create, edit,) Tj
+T*
+(deactivate or safely remove trains.  |  Use an isolated test database and inject a failed write  | ) Tj
+T*
+(1. Trigger a database failure during operation; inspect persisted state. 2. Compare response and) Tj
+T*
+(database state with expected behavior.  |  Simulated write failure  |  Operation fails safely) Tj
+T*
+(without partial inconsistent writes; requirement: Role checks and dependency-preserving removal) Tj
+T*
+(tests.  |  Not executed  |  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-017: Let administrators manage stations, routes and train-route assignments.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-017-01  |  RRS-F-017  |  Valid request: Let administrators manage stations, routes and) Tj
+T*
+(train-route assignments.  |  Prepared valid test record  |  1. Submit a valid request and inspect) Tj
+T*
+(returned status and persisted records. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Valid data and an authorized session where required  |  Expected behavior occurs) Tj
+T*
+(without an error; requirement: Validation and dependency checks prevent invalid updates.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+(|  UT-017-02  |  RRS-F-017  |  Missing required field: Let administrators manage stations, routes) Tj
+T*
+(and train-route assignments.  |  Remove one required input  |  1. Submit the request without a) Tj
+T*
+(required field and inspect response. 2. Compare response and database state with expected behavior. ) Tj
+T*
+(|  Required field omitted  |  Request is rejected with a validation response; requirement:) Tj
+T*
+(Validation and dependency checks prevent invalid updates.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-017-03  |  RRS-F-017  |  Invalid identifier: Let administrators manage stations, routes and) Tj
+T*
+(train-route assignments.  |  Use an unknown or malformed identifier  |  1. Submit request with an) Tj
+T*
+(invalid reference and inspect response. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Identifier 999999 or malformed value  |  Request is rejected without changing existing) Tj
+T*
+(records; requirement: Validation and dependency checks prevent invalid updates.  |  Not executed  | ) Tj
+T*
+(Not executed  |) Tj
+T*
+(|  ST-017-04  |  RRS-F-017  |  Unauthorized request: Let administrators manage stations, routes and) Tj
+T*
+(train-route assignments.  |  No authenticated session  |  1. Call the protected endpoint without a) Tj
+T*
+ET
+endstream
+endobj
+31 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 30 0 R >>
+endobj
+32 0 obj
+<< /Length 5560 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(valid session and inspect response. 2. Compare response and database state with expected behavior. ) Tj
+T*
+(|  Missing session cookie  |  Protected operations are denied; no records change; requirement:) Tj
+T*
+(Validation and dependency checks prevent invalid updates.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-017-05  |  RRS-F-017  |  Wrong user or role: Let administrators manage stations, routes and) Tj
+T*
+(train-route assignments.  |  Sign in with a different passenger or non-admin account  |  1. Access) Tj
+T*
+(or modify a record owned by another user and inspect response. 2. Compare response and database) Tj
+T*
+(state with expected behavior.  |  Another account's record identifier  |  Ownership or administrator) Tj
+T*
+(access restrictions are enforced; requirement: Validation and dependency checks prevent invalid) Tj
+T*
+(updates.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-017-06  |  RRS-F-017  |  Boundary input: Let administrators manage stations, routes and) Tj
+T*
+(train-route assignments.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input) Tj
+T*
+(and inspect validation and database state. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely) Tj
+T*
+(according to module validation; requirement: Validation and dependency checks prevent invalid) Tj
+T*
+(updates.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-017-07  |  RRS-F-017  |  Repeat request: Let administrators manage stations, routes and) Tj
+T*
+(train-route assignments.  |  Use an identical request twice  |  1. Execute the same request twice;) Tj
+T*
+(inspect records and return values. 2. Compare response and database state with expected behavior.  |) Tj
+T*
+(Identical request payload  |  Repeated requests do not create unintended duplicate effects;) Tj
+T*
+(requirement: Validation and dependency checks prevent invalid updates.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+(|  IT-017-08  |  RRS-F-017  |  Database error or rollback: Let administrators manage stations,) Tj
+T*
+(routes and train-route assignments.  |  Use an isolated test database and inject a failed write  | ) Tj
+T*
+(1. Trigger a database failure during operation; inspect persisted state. 2. Compare response and) Tj
+T*
+(database state with expected behavior.  |  Simulated write failure  |  Operation fails safely) Tj
+T*
+(without partial inconsistent writes; requirement: Validation and dependency checks prevent invalid) Tj
+T*
+(updates.  |  Not executed  |  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-018: Let administrators manage schedules and seat inventory.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-018-01  |  RRS-F-018  |  Valid request: Let administrators manage schedules and seat) Tj
+T*
+(inventory.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned status) Tj
+T*
+(and persisted records. 2. Compare response and database state with expected behavior.  |  Valid data) Tj
+T*
+(and an authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Existing bookings are protected from unsafe changes.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-018-02  |  RRS-F-018  |  Missing required field: Let administrators manage schedules and seat) Tj
+T*
+(inventory.  |  Remove one required input  |  1. Submit the request without a required field and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Required field) Tj
+T*
+(omitted  |  Request is rejected with a validation response; requirement: Existing bookings are) Tj
+T*
+(protected from unsafe changes.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-018-03  |  RRS-F-018  |  Invalid identifier: Let administrators manage schedules and seat) Tj
+T*
+(inventory.  |  Use an unknown or malformed identifier  |  1. Submit request with an invalid) Tj
+T*
+(reference and inspect response. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identifier 999999 or malformed value  |  Request is rejected without changing existing records;) Tj
+T*
+(requirement: Existing bookings are protected from unsafe changes.  |  Not executed  |  Not executed ) Tj
+T*
+(|) Tj
+T*
+(|  ST-018-04  |  RRS-F-018  |  Unauthorized request: Let administrators manage schedules and seat) Tj
+T*
+(inventory.  |  No authenticated session  |  1. Call the protected endpoint without a valid session) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Missing) Tj
+T*
+(session cookie  |  Protected operations are denied; no records change; requirement: Existing) Tj
+T*
+(bookings are protected from unsafe changes.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-018-05  |  RRS-F-018  |  Wrong user or role: Let administrators manage schedules and seat) Tj
+T*
+(inventory.  |  Sign in with a different passenger or non-admin account  |  1. Access or modify a) Tj
+T*
+(record owned by another user and inspect response. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Another account's record identifier  |  Ownership or administrator access) Tj
+T*
+(restrictions are enforced; requirement: Existing bookings are protected from unsafe changes.  |  Not) Tj
+T*
+ET
+endstream
+endobj
+33 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 32 0 R >>
+endobj
+34 0 obj
+<< /Length 5537 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(executed  |  Not executed  |) Tj
+T*
+(|  UT-018-06  |  RRS-F-018  |  Boundary input: Let administrators manage schedules and seat) Tj
+T*
+(inventory.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect) Tj
+T*
+(validation and database state. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely according to) Tj
+T*
+(module validation; requirement: Existing bookings are protected from unsafe changes.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+(|  ST-018-07  |  RRS-F-018  |  Repeat request: Let administrators manage schedules and seat) Tj
+T*
+(inventory.  |  Use an identical request twice  |  1. Execute the same request twice; inspect records) Tj
+T*
+(and return values. 2. Compare response and database state with expected behavior.  |  Identical) Tj
+T*
+(request payload  |  Repeated requests do not create unintended duplicate effects; requirement:) Tj
+T*
+(Existing bookings are protected from unsafe changes.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-018-08  |  RRS-F-018  |  Database error or rollback: Let administrators manage schedules and) Tj
+T*
+(seat inventory.  |  Use an isolated test database and inject a failed write  |  1. Trigger a) Tj
+T*
+(database failure during operation; inspect persisted state. 2. Compare response and database state) Tj
+T*
+(with expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: Existing bookings are protected from unsafe changes.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-019: Let administrators inspect bookings, cancellations and refunds.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-019-01  |  RRS-F-019  |  Valid request: Let administrators inspect bookings, cancellations and) Tj
+T*
+(refunds.  |  Prepared valid test record  |  1. Submit a valid request and inspect returned status) Tj
+T*
+(and persisted records. 2. Compare response and database state with expected behavior.  |  Valid data) Tj
+T*
+(and an authorized session where required  |  Expected behavior occurs without an error; requirement:) Tj
+T*
+(Protected detail and search endpoints return scoped records.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-019-02  |  RRS-F-019  |  Missing required field: Let administrators inspect bookings,) Tj
+T*
+(cancellations and refunds.  |  Remove one required input  |  1. Submit the request without a) Tj
+T*
+(required field and inspect response. 2. Compare response and database state with expected behavior. ) Tj
+T*
+(|  Required field omitted  |  Request is rejected with a validation response; requirement: Protected) Tj
+T*
+(detail and search endpoints return scoped records.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-019-03  |  RRS-F-019  |  Invalid identifier: Let administrators inspect bookings,) Tj
+T*
+(cancellations and refunds.  |  Use an unknown or malformed identifier  |  1. Submit request with an) Tj
+T*
+(invalid reference and inspect response. 2. Compare response and database state with expected) Tj
+T*
+(behavior.  |  Identifier 999999 or malformed value  |  Request is rejected without changing existing) Tj
+T*
+(records; requirement: Protected detail and search endpoints return scoped records.  |  Not executed ) Tj
+T*
+(|  Not executed  |) Tj
+T*
+(|  ST-019-04  |  RRS-F-019  |  Unauthorized request: Let administrators inspect bookings,) Tj
+T*
+(cancellations and refunds.  |  No authenticated session  |  1. Call the protected endpoint without a) Tj
+T*
+(valid session and inspect response. 2. Compare response and database state with expected behavior. ) Tj
+T*
+(|  Missing session cookie  |  Protected operations are denied; no records change; requirement:) Tj
+T*
+(Protected detail and search endpoints return scoped records.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-019-05  |  RRS-F-019  |  Wrong user or role: Let administrators inspect bookings,) Tj
+T*
+(cancellations and refunds.  |  Sign in with a different passenger or non-admin account  |  1. Access) Tj
+T*
+(or modify a record owned by another user and inspect response. 2. Compare response and database) Tj
+T*
+(state with expected behavior.  |  Another account's record identifier  |  Ownership or administrator) Tj
+T*
+(access restrictions are enforced; requirement: Protected detail and search endpoints return scoped) Tj
+T*
+(records.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-019-06  |  RRS-F-019  |  Boundary input: Let administrators inspect bookings, cancellations) Tj
+T*
+(and refunds.  |  Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect) Tj
+T*
+(validation and database state. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Empty string, zero or out-of-range value as appropriate  |  Boundary is handled safely according to) Tj
+T*
+(module validation; requirement: Protected detail and search endpoints return scoped records.  |  Not) Tj
+T*
+(executed  |  Not executed  |) Tj
+T*
+(|  ST-019-07  |  RRS-F-019  |  Repeat request: Let administrators inspect bookings, cancellations) Tj
+T*
+(and refunds.  |  Use an identical request twice  |  1. Execute the same request twice; inspect) Tj
+T*
+ET
+endstream
+endobj
+35 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 34 0 R >>
+endobj
+36 0 obj
+<< /Length 5418 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(records and return values. 2. Compare response and database state with expected behavior.  | ) Tj
+T*
+(Identical request payload  |  Repeated requests do not create unintended duplicate effects;) Tj
+T*
+(requirement: Protected detail and search endpoints return scoped records.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+(|  IT-019-08  |  RRS-F-019  |  Database error or rollback: Let administrators inspect bookings,) Tj
+T*
+(cancellations and refunds.  |  Use an isolated test database and inject a failed write  |  1.) Tj
+T*
+(Trigger a database failure during operation; inspect persisted state. 2. Compare response and) Tj
+T*
+(database state with expected behavior.  |  Simulated write failure  |  Operation fails safely) Tj
+T*
+(without partial inconsistent writes; requirement: Protected detail and search endpoints return) Tj
+T*
+(scoped records.  |  Not executed  |  Not executed  |) Tj
+T*
+() Tj
+T*
+(RRS-F-020: Expose application and database health endpoints.) Tj
+T*
+() Tj
+T*
+(|  Test Case ID  |  Name of Module  |  Test Case Description  |  Pre-conditions  |  Test Steps  | ) Tj
+T*
+(Test Data  |  Expected Results  |  Actual Result  |  Test Result  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UT-020-01  |  RRS-F-020  |  Valid request: Expose application and database health endpoints.  | ) Tj
+T*
+(Prepared valid test record  |  1. Submit a valid request and inspect returned status and persisted) Tj
+T*
+(records. 2. Compare response and database state with expected behavior.  |  Valid data and an) Tj
+T*
+(authorized session where required  |  Expected behavior occurs without an error; requirement: API) Tj
+T*
+(health and database outage/recovery tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-020-02  |  RRS-F-020  |  Missing required field: Expose application and database health) Tj
+T*
+(endpoints.  |  Remove one required input  |  1. Submit the request without a required field and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Required field) Tj
+T*
+(omitted  |  Request is rejected with a validation response; requirement: API health and database) Tj
+T*
+(outage/recovery tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-020-03  |  RRS-F-020  |  Invalid identifier: Expose application and database health endpoints.) Tj
+T*
+(|  Use an unknown or malformed identifier  |  1. Submit request with an invalid reference and) Tj
+T*
+(inspect response. 2. Compare response and database state with expected behavior.  |  Identifier) Tj
+T*
+(999999 or malformed value  |  Request is rejected without changing existing records; requirement:) Tj
+T*
+(API health and database outage/recovery tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-020-04  |  RRS-F-020  |  Unauthorized request: Expose application and database health) Tj
+T*
+(endpoints.  |  No authenticated session  |  1. Call the protected endpoint without a valid session) Tj
+T*
+(and inspect response. 2. Compare response and database state with expected behavior.  |  Missing) Tj
+T*
+(session cookie  |  Protected operations are denied; no records change; requirement: API health and) Tj
+T*
+(database outage/recovery tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  ST-020-05  |  RRS-F-020  |  Wrong user or role: Expose application and database health endpoints.) Tj
+T*
+(|  Sign in with a different passenger or non-admin account  |  1. Access or modify a record owned by) Tj
+T*
+(another user and inspect response. 2. Compare response and database state with expected behavior.  |) Tj
+T*
+(Another account's record identifier  |  Ownership or administrator access restrictions are enforced;) Tj
+T*
+(requirement: API health and database outage/recovery tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  UT-020-06  |  RRS-F-020  |  Boundary input: Expose application and database health endpoints.  | ) Tj
+T*
+(Use a boundary or invalid-range value  |  1. Submit the boundary input and inspect validation and) Tj
+T*
+(database state. 2. Compare response and database state with expected behavior.  |  Empty string,) Tj
+T*
+(zero or out-of-range value as appropriate  |  Boundary is handled safely according to module) Tj
+T*
+(validation; requirement: API health and database outage/recovery tests.  |  Not executed  |  Not) Tj
+T*
+(executed  |) Tj
+T*
+(|  ST-020-07  |  RRS-F-020  |  Repeat request: Expose application and database health endpoints.  | ) Tj
+T*
+(Use an identical request twice  |  1. Execute the same request twice; inspect records and return) Tj
+T*
+(values. 2. Compare response and database state with expected behavior.  |  Identical request payload) Tj
+T*
+(|  Repeated requests do not create unintended duplicate effects; requirement: API health and) Tj
+T*
+(database outage/recovery tests.  |  Not executed  |  Not executed  |) Tj
+T*
+(|  IT-020-08  |  RRS-F-020  |  Database error or rollback: Expose application and database health) Tj
+T*
+(endpoints.  |  Use an isolated test database and inject a failed write  |  1. Trigger a database) Tj
+T*
+(failure during operation; inspect persisted state. 2. Compare response and database state with) Tj
+T*
+(expected behavior.  |  Simulated write failure  |  Operation fails safely without partial) Tj
+T*
+(inconsistent writes; requirement: API health and database outage/recovery tests.  |  Not executed  |) Tj
+T*
+(Not executed  |) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+37 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 36 0 R >>
+endobj
+38 0 obj
+<< /Length 285 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(Nonfunctional and security checks) Tj
+T*
+() Tj
+T*
+(Performance, availability, compatibility, security and maintainability must be measured separately) Tj
+T*
+(using the Software Test Plan. Do not mark them passed without execution logs.) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+39 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 38 0 R >>
+endobj
+xref
+0 40
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000233 00000 n 
+0000000301 00000 n 
+0000005601 00000 n 
+0000005727 00000 n 
+0000011370 00000 n 
+0000011496 00000 n 
+0000017110 00000 n 
+0000017236 00000 n 
+0000022703 00000 n 
+0000022831 00000 n 
+0000028424 00000 n 
+0000028552 00000 n 
+0000033942 00000 n 
+0000034070 00000 n 
+0000039558 00000 n 
+0000039686 00000 n 
+0000045259 00000 n 
+0000045387 00000 n 
+0000050990 00000 n 
+0000051118 00000 n 
+0000056724 00000 n 
+0000056852 00000 n 
+0000062460 00000 n 
+0000062588 00000 n 
+0000068013 00000 n 
+0000068141 00000 n 
+0000073679 00000 n 
+0000073807 00000 n 
+0000079304 00000 n 
+0000079432 00000 n 
+0000085045 00000 n 
+0000085173 00000 n 
+0000090763 00000 n 
+0000090891 00000 n 
+0000096362 00000 n 
+0000096490 00000 n 
+0000096827 00000 n 
+trailer
+<< /Size 40 /Root 1 0 R >>
+startxref
+96955
+%%EOF

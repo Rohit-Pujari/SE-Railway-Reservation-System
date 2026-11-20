@@ -1,0 +1,684 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R] /Count 5 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Length 3849 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(System Validation Report   Railway Reservation System) Tj
+T*
+() Tj
+T*
+(Date: 19 November 2026) Tj
+T*
+(Overall result: Conditional   core flows implemented and unit-tested; real-database integration) Tj
+T*
+(excluded \(no credentials\).) Tj
+T*
+(Evaluation evidence: se-evaluation-complete branch; final implementation previously merged through) Tj
+T*
+(PR #93. This document is maintained on main.) Tj
+T*
+(Systems covered: Django backend, React frontend, booking and simulated payment, cancellation and) Tj
+T*
+(refunds, administrator management.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(1. Purpose and acceptance criteria) Tj
+T*
+() Tj
+T*
+(This report evaluates whether the reservation system meets the requirements in) Tj
+T*
+(Documents/Software_Requirements_Specification.md and Documents/Software_Test_Plan.md. A test is) Tj
+T*
+(marked PASS only when an actual result supports it. IMPLEMENTED, UNIT-TESTED means the feature) Tj
+T*
+(exists in code and is covered by unit tests but could not be exercised against a live database.) Tj
+T*
+(BLOCKED means the check could not be completed due to an external dependency. EXCLUDED means the) Tj
+T*
+(check is intentionally out of scope for this evaluation \(per project owner instruction\). NOT) Tj
+T*
+(IMPLEMENTED means the feature is absent from the codebase.) Tj
+T*
+() Tj
+T*
+(MySQL-dependent checks \(SV-05 through SV-08 live verification, SV-17, performance benchmark\) are) Tj
+T*
+(EXCLUDED from this evaluation   not passed, not failed.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(2. Environment and method) Tj
+T*
+() Tj
+T*
+(- Backend: Python 3.11.18, Django 5.2, Django REST Framework, mysql-connector-python, werkzeug) Tj
+T*
+(password hashing.) Tj
+T*
+(- Frontend: React 19, Vite, Playwright \(Chromium, Firefox; Safari/WebKit blocked by missing system) Tj
+T*
+(dependencies\).) Tj
+T*
+(- Test database: MySQL 8.0.16+ is installed and listening on port 3306, but no database credentials) Tj
+T*
+(are available. root and railway_app connections are both denied. sudo is unavailable without a) Tj
+T*
+(password. Real-database integration testing is EXCLUDED.) Tj
+T*
+(- Backend unit tests: 272 tests run, 272 passed, 0 failed, 0 errors, 0 skipped \(see) Tj
+T*
+(docs/test-reports/unit-test.log\). Database access is mocked; no development database is modified.) Tj
+T*
+(- Frontend: Production build succeeds; Playwright cross-browser smoke tests pass in Chromium and) Tj
+T*
+(Firefox.) Tj
+T*
+(- Coverage: coverage.py 7.17.3 with --branch on backend/app and backend/config.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(3. Executed system validation cases) Tj
+T*
+() Tj
+T*
+(|  ID  |  Requirement / workflow  |  Expected result  |  Actual result  |  Status  |) Tj
+T*
+(| ---- | ------------------------ | ----------------- | --------------- | -------- |) Tj
+T*
+(|  SV-01  |  Passenger registration and login  |  New user persists and can authenticate  |  Unit) Tj
+T*
+(tests pass \(registration validation, hashed-password storage, duplicate-email 409, safe error) Tj
+T*
+(messages\). Historical browser: registration HTTP 201, login/logout HTTP 200.  |  PASS \(unit\); PASS) Tj
+T*
+(\(historical browser\)  |) Tj
+T*
+(|  SV-02  |  Administrator authentication  |  Authorized admin login/logout works  |  Unit tests) Tj
+T*
+(pass \(admin login 200, passenger rejected 401, disabled admin 401, logout clears session\).) Tj
+T*
+(Historical browser: admin login/logout HTTP 200.  |  PASS \(unit\); PASS \(historical browser\)  |) Tj
+T*
+(|  SV-03  |  Train search and fare  |  Valid route/date returns matching trains, fares and seats  | ) Tj
+T*
+(Unit tests pass \(search success, validation errors, parameterized SQL, bounded results, past-date) Tj
+T*
+(rejection\). Historical browser: search/classes/fare/availability returned matching services.  | ) Tj
+T*
+(PASS \(unit\); PASS \(historical browser\)  |) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 5164 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(|  SV-04  |  Passenger booking  |  Booking allocates seats and returns PNR  |  Unit tests pass) Tj
+T*
+(\(booking flow, PNR generation, seat holds, idempotency, conflict on unavailable seats, past-date) Tj
+T*
+(rejection\). Historical browser: booking HTTP 201, inventory decreased by one.  |  PASS \(unit\); PASS) Tj
+T*
+(\(historical browser\)  |) Tj
+T*
+(|  SV-05  |  Simulated payment  |  Passenger-owned booking confirms after demo payment  |  Unit) Tj
+T*
+(tests pass \(payment confirmation, idempotent replay, ownership check, expired hold rejection\). Live) Tj
+T*
+(DB verification EXCLUDED \(no credentials\).  |  PASS \(unit\); EXCLUDED \(live DB\)  |) Tj
+T*
+(|  SV-06  |  Payment access control  |  Anonymous users cannot pay  |  Unit tests pass \(anonymous) Tj
+T*
+(pay returns 401\). Live DB verification EXCLUDED.  |  PASS \(unit\); EXCLUDED \(live DB\)  |) Tj
+T*
+(|  SV-07  |  Payment retry  |  Payment retries do not double-charge  |  Unit tests pass \(replayed) Tj
+T*
+(confirmation returns replayed: true, no duplicate payment\). Live DB verification EXCLUDED.  |  PASS) Tj
+T*
+(\(unit\); EXCLUDED \(live DB\)  |) Tj
+T*
+(|  SV-08  |  Idempotency  |  Repeat confirmation does not duplicate payment  |  Unit tests pass) Tj
+T*
+(\(same booking/PNR returned, replayed: true\). Live DB verification EXCLUDED.  |  PASS \(unit\);) Tj
+T*
+(EXCLUDED \(live DB\)  |) Tj
+T*
+(|  SV-09  |  Booking history  |  Owner sees ticket; other accounts cannot  |  Unit tests pass) Tj
+T*
+(\(history endpoint requires passenger session, scopes by user_id\). Historical browser: confirmed) Tj
+T*
+(ticket includes seats; cross-account read rejected.  |  PASS \(unit\); PASS \(historical browser\)  |) Tj
+T*
+(|  SV-10  |  Idempotent booking  |  Repeated key cannot allocate twice  |  Unit tests pass \(same) Tj
+T*
+(booking/PNR returned, no additional allocation\). Live DB verification EXCLUDED.  |  PASS \(unit\);) Tj
+T*
+(EXCLUDED \(live DB\)  |) Tj
+T*
+(|  SV-11  |  Concurrent seat allocation  |  Overselling prevented  |  Unit tests pass \(booking) Tj
+T*
+(creates holds under inventory lock; conflict on insufficient seats\). Historical browser: two 6-seat) Tj
+T*
+(requests on 8-seat service: one 201, one 409, two seats remain.  |  PASS \(unit\); PASS \(historical) Tj
+T*
+(browser\)  |) Tj
+T*
+(|  SV-12  |  Expired hold  |  Expiry restores inventory; payment rejected  |  Unit tests pass) Tj
+T*
+(\(payment checks hold_expires_at <= current_time\). Historical browser: availability restored; payment) Tj
+T*
+(rejected.  |  PASS \(unit\); PASS \(historical browser\)  |) Tj
+T*
+(|  SV-13  |  Transaction rollback  |  Partial failure leaves no booking  |  Unit tests pass) Tj
+T*
+(\(rollback on database error in booking, fare, cancellation, passenger details, admin management\).) Tj
+T*
+(Historical browser: injected allocation-insert failure rolled back booking/passenger inserts.  | ) Tj
+T*
+(PASS \(unit\); PASS \(historical browser\)  |) Tj
+T*
+(|  SV-14  |  Browser CSRF protection  |  Trusted origin with token succeeds; untrusted origin fails ) Tj
+T*
+(|  Unit tests pass \(CSRF token required, untrusted origin 403, Vite origins accepted\). Historical) Tj
+T*
+(browser: Chromium registration initially failed with 403, corrected via trusted origins.  |  PASS) Tj
+T*
+(\(unit\); PASS \(historical browser\)  |) Tj
+T*
+(|  SV-15  |  Cancellation and pending refunds  |  Passenger can cancel, release seats, initiate) Tj
+T*
+(refund  |  IMPLEMENTED in booking_cancellation.py and booking_refunds.py; API endpoint exists; unit) Tj
+T*
+(tests pass \(cancellation flow, refund calculation, seat release, ownership check\). Live DB) Tj
+T*
+(verification EXCLUDED.  |  IMPLEMENTED, PASS \(unit\); EXCLUDED \(live DB\)  |) Tj
+T*
+(|  SV-16  |  Administrator dashboard and management  |  Admin can manage trains, stations, routes,) Tj
+T*
+(schedules, seats; view bookings/cancellations  |  IMPLEMENTED in django_views.py and service) Tj
+T*
+(modules; unit tests pass \(dashboard authorization, admin auth, RBAC, station/route/train/schedule) Tj
+T*
+(CRUD\). Live DB verification EXCLUDED.  |  IMPLEMENTED, PASS \(unit\); EXCLUDED \(live DB\)  |) Tj
+T*
+(|  SV-17  |  Live database privileges  |  Application account can UPDATE runtime tables  |  BLOCKED:) Tj
+T*
+(database/app_permissions.sql grants UPDATE on four tables, but applying it requires sudo mariadb) Tj
+T*
+(which is unavailable without a password.  |  BLOCKED  |) Tj
+T*
+(|  SV-18  |  Cross-browser testing  |  Supported browsers render correctly  |  PASS: Playwright) Tj
+T*
+(tests pass in Chromium \(3/3\) and Firefox \(3/3\). Safari/WebKit blocked by missing system dependencies) Tj
+T*
+(\(libicu74, libxml2; no sudo access\).  |  PASS \(Chrome, Firefox\); BLOCKED \(Safari\)  |) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(4. Unit and build evidence) Tj
+T*
+() Tj
+T*
+(- Backend unit tests: 272 tests executed, 272 passed, 0 failed, 0 errors, 0 skipped. Command: uv run) Tj
+T*
+(--active python -m unittest discover -s backend/tests -p "test_*.py" -v. Full log:) Tj
+T*
+(docs/test-reports/unit-test.log.) Tj
+T*
+(- New tests added: test_admin_management.py \(40 tests covering admin dashboard, booking details,) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 3581 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(station/route management, schedule management\); age boundary tests \(negative, zero, one, 120, 121\)) Tj
+T*
+(in test_passenger_details.py; past-date rejection tests in test_booking_flow.py; test fixes in) Tj
+T*
+(test_architecture.py, test_booking_flow.py, test_booking_cancellation_flow.py.) Tj
+T*
+(- Frontend production build: npm run build succeeds \(vite build, ~509 ms\).) Tj
+T*
+(- Django compileall: python -m compileall -q backend passes.) Tj
+T*
+(- Browser tests: 6 Playwright tests pass \(3 Chromium + 3 Firefox\).) Tj
+T*
+(- Coverage: Line coverage 76.2%, branch coverage 68.9% \(--branch on backend/app,backend/config\).) Tj
+T*
+(Reports: docs/test-reports/coverage-summary.txt, coverage.json, coverage.xml.) Tj
+T*
+() Tj
+T*
+(Previously recorded evidence \(101 unit tests passed after fixes on an earlier snapshot\) is retained) Tj
+T*
+(as historical evidence in Documents/VERIFICATION_2026-11-19.md and is not deleted.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(5. Security validation) Tj
+T*
+() Tj
+T*
+(|  Check  |  Result  |) Tj
+T*
+(| ------- | -------- |) Tj
+T*
+(|  Passwords stored as Werkzeug scrypt hashes, never returned in responses  |  PASS \(unit tests\)  |) Tj
+T*
+(|  Authenticated session + passenger ownership / admin RBAC  |  PASS \(unit tests\)  |) Tj
+T*
+(|  CSRF checks on state-changing browser requests; untrusted origins rejected  |  PASS \(unit tests\) ) Tj
+T*
+(|) Tj
+T*
+(|  Parameterized SQL; input validation  |  PASS \(unit tests + source review\)  |) Tj
+T*
+(|  Secure cookies \(HttpOnly, SameSite=Lax\), HTTPS required in production  |  PASS \(settings review\) ) Tj
+T*
+(|) Tj
+T*
+(|  Past-date journey validation \(server-side\)  |  PASS \(unit tests\)  |) Tj
+T*
+(|  Age 1-120 validation \(zero and negative rejected\)  |  PASS \(unit tests\)  |) Tj
+T*
+(|  Session replay / penetration testing  |  NOT VERIFIED  |) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(6. Defects fixed in this evaluation) Tj
+T*
+() Tj
+T*
+(|  #  |  Defect  |  Fix  |  Status  |) Tj
+T*
+(| --- | -------- | ----- | -------- |) Tj
+T*
+(|  1  |  Backend search accepted past journey dates  |  Added parsed_date < today rejection in) Tj
+T*
+(train_search.py:validate_search, seat_availability.py:validate_availability, and) Tj
+T*
+(booking.py:_validate_request  |  FIXED + tested  |) Tj
+T*
+(|  2  |  Passenger age validator accepted age 0  |  Changed range from 0-120 to 1-120 in) Tj
+T*
+(passenger_details.py:validate_passengers  |  FIXED + tested  |) Tj
+T*
+(|  3  |  Test architecture URL count outdated \(36 37\)  |  Updated assertion in test_architecture.py ) Tj
+T*
+(|  FIXED  |) Tj
+T*
+(|  4  |  Mock login user missing role key  |  Added "role": "PASSENGER" to test mock dicts  |  FIXED) Tj
+T*
+(|) Tj
+T*
+(|  5  |  Weak coverage in admin modules  |  Added test_admin_management.py with 40 tests  |  FIXED) Tj
+T*
+(\(coverage: 76% line, 69% branch\)  |) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(7. Remaining defects and deviations) Tj
+T*
+() Tj
+T*
+(1. BLOCKED: Live database integration cannot be executed. MySQL is running on port 3306 but no) Tj
+T*
+(credentials are available. database/app_permissions.sql is prepared but unapplied. EXCLUDED from) Tj
+T*
+(this evaluation.) Tj
+T*
+(2. Medium: Backend search previously accepted past dates   FIXED \(see  6\).) Tj
+T*
+(3. Medium: Passenger age zero previously accepted   FIXED \(see  6\).) Tj
+T*
+(4. Medium: Historical booking grouping \(past vs upcoming journeys\) lacks a dedicated end-to-end UI) Tj
+T*
+(test.) Tj
+T*
+(5. Evidence: CI run URLs and final reviewer sign-off must be added when GitHub Actions executes) Tj
+T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 2816 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(against the final commit.) Tj
+T*
+(6. Compatibility: MariaDB was used in earlier verification; MySQL 8 production compatibility was not) Tj
+T*
+(independently validated in this session.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(8. Final assessment) Tj
+T*
+() Tj
+T*
+(Overall result: Conditional. All passenger and administrator workflows described in the SRS are) Tj
+T*
+(implemented in the backend codebase and covered by 272 passing unit tests. The frontend build and) Tj
+T*
+(cross-browser tests \(Chromium, Firefox\) pass. Coverage is 76.2% line / 68.9% branch. Real-database) Tj
+T*
+(integration testing is EXCLUDED by project owner instruction \(no credentials available\).) Tj
+T*
+(Safari/WebKit browser tests are BLOCKED by missing system dependencies.) Tj
+T*
+() Tj
+T*
+(The system satisfies all feasible automated validation. Live-database checks and Safari/WebKit) Tj
+T*
+(require manual participation.) Tj
+T*
+() Tj
+T*
+(Reviewer sign-off: Pending.) Tj
+T*
+(Independent rerun by report author: Not performed against live DB.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(9. Payment workflow \(confirmed\)) Tj
+T*
+() Tj
+T*
+(Payment remains simulated, as required. No Razorpay or real payment gateway is integrated. A) Tj
+T*
+(passenger can confirm a held booking through a demo payment action; the backend validates ownership,) Tj
+T*
+(booking state and seat holds, then atomically records the payment, confirms seats and booking, and) Tj
+T*
+(queues notification records. No real money is charged. Administrator payment approval has been) Tj
+T*
+(removed and is not reintroduced.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(References) Tj
+T*
+() Tj
+T*
+(- Documents/Software_Requirements_Specification.md   Requirements baseline) Tj
+T*
+(- Documents/Software_Architecture_and_Design.md   Architecture baseline) Tj
+T*
+(- Documents/Software_Test_Plan.md   Test plan) Tj
+T*
+(- docs/SE_EVALUATION_TRACKER.md   Evaluation checklist) Tj
+T*
+(- Documents/VERIFICATION_2026-11-19.md   Earlier verification notes \(retained as historical) Tj
+T*
+(evidence\)) Tj
+T*
+(- database/schema.sql   Database schema) Tj
+T*
+(- database/app_permissions.sql   Required DB grants \(unapplied, blocked\)) Tj
+T*
+(- docs/test-reports/   Test logs and coverage reports) Tj
+T*
+(- docs/demo/   Demonstration package) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(Appendix A   UML use-case actors and flows) Tj
+T*
+() Tj
+T*
+(The diagrams and flows below are derived from the baseline SRS, Section 7. They describe intended) Tj
+T*
+(system behavior, not proof of live database validation.) Tj
+T*
+() Tj
+T*
+(A.1 Passenger use-case diagram) Tj
+T*
+() Tj
+T*
+(mermaid) Tj
+T*
+(flowchart LR) Tj
+T*
+(P[Passenger] --> R\([Register / sign in]\)) Tj
+T*
+(P --> S\([Search trains and seats]\)) Tj
+T*
+(P --> B\([Enter traveler details and create booking / PNR]\)) Tj
+T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 3712 >>
+stream
+BT
+/F1 8.5 Tf
+45 798 Td
+11 TL
+(P --> M\([Confirm simulated payment]\)) Tj
+T*
+(P --> H\([View booking history / PNR status]\)) Tj
+T*
+(P --> C\([Cancel booking / view pending refund]\)) Tj
+T*
+(S -.-> B) Tj
+T*
+(B -.-> M) Tj
+T*
+(M -.-> H) Tj
+T*
+(H -.-> C) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(A.2 Administrator use-case diagram) Tj
+T*
+() Tj
+T*
+(mermaid) Tj
+T*
+(flowchart LR) Tj
+T*
+(A[Administrator] --> L\([Administrator sign in]\)) Tj
+T*
+(A --> T\([Manage trains and stations]\)) Tj
+T*
+(A --> R\([Manage routes and schedules]\)) Tj
+T*
+(A --> I\([Manage seat inventory]\)) Tj
+T*
+(A --> B\([View bookings and cancellations]\)) Tj
+T*
+(A --> F\([View pending refunds]\)) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(A.3 Detailed use-case flows) Tj
+T*
+() Tj
+T*
+(|  Use case  |  Actor  |  Preconditions  |  Main flow  |  Alternative / exception  |  Postcondition ) Tj
+T*
+(|  Requirement  |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- | --- |) Tj
+T*
+(|  UC-01 Register and sign in  |  Passenger  |  Browser and API available  |  Enter details  ) Tj
+T*
+(validate and hash password   create account   authenticate  |  Invalid/duplicate details or) Tj
+T*
+(incorrect credentials rejected  |  Authenticated passenger session  |  RRS-F-001 002, SR-001 003  |) Tj
+T*
+(|  UC-02 Search trains and seats  |  Passenger  |  Origin, destination, valid travel date  |  Select) Tj
+T*
+(stations/class   search   view schedules, fare and available seats  |  Invalid stations/classes or) Tj
+T*
+(past dates rejected  |  Eligible schedule selected  |  RRS-F-004 006  |) Tj
+T*
+(|  UC-03 Create booking and PNR  |  Passenger  |  Signed in; eligible schedule  |  Enter travelers  ) Tj
+T*
+(validate details and fare   allocate held seats transactionally   issue PNR  |  Unavailable seats) Tj
+T*
+(conflict; duplicate request key reused; rollback on failure  |  Held reservation and PNR  | ) Tj
+T*
+(RRS-F-007 010  |) Tj
+T*
+(|  UC-04 Simulated payment  |  Passenger  |  Owns an unexpired held booking  |  Choose demo payment) Tj
+T*
+(  validate owner/state   record simulated payment   confirm seats/booking   queue notifications  | ) Tj
+T*
+(Expired hold or unauthorized access rejected; retry is idempotent  |  Confirmed booking; no money) Tj
+T*
+(transferred  |  RRS-F-011, F-015  |) Tj
+T*
+(|  UC-05 Booking history/cancellation  |  Passenger  |  Authenticated owner  |  View PNR/history  ) Tj
+T*
+(request eligible cancellation   release seats   calculate charge and pending refund  | ) Tj
+T*
+(Cross-account access or ineligible cancellation rejected  |  Cancellation and pending refund) Tj
+T*
+(recorded  |  RRS-F-012 014  |) Tj
+T*
+(|  UC-06 Administrator login  |  Administrator  |  Active admin account  |  Submit credentials  ) Tj
+T*
+(validate role   establish admin session  |  Passenger or disabled administrator rejected  | ) Tj
+T*
+(Authorized admin session  |  RRS-F-003, SR-002  |) Tj
+T*
+(|  UC-07 Railway data management  |  Administrator  |  Authorized admin session  |  Manage trains,) Tj
+T*
+(stations, routes, assignments and schedules   validate dependencies   save  |  Invalid references or) Tj
+T*
+(changes affecting existing bookings rejected  |  Consistent master data  |  RRS-F-016 018  |) Tj
+T*
+(|  UC-08 Inventory and record inspection  |  Administrator  |  Authorized admin session  | ) Tj
+T*
+(Inspect/update permitted seat inventory   view bookings, cancellations and refunds  |  Unauthorized) Tj
+T*
+(or conflicting inventory changes rejected  |  Safe inventory management and operational visibility ) Tj
+T*
+(|  RRS-F-018 019  |) Tj
+T*
+() Tj
+T*
+(Validation boundary: These are requirements-based flow descriptions. Unit tests and historical) Tj
+T*
+(browser evidence appear in SV-01 SV-18; MySQL integration is excluded and WebKit is blocked.) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 12 0 R >>
+endobj
+xref
+0 14
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000141 00000 n 
+0000000209 00000 n 
+0000004110 00000 n 
+0000004236 00000 n 
+0000009452 00000 n 
+0000009578 00000 n 
+0000013211 00000 n 
+0000013337 00000 n 
+0000016206 00000 n 
+0000016334 00000 n 
+0000020099 00000 n 
+trailer
+<< /Size 14 /Root 1 0 R >>
+startxref
+20227
+%%EOF
