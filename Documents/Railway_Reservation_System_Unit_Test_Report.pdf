@@ -1,0 +1,107 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 1471 >>
+stream
+BT /F1 10 Tf 50 795 Td 14 TL
+/F1 15 Tf (RAILWAY RESERVATION SYSTEM) Tj /F1 10 Tf
+T* (UNIT TEST REPORT) Tj
+T* (1. Overview) Tj
+T* (This report records the repository's automated backend unit-test suite.) Tj
+T* (Project: Railway Reservation System) Tj
+T* (Branch: main) Tj
+T* (Test framework: Python unittest) Tj
+T* (Coverage tool: coverage.py with branch coverage) Tj
+T* (CI platform: GitHub Actions \(workflow: Tests\)) Tj
+T* (2. Scope) Tj
+T* (Tests are maintained under backend/tests/test_*.py.) Tj
+T* (Covered areas include registration, login, admin authorization,) Tj
+T* (train search, seat availability, fare calculation, passenger details,) Tj
+T* (booking creation, payments, cancellations, refunds, booking history,) Tj
+T* (schedule and seat administration, configuration and API security.) Tj
+T* (3. Execution method) Tj
+T* (GitHub Actions runs the suite using:) Tj
+T* (python -m coverage run --branch --source=backend/app,backend/config) Tj
+T* (  -m unittest discover -s backend/tests -p test_*.py -v) Tj
+T* (It then generates coverage report, JSON and XML outputs.) Tj
+T* (4. Verified execution evidence) Tj
+T* (GitHub Actions workflow run: 158) Tj
+T* (Run ID: 44675211671) Tj
+T* (Commit: 3c29c7a1a149767c32d6c47562b4b3628e509c0e) Tj
+T* (Result: SUCCESS) Tj
+T* (Unit-test and coverage step: SUCCESS) Tj
+T* (Coverage artifact upload step: SUCCESS) Tj
+T* (Evidence: github.com/Rohit-Pujari/SE-Railway-Reservation-System/) Tj
+T* (  actions/runs/44675211671) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 2058 >>
+stream
+BT /F1 10 Tf 50 795 Td 14 TL
+/F1 15 Tf (UNIT TEST REPORT - CONTINUED) Tj /F1 10 Tf
+T* (5. Representative test cases inspected) Tj
+T* (Registration: input validation, password hashing, database rollback,) Tj
+T* (HTTP success, invalid input, duplicate accounts and safe errors.) Tj
+T* (Booking: invalid requests, atomic transactions, seat holds,) Tj
+T* (generated PNR and assigned seat information.) Tj
+T* (Administrator authentication: login, logout, wrong password,) Tj
+T* (passenger-role rejection and disabled-account rejection.) Tj
+T* (Architecture: DRF routes, CSRF configuration, security headers,) Tj
+T* (React build dependencies and development launcher checks.) Tj
+T* (6. Observed results) Tj
+T* (CI job 'Application tests': PASSED.) Tj
+T* (Unit tests with coverage step: PASSED.) Tj
+T* (Exact individual test count: not established from run summary.) Tj
+T* (Exact line coverage percentage: not established from run summary.) Tj
+T* (Exact branch coverage percentage: not established from run summary.) Tj
+T* (No individual test failure was reported by the inspected job status.) Tj
+T* (7. Limitations) Tj
+T* (A passing CI run is evidence for its associated commit, not proof) Tj
+T* (that every subsequent commit or production environment is correct.) Tj
+T* (The report does not claim live database, payment gateway or) Tj
+T* (production deployment testing. Mock-based tests validate isolated) Tj
+T* (behavior and expected interactions, not all real-world integrations.) Tj
+T* (8. Reproduction) Tj
+T* (Install requirements from requirements.txt and run:) Tj
+T* (python -m coverage run --branch --source=backend/app,backend/config) Tj
+T* (  -m unittest discover -s backend/tests -p test_*.py -v) Tj
+T* (python -m coverage report -m) Tj
+T* (The CI workflow also uploads logs and coverage outputs as artifacts.) Tj
+T* (9. Conclusion) Tj
+T* (The inspected GitHub Actions run confirms successful execution of) Tj
+T* (the automated unit-test and coverage reporting stage.) Tj
+T* (Prepared from repository source and CI evidence; no results invented.) Tj
+ET
+endstream
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000317 00000 n 
+0000001839 00000 n 
+0000001965 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4074
+%%EOF
